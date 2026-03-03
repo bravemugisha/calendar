@@ -11,12 +11,12 @@ import MonthRegularContent from './MonthRegularContent';
 import RegularEventContent from './RegularEventContent';
 import YearEventContent from './YearEventContent';
 
-/** Resolve the most specific overridden generator name, falling back to 'eventContent'. */
+/** Resolve the most specific overridden generator name. Returns null if not overridden. */
 function resolveGeneratorName(
   store: CustomRenderingStore | null,
   viewType: ViewType,
   isAllDay: boolean
-): string {
+): string | null {
   const viewKey =
     (viewType as string).charAt(0).toUpperCase() +
     (viewType as string).slice(1);
@@ -25,9 +25,7 @@ function resolveGeneratorName(
     : `eventContent${viewKey}`; // e.g. 'eventContentDay'
 
   if (store?.isOverridden(specificName)) return specificName;
-  if (isAllDay && store?.isOverridden('eventContentAllDay'))
-    return 'eventContentAllDay';
-  return 'eventContent';
+  return null;
 }
 
 interface EventContentProps {

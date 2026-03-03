@@ -3,32 +3,20 @@ import type {
   ICalendarApp,
   CustomRendering,
   UseCalendarAppReturn,
-  Event,
-  EventDetailPosition,
-  CalendarHeaderProps,
-  CalendarType,
-  ViewType,
-  EventLayout,
+  EventContentSlotArgs,
+  EventDetailContentProps,
+  EventDetailDialogProps,
+  CreateCalendarDialogProps,
+  TitleBarSlotProps,
+  ColorPickerProps,
+  CreateCalendarDialogColorPickerProps,
 } from '@dayflow/core';
 import { useRef, useEffect, useState, useMemo } from 'react';
 import type { ReactNode, FC } from 'react';
 import { createPortal } from 'react-dom';
 
-/** Args passed to all eventContent* slot renderers. */
-export interface EventContentSlotArgs {
-  event: Event;
-  viewType: ViewType;
-  isAllDay: boolean;
-  isMobile: boolean;
-  isSelected: boolean;
-  isDragging: boolean;
-  layout?: EventLayout;
-}
-
 export interface DayFlowCalendarProps {
   calendar: ICalendarApp | UseCalendarAppReturn;
-  /** Custom event content renderer for all views and event types (React) */
-  eventContent?: (args: EventContentSlotArgs) => ReactNode;
   /** Custom event content renderer for Day view timed events */
   eventContentDay?: (args: EventContentSlotArgs) => ReactNode;
   /** Custom event content renderer for Week view timed events */
@@ -37,8 +25,6 @@ export interface DayFlowCalendarProps {
   eventContentMonth?: (args: EventContentSlotArgs) => ReactNode;
   /** Custom event content renderer for Year view events */
   eventContentYear?: (args: EventContentSlotArgs) => ReactNode;
-  /** Custom event content renderer for all-day events in all views */
-  eventContentAllDay?: (args: EventContentSlotArgs) => ReactNode;
   /** Custom event content renderer for all-day events in Day view */
   eventContentAllDayDay?: (args: EventContentSlotArgs) => ReactNode;
   /** Custom event content renderer for all-day events in Week view */
@@ -48,41 +34,20 @@ export interface DayFlowCalendarProps {
   /** Custom event content renderer for all-day events in Year view */
   eventContentAllDayYear?: (args: EventContentSlotArgs) => ReactNode;
   /** Custom event detail panel content (React) */
-  eventDetailContent?: (args: {
-    event: Event;
-    position: EventDetailPosition;
-    onClose: () => void;
-  }) => ReactNode;
+  eventDetailContent?: (args: EventDetailContentProps) => ReactNode;
   /** Custom event detail dialog (React) */
-  eventDetailDialog?: (args: {
-    event: Event;
-    isOpen: boolean;
-    onClose: () => void;
-    onEventUpdate: (event: Event) => void;
-    onEventDelete: (id: string) => void;
-    isAllDay: boolean;
-    app: ICalendarApp;
-  }) => ReactNode;
-  /** Custom calendar header content (React) */
-  headerContent?: (args: CalendarHeaderProps) => ReactNode;
+  eventDetailDialog?: (args: EventDetailDialogProps) => ReactNode;
   /** Custom create calendar dialog (React) */
-  createCalendarDialog?: (args: {
-    onClose: () => void;
-    onCreate: (calendar: CalendarType) => void;
-    colorPickerMode?: 'default' | 'custom';
-  }) => ReactNode;
+  createCalendarDialog?: (args: CreateCalendarDialogProps) => ReactNode;
   collapsedSafeAreaLeft?: number;
   /** Title bar slot (React) */
-  titleBarSlot?:
-    | ReactNode
-    | ((context: {
-        isCollapsed: boolean;
-        toggleCollapsed: () => void;
-      }) => ReactNode);
+  titleBarSlot?: (context: TitleBarSlotProps) => ReactNode;
   /** Custom color picker renderer (React) */
-  colorPicker?: (args: unknown) => ReactNode;
-  /** Custom color picker wrapper renderer (React) */
-  colorPickerWrapper?: (args: unknown) => ReactNode;
+  colorPicker?: (args: ColorPickerProps) => ReactNode;
+  /** Custom create calendar dialog color picker renderer (React) */
+  createCalendarDialogColorPicker?: (
+    args: CreateCalendarDialogColorPickerProps
+  ) => ReactNode;
 }
 
 /** Compute active override names from props and installed plugins. */
@@ -186,6 +151,7 @@ export const DayFlowCalendar: FC<DayFlowCalendarProps> = ({
     const allOverrides = computeActiveOverrides(app, renderProps);
     if (overridesChanged(renderPropsKeysRef.current, allOverrides)) {
       store.setOverrides(allOverrides);
+      app.setOverrides(allOverrides);
       renderPropsKeysRef.current = allOverrides;
     }
 

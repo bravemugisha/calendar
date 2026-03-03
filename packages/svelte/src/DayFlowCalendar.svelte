@@ -1,51 +1,53 @@
 <script lang="ts">
   import { onMount, onDestroy, tick } from "svelte";
+  import type { Component } from "svelte";
   import { CalendarRenderer } from "@dayflow/core";
   import type {
     ICalendarApp,
     UseCalendarAppReturn,
     CustomRendering,
+    EventDetailContentProps,
+    EventDetailDialogProps,
+    CreateCalendarDialogProps,
+    TitleBarSlotProps,
+    EventContentSlotArgs,
+    ColorPickerProps,
+    CreateCalendarDialogColorPickerProps,
   } from "@dayflow/core";
 
   const {
     calendar,
-    eventContent = null,
     eventContentDay = null,
     eventContentWeek = null,
     eventContentMonth = null,
     eventContentYear = null,
-    eventContentAllDay = null,
     eventContentAllDayDay = null,
     eventContentAllDayWeek = null,
     eventContentAllDayMonth = null,
     eventContentAllDayYear = null,
     eventDetailContent = null,
     eventDetailDialog = null,
-    headerContent = null,
     createCalendarDialog = null,
     titleBarSlot = null,
     colorPicker = null,
-    colorPickerWrapper = null,
+    createCalendarDialogColorPicker = null,
     collapsedSafeAreaLeft = null,
   } = $props<{
     calendar: ICalendarApp | UseCalendarAppReturn;
-    eventContent?: unknown;
-    eventContentDay?: unknown;
-    eventContentWeek?: unknown;
-    eventContentMonth?: unknown;
-    eventContentYear?: unknown;
-    eventContentAllDay?: unknown;
-    eventContentAllDayDay?: unknown;
-    eventContentAllDayWeek?: unknown;
-    eventContentAllDayMonth?: unknown;
-    eventContentAllDayYear?: unknown;
-    eventDetailContent?: unknown;
-    eventDetailDialog?: unknown;
-    headerContent?: unknown;
-    createCalendarDialog?: unknown;
-    titleBarSlot?: unknown;
-    colorPicker?: unknown;
-    colorPickerWrapper?: unknown;
+    eventContentDay?: Component<EventContentSlotArgs>;
+    eventContentWeek?: Component<EventContentSlotArgs>;
+    eventContentMonth?: Component<EventContentSlotArgs>;
+    eventContentYear?: Component<EventContentSlotArgs>;
+    eventContentAllDayDay?: Component<EventContentSlotArgs>;
+    eventContentAllDayWeek?: Component<EventContentSlotArgs>;
+    eventContentAllDayMonth?: Component<EventContentSlotArgs>;
+    eventContentAllDayYear?: Component<EventContentSlotArgs>;
+    eventDetailContent?: Component<EventDetailContentProps>;
+    eventDetailDialog?: Component<EventDetailDialogProps>;
+    createCalendarDialog?: Component<CreateCalendarDialogProps>;
+    titleBarSlot?: Component<TitleBarSlotProps>;
+    colorPicker?: Component<ColorPickerProps>;
+    createCalendarDialogColorPicker?: Component<CreateCalendarDialogColorPickerProps>;
     collapsedSafeAreaLeft?: number | null;
   }>();
 
@@ -63,23 +65,20 @@
   );
 
   const renderProps = $derived({
-    eventContent,
     eventContentDay,
     eventContentWeek,
     eventContentMonth,
     eventContentYear,
-    eventContentAllDay,
     eventContentAllDayDay,
     eventContentAllDayWeek,
     eventContentAllDayMonth,
     eventContentAllDayYear,
     eventDetailContent,
     eventDetailDialog,
-    headerContent,
     createCalendarDialog,
     titleBarSlot,
     colorPicker,
-    colorPickerWrapper,
+    createCalendarDialogColorPicker,
     collapsedSafeAreaLeft,
   } as Record<string, unknown>);
 
