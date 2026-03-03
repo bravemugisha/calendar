@@ -16,14 +16,6 @@ const meta: MetaRecord = {
   'create-calendar': {
     title: 'カレンダー作成',
   },
-  'custom-detail-dialog': {
-    title: 'カスタム詳細ダイアログ',
-    display: 'hidden',
-  },
-  'custom-detail-panel': {
-    title: 'カスタム詳細パネル',
-    display: 'hidden',
-  },
   'content-slots': {
     title: 'コンテンツスロット',
   },

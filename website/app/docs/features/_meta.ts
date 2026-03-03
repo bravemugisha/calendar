@@ -16,14 +16,6 @@ const meta: MetaRecord = {
   'create-calendar': {
     title: 'Create Calendar',
   },
-  'custom-detail-dialog': {
-    title: 'Custom Detail Dialog',
-    display: 'hidden',
-  },
-  'custom-detail-panel': {
-    title: 'Custom Detail Panel',
-    display: 'hidden',
-  },
   'content-slots': {
     title: 'Content Slots',
   },

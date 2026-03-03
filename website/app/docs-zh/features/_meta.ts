@@ -16,14 +16,6 @@ const meta: MetaRecord = {
   'create-calendar': {
     title: '创建日历',
   },
-  'custom-detail-dialog': {
-    title: '自定义详情对话框',
-    display: 'hidden',
-  },
-  'custom-detail-panel': {
-    title: '自定义详情面板',
-    display: 'hidden',
-  },
   'content-slots': {
     title: '内容插槽',
   },
