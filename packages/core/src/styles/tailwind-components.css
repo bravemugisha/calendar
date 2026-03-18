@@ -1,28 +1,28 @@
 /* styles.components.css — for projects that already have Tailwind CSS
  *
- * This file includes DayFlow's component styles, theme variables, and
- * utility classes, but excludes Tailwind's preflight (CSS reset) and
- * base theme tokens. Import this instead of styles.css if your project
- * uses Tailwind to avoid CSS reset conflicts.
+ * This file includes DayFlow's component styles and theme variables only.
+ * It does NOT emit Tailwind utility classes, so it will not conflict with
+ * the host application's own Tailwind instance.
+ *
+ * Import this instead of styles.css if your project uses Tailwind v4.
+ * Your project's Tailwind instance provides the utility classes; DayFlow's
+ * source files are automatically scanned by @tailwindcss/vite. For other
+ * bundlers, add an @source pointing to DayFlow's node_modules source files
+ * in your own Tailwind entry CSS.
  *
  * Usage:
  *   import '@dayflow/core/dist/styles.components.css'
  */
-@import 'tailwindcss/theme' layer(theme);
-@import 'tailwindcss/utilities';
-@import '@dayflow/blossom-color-picker/styles.css';
 
-/* Force scanning of all relevant source code files to extract utility classes */
-@source "../**/*.{ts,tsx}";
-@source "../../../core/*/src/**/*.{ts,tsx}";
-@source "../../../plugins/*/src/**/*.{ts,tsx}";
+/* @tailwindcss/theme is imported here only to resolve @apply at build time.
+ * It does not emit utility classes into the compiled output. */
+@import 'tailwindcss/theme' layer(theme);
+@import '@dayflow/blossom-color-picker/styles.css';
 
 @variant dark (.dark &);
 
-/* Ensure that the base variables can be correctly parsed even without Tailwind */
 :root {
   color-scheme: light dark;
-  font-family: Arial;
 }
 
 @layer df-theme {
@@ -92,41 +92,21 @@
   }
 }
 
-/*
- * Map Tailwind's internal color tokens to the library's namespaced variables.
- * Using @theme inline means generated utilities reference --df-color-* directly
- * (e.g. `.bg-primary { background-color: var(--df-color-primary) }`),
- * so the host's own --color-primary is never touched.
- */
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-
-  --color-background: var(--df-color-background);
-  --color-foreground: var(--df-color-foreground);
-  --color-hover: var(--df-color-hover);
-  --color-border: var(--df-color-border);
-  --color-card: var(--df-color-card);
-  --color-card-foreground: var(--df-color-card-foreground);
-  --color-muted: var(--df-color-muted);
-  --color-muted-foreground: var(--df-color-muted-foreground);
-
-  --color-primary: var(--df-color-primary);
-  --color-primary-foreground: var(--df-color-primary-foreground);
-  --color-secondary: var(--df-color-secondary);
-  --color-secondary-foreground: var(--df-color-secondary-foreground);
-
-  --color-destructive: var(--df-color-destructive);
-  --color-destructive-foreground: var(--df-color-destructive-foreground);
-}
-
 /* ==================== Component Layer ==================== */
 
 @layer components {
   .df-calendar-container {
-    @apply relative flex flex-row bg-white dark:bg-gray-900 rounded-lg overflow-hidden shadow-lg border border-gray-200 dark:border-gray-700;
+    @apply relative flex flex-row bg-white dark:bg-gray-900 rounded-lg overflow-hidden;
+    border: 1px solid var(--color-gray-200, oklch(92.8% 0.006 264.531));
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    .dark & {
+      border-color: var(--color-gray-700, oklch(37.3% 0.034 259.733));
+    }
     --df-calendar-height: 800px;
     height: var(--df-calendar-height, 800px);
+    font-family: Arial;
   }
 
   @media (max-width: 768px) {
@@ -148,7 +128,11 @@
   }
 
   .calendar-checkbox {
-    @apply mr-2 h-4 w-4 inline-flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded-sm cursor-pointer;
+    @apply mr-2 h-4 w-4 inline-flex items-center justify-center rounded-sm cursor-pointer;
+    border: 1px solid var(--color-gray-300, oklch(87.2% 0.01 258.338));
+    .dark & {
+      border-color: var(--color-gray-600, oklch(44.6% 0.03 256.802));
+    }
     appearance: none;
     background-color: transparent;
     position: relative;
@@ -355,4 +339,114 @@
 .df-cursor-grabbing,
 .df-cursor-grabbing * {
   cursor: grabbing;
+}
+
+/* ==================== Semantic Color Rules ====================
+ * DayFlow components use Tailwind's semantic utility classes (bg-primary,
+ * text-primary-foreground, bg-destructive, etc.) internally. Because
+ * styles.components.css does not emit Tailwind utilities, we define the
+ * colour behaviour here directly via DayFlow's own CSS custom properties.
+ * All rules are scoped to DayFlow's own container/element classes so they
+ * never affect the host application's own elements.
+ */
+
+/* --- Current-time indicator (day/week view) --- */
+.df-current-time-bar {
+  background-color: var(--df-color-primary);
+}
+.df-current-time-label {
+  background-color: var(--df-color-primary);
+  color: var(--df-color-primary-foreground);
+}
+/* Week view: time line bar divs use bg-primary/bg-primary\/30 inside df-current-time-line */
+.df-current-time-line .bg-primary {
+  background-color: var(--df-color-primary);
+}
+.df-current-time-line .bg-primary\/30 {
+  background-color: color-mix(
+    in srgb,
+    var(--df-color-primary) 30%,
+    transparent
+  );
+}
+
+/* --- Mini-calendar today / selected date --- */
+.df-mini-calendar-day.bg-primary {
+  background-color: var(--df-color-primary);
+  color: var(--df-color-primary-foreground);
+}
+.df-mini-calendar-day.bg-secondary {
+  background-color: var(--df-color-secondary);
+  color: var(--df-color-secondary-foreground);
+}
+
+/* --- Calendar header buttons (today label + nav arrow hover) --- */
+.df-today-button {
+  color: var(--df-color-primary);
+}
+.df-today-button:hover,
+.df-nav-button:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--df-color-primary) 10%,
+    transparent
+  );
+}
+.df-nav-button:hover {
+  color: var(--df-color-primary);
+}
+
+/* --- Primary-colour hover/text for other buttons inside the calendar --- */
+.df-calendar-container .text-primary {
+  color: var(--df-color-primary);
+}
+.df-calendar-container .hover\:bg-primary\/10:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--df-color-primary) 10%,
+    transparent
+  );
+}
+.df-calendar-container .hover\:text-primary:hover {
+  color: var(--df-color-primary);
+}
+.df-calendar-container .focus\:ring-primary:focus {
+  --tw-ring-color: var(--df-color-primary);
+}
+.df-calendar-container .focus\:border-primary:focus {
+  border-color: var(--df-color-primary);
+}
+
+/* --- Event-detail panel action buttons --- */
+.df-event-detail-panel .bg-primary,
+.df-dialog-container .bg-primary {
+  background-color: var(--df-color-primary);
+  color: var(--df-color-primary-foreground);
+}
+.df-event-detail-panel .bg-primary:hover,
+.df-dialog-container .bg-primary:hover,
+.df-event-detail-panel .hover\:bg-primary:hover,
+.df-dialog-container .hover\:bg-primary:hover {
+  background-color: color-mix(in srgb, var(--df-color-primary) 85%, black);
+}
+.df-event-detail-panel .bg-destructive,
+.df-dialog-container .bg-destructive {
+  background-color: var(--df-color-destructive);
+  color: var(--df-color-destructive-foreground);
+}
+.df-event-detail-panel .hover\:bg-destructive\/90:hover,
+.df-dialog-container .hover\:bg-destructive\/90:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--df-color-destructive) 90%,
+    transparent
+  );
+}
+.df-event-detail-panel .focus\:border-primary:focus,
+.df-dialog-container .focus\:border-primary:focus {
+  border-color: var(--df-color-primary);
+}
+.df-event-detail-panel .focus\:ring-primary:focus,
+.df-dialog-container .focus\:ring-primary:focus {
+  --tw-ring-color: var(--df-color-primary);
 }
