@@ -11,7 +11,7 @@
 @variant dark (.dark &);
 
 /* Ensure that the base variables can be correctly parsed even without Tailwind */
-:root {
+.df-calendar-container {
   color-scheme: light dark;
 }
 
@@ -164,6 +164,152 @@
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
+
+  .df-header {
+    @apply bg-white dark:bg-gray-900;
+  }
+
+  .df-calendar {
+    @apply bg-white dark:bg-gray-900;
+  }
+
+  .df-month-view {
+    @apply bg-white dark:bg-gray-900;
+  }
+
+  .df-week-header-row,
+  .df-week-header {
+    @apply border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900;
+  }
+
+  .df-month-day-cell,
+  .df-time-grid-cell,
+  .df-all-day-cell {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+
+  .df-time-column {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+
+  .df-time-grid-row,
+  .df-all-day-row,
+  .df-mini-calendar {
+    @apply border-gray-200 dark:border-gray-700;
+  }
+
+  .df-event-detail-panel,
+  .df-dialog-container {
+    @apply border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800;
+  }
+
+  .df-sidebar {
+    @apply border-gray-200 bg-white dark:border-gray-700 dark:bg-slate-900;
+  }
+
+  /* Year View Heatmap Intensity Colors */
+  .df-year-grid-month {
+    --heat-1: #ebf5ff;
+    --heat-2: #cfe8ff;
+    --heat-3: #91d5ff;
+    --heat-4: #60a5fa;
+    --heat-5: #3b82f6;
+  }
+
+  .dark .df-year-grid-month {
+    --heat-1: #1e3a5f;
+    --heat-2: #2563eb;
+    --heat-3: #1e40af;
+    --heat-4: #3b82f6;
+    --heat-5: #93c5fd;
+  }
+
+  /*
+   * Scrollbar styles scoped to the calendar container.
+   * Global * and ::-webkit-scrollbar selectors are intentionally avoided to
+   * prevent leaking into the host application's scrollable areas.
+   */
+  .df-calendar-container *::-webkit-scrollbar {
+    width: 2px;
+    height: 2px;
+  }
+
+  .df-calendar-container *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .df-calendar-container *::-webkit-scrollbar-thumb {
+    background: #d1d5db; /* gray-300 */
+    border-radius: 1px;
+  }
+
+  .dark .df-calendar-container *::-webkit-scrollbar-thumb {
+    background: #4b5563; /* gray-600 */
+  }
+
+  .df-calendar-container *::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af; /* gray-400 */
+  }
+
+  .df-calendar-container * {
+    scrollbar-width: thin; /* Firefox */
+    scrollbar-color: #d1d5db transparent; /* Firefox */
+  }
+
+  .dark .df-calendar-container * {
+    scrollbar-color: #4b5563 transparent; /* Firefox */
+  }
+
+  .df-calendar-container .df-header-left {
+    flex: 1;
+  }
+
+  .df-calendar-container .df-header-mid {
+    flex: 1;
+  }
+
+  .df-calendar-container .df-header-right {
+    flex: 1;
+  }
+
+  /* Drag & Resize Utilities */
+  .df-calendar-container.df-drag-active,
+  .df-calendar-container .df-drag-active {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  .df-calendar-container.df-drag-active .calendar-event,
+  .df-calendar-container.df-drag-active .df-month-more-events,
+  .df-calendar-container.df-drag-active .df-month-title,
+  .df-calendar-container.df-drag-active .df-year-event-content {
+    pointer-events: none;
+  }
+
+  .df-calendar-container .df-cursor-ns-resize,
+  .df-calendar-container .df-cursor-ns-resize * {
+    cursor: ns-resize;
+  }
+
+  .df-calendar-container .df-cursor-ew-resize,
+  .df-calendar-container .df-cursor-ew-resize * {
+    cursor: ew-resize;
+  }
+
+  .df-calendar-container .df-cursor-grabbing,
+  .df-calendar-container .df-cursor-grabbing * {
+    cursor: grabbing;
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .df-calendar-container .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .df-calendar-container .scrollbar-hide {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
 }
 
 /* ==================== Utilities ==================== */
@@ -176,174 +322,4 @@
   to {
     opacity: 0;
   }
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes df-event-pop-in {
-  from {
-    opacity: 0;
-    transform: scale(0.95) translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
-}
-
-.df-all-day-event-animate {
-  animation: df-event-pop-in 0.3s ease-out forwards;
-}
-
-@keyframes zoomIn {
-  from {
-    transform: scale(0.95);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
-.animate-in {
-  animation-duration: 200ms;
-  animation-fill-mode: forwards;
-  animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
-}
-
-.fade-in {
-  animation-name: fadeIn;
-}
-
-.zoom-in-95 {
-  animation-name: zoomIn;
-}
-
-.fade-in.zoom-in-95 {
-  animation-name: fadeIn, zoomIn;
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes slideDown {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(100%);
-  }
-}
-
-.animate-slide-up {
-  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-slide-down {
-  animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@media (max-width: 767px) {
-  .mobile-mask-fade {
-    mask-image: linear-gradient(to right, black 70%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 70%, transparent 100%);
-  }
-}
-
-/* Hide scrollbar but allow scrolling */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-.scrollbar-hide {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-/*
- * Scrollbar styles scoped to the calendar container.
- * Global * and ::-webkit-scrollbar selectors are intentionally avoided to
- * prevent leaking into the host application's scrollable areas.
- */
-.df-calendar-container *::-webkit-scrollbar {
-  width: 2px;
-  height: 2px;
-}
-
-.df-calendar-container *::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.df-calendar-container *::-webkit-scrollbar-thumb {
-  background: #d1d5db; /* gray-300 */
-  border-radius: 1px;
-}
-
-.dark .df-calendar-container *::-webkit-scrollbar-thumb {
-  background: #4b5563; /* gray-600 */
-}
-
-.df-calendar-container *::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af; /* gray-400 */
-}
-
-.df-calendar-container * {
-  scrollbar-width: thin; /* Firefox */
-  scrollbar-color: #d1d5db transparent; /* Firefox */
-}
-
-.dark .df-calendar-container * {
-  scrollbar-color: #4b5563 transparent; /* Firefox */
-}
-
-.df-header-left {
-  flex: 1;
-}
-
-.df-header-mid {
-  flex: 1;
-}
-
-.df-header-right {
-  flex: 1;
-}
-
-/* Drag & Resize Utilities */
-.df-drag-active {
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-.df-drag-active .calendar-event,
-.df-drag-active .df-month-more-events,
-.df-drag-active .df-month-title,
-.df-drag-active .df-year-event-content {
-  pointer-events: none;
-}
-
-.df-cursor-ns-resize,
-.df-cursor-ns-resize * {
-  cursor: ns-resize;
-}
-
-.df-cursor-ew-resize,
-.df-cursor-ew-resize * {
-  cursor: ew-resize;
-}
-
-.df-cursor-grabbing,
-.df-cursor-grabbing * {
-  cursor: grabbing;
 }
