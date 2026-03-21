@@ -18,6 +18,7 @@ import {
   temporalToDate,
   dateToZonedDateTime,
   dateToPlainDate,
+  restoreTimedDragFromAllDayTransition,
 } from '@dayflow/core';
 import { useCallback } from 'preact/hooks';
 import { Temporal } from 'temporal-polyfill';
@@ -53,6 +54,7 @@ export const useDragHandlers = (
     calculateDragLayout,
     currentWeekStart,
     events,
+    allDayRowRef,
     FIRST_HOUR = 0,
     LAST_HOUR = 24,
     MIN_DURATION = 0.25,
@@ -210,11 +212,24 @@ export const useDragHandlers = (
 
         if (drag.allDay) {
           // Switch from all-day to regular event
+          const restoredTimedDrag = restoreTimedDragFromAllDayTransition({
+            wasOriginallyAllDay: drag.originalEvent?.allDay ?? false,
+            mouseHour,
+            hourOffset: drag.hourOffset,
+            duration: drag.duration,
+            originalStartHour: drag.originalStartHour,
+            originalEndHour: drag.originalEndHour,
+            firstHour: FIRST_HOUR,
+            lastHour: LAST_HOUR,
+            minDuration: TIME_STEP,
+            roundToTimeStep,
+          });
+
           drag.allDay = false;
-          drag.startHour = roundToTimeStep(mouseHour);
-          drag.endHour = drag.startHour + 1;
-          drag.duration = 1;
-          drag.hourOffset = 0;
+          drag.startHour = restoredTimedDrag.startHour;
+          drag.endHour = restoredTimedDrag.endHour;
+          drag.duration = restoredTimedDrag.duration;
+          drag.hourOffset = restoredTimedDrag.hourOffset;
           drag.eventDate = currentWeekStart
             ? getDateByDayIndex(currentWeekStart, newDayIndex)
             : new Date();
@@ -1257,7 +1272,8 @@ export const useDragHandlers = (
             day: drag.dayIndex,
             start: startTemporal,
             end: endTemporal,
-            calendarId: 'blue',
+            calendarId:
+              app?.getCalendarRegistry()?.getDefaultCalendar()?.id ?? 'blue',
             allDay: isAllDay,
           });
         } else if (drag.mode === 'move' || drag.mode === 'resize') {
@@ -1413,7 +1429,8 @@ export const useDragHandlers = (
           start: startTemporal,
           end: endTemporal,
           day: targetDate.getDay(),
-          calendarId: 'blue',
+          calendarId:
+            app?.getCalendarRegistry()?.getDefaultCalendar()?.id ?? 'blue',
           allDay: false,
         };
 
@@ -1512,12 +1529,13 @@ export const useDragHandlers = (
       const drag = dragRef.current;
       if (!drag) return;
       const sourceElement = e.currentTarget as HTMLElement;
+      const sourceRect = sourceElement.getBoundingClientRect();
 
       if (isDateGridView) {
         // Month view move start
         currentDragRef.current = {
-          x: clientX - sourceElement.getBoundingClientRect().left,
-          y: clientY - sourceElement.getBoundingClientRect().top,
+          x: clientX - sourceRect.left,
+          y: clientY - sourceRect.top,
         };
 
         const eventStartDate = temporalToDate(event.start);
@@ -1622,6 +1640,14 @@ export const useDragHandlers = (
         }
 
         const eventStartDate = temporalToDate(event.start);
+        const indicatorContainer = event.allDay
+          ? ((sourceElement.offsetParent as HTMLElement | null) ??
+            allDayRowRef?.current ??
+            null)
+          : null;
+        const allDayContainerRect = event.allDay
+          ? indicatorContainer?.getBoundingClientRect()
+          : null;
 
         Object.assign(drag, {
           active: true,
@@ -1639,6 +1665,19 @@ export const useDragHandlers = (
           eventDate: eventStartDate,
           eventDurationDays: eventDurationDays, // Save original multi-day count
           startDragDayIndex: currentDayIndex, // Save dayIndex when drag starts
+          initialIndicatorLeft: allDayContainerRect
+            ? sourceRect.left - allDayContainerRect.left
+            : undefined,
+          initialIndicatorTop: allDayContainerRect
+            ? sourceRect.top - allDayContainerRect.top
+            : undefined,
+          initialIndicatorWidth: allDayContainerRect
+            ? sourceRect.width
+            : undefined,
+          initialIndicatorHeight: allDayContainerRect
+            ? sourceRect.height
+            : undefined,
+          indicatorContainer,
           calendarId: event.calendarId,
           title: event.title,
         });
@@ -1688,6 +1727,7 @@ export const useDragHandlers = (
       dragRef,
       currentDragRef,
       setDragState,
+      allDayRowRef,
     ]
   );
 
