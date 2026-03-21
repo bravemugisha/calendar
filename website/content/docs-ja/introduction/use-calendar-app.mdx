@@ -28,24 +28,24 @@ export function TeamCalendar() {
 
 ## 主な設定項目
 
-| オプション                  | 型                          | 必須 | デフォルト           | 説明                                                                                    |
-| --------------------------- | --------------------------- | ---- | -------------------- | --------------------------------------------------------------------------------------- |
-| `views`                     | `CalendarView[]`            | 必須 | —                    | 表示するビューを登録。`createMonthView()` などのファクトリを使用。                      |
-| `plugins`                   | `CalendarPlugin[]`          | 任意 | `[]`                 | ドラッグ操作やショートカットなどのプラグインをインストール。                            |
-| `events`                    | `Event[]`                   | 任意 | `[]`                 | 初期イベント配列。以後は `calendar.addEvent` などで更新。                               |
-| `callbacks`                 | `CalendarCallbacks`         | 任意 | `{}`                 | ビュー変更やイベント CRUD をフックするライフサイクルコールバック。                      |
-| `defaultView`               | `ViewType`                  | 任意 | `ViewType.WEEK`      | 最初に表示するビュー。`views` に含まれている必要あり。                                  |
-| `initialDate`               | `Date`                      | 任意 | `new Date()`         | フォーカスする基準日。ルーティングの状態などから差し替え可能。                          |
-| `switcherMode`              | `'buttons' \| 'select'`     | 任意 | `'buttons'`          | ビルトインビュースイッチャーの表示方法。                                                |
-| `calendars`                 | `CalendarType[]`            | 任意 | `[]`                 | カテゴリや色の定義。`calendarId` と連携。                                               |
-| `defaultCalendar`           | `string`                    | 任意 | 最初の可視カレンダー | 新規イベント作成時の既定カレンダー ID。                                                 |
-| `theme`                     | `ThemeConfig`               | 任意 | `{ mode: 'light' }`  | テーマモード（`light`/`dark`/`auto`）やトークン上書き。                                 |
-| `locale`                    | `string \| Locale`          | 任意 | `'en-US'`            | 国際化（i18n）のためのロケール設定。言語コード（'ja'など）またはLocaleオブジェクト。    |
-| `useEventDetailDialog`      | `boolean`                   | 任意 | `false`              | 詳細表示をモーダルダイアログに切り替える。                                              |
-| `useCalendarHeader`         | `boolean \| Function`       | 任意 | `true`               | デフォルトヘッダーの有効化、非表示（`false`）、またはカスタムレンダラーの指定。         |
-| `readOnly`                  | `boolean \| ReadOnlyConfig` | 任意 | `false`              | インタラクションを無効化。真偽値、または詳細制御（ドラッグ/表示）用の設定オブジェクト。 |
-| `customMobileEventRenderer` | `MobileEventRenderer`       | 任意 | —                    | デフォルトのモバイル用イベントドロワー/ダイアログを置き換えるカスタムコンポーネント。   |
-| `allDaySortComparator`      | `AllDaySortComparator`      | 任意 | カレンダーグループ順 | 全ビューでの終日イベントの行順を制御するカスタム比較関数。                              |
+| オプション                  | 型                          | 必須 | デフォルト                               | 説明                                                                                                   |
+| --------------------------- | --------------------------- | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| `views`                     | `CalendarView[]`            | 必須 | —                                        | 表示するビューを登録。`createMonthView()` などのファクトリを使用。                                     |
+| `plugins`                   | `CalendarPlugin[]`          | 任意 | `[]`                                     | ドラッグ操作やショートカットなどのプラグインをインストール。                                           |
+| `events`                    | `Event[]`                   | 任意 | `[]`                                     | 初期イベント配列。以後は `calendar.addEvent` などで更新。                                              |
+| `callbacks`                 | `CalendarCallbacks`         | 任意 | `{}`                                     | ビュー変更やイベント CRUD をフックするライフサイクルコールバック。                                     |
+| `defaultView`               | `ViewType`                  | 任意 | `ViewType.WEEK`                          | 最初に表示するビュー。`views` に含まれている必要あり。                                                 |
+| `initialDate`               | `Date`                      | 任意 | `new Date()`                             | フォーカスする基準日。ルーティングの状態などから差し替え可能。                                         |
+| `switcherMode`              | `'buttons' \| 'select'`     | 任意 | `'buttons'`                              | ビルトインビュースイッチャーの表示方法。                                                               |
+| `calendars`                 | `CalendarType[]`            | 任意 | `[]`                                     | カテゴリや色の定義。`calendarId` と連携。                                                              |
+| `defaultCalendar`           | `string`                    | 任意 | 最初の可視カレンダー                     | 新規イベント作成時の既定カレンダー ID。                                                                |
+| `theme`                     | `ThemeConfig`               | 任意 | `{ mode: 'light' }`                      | テーマモード（`light`/`dark`/`auto`）やトークン上書き。                                                |
+| `locale`                    | `string \| Locale`          | 任意 | `'en-US'`                                | 国際化（i18n）のためのロケール設定。言語コード（'ja'など）またはLocaleオブジェクト。                   |
+| `useEventDetailDialog`      | `boolean`                   | 任意 | `false`                                  | 詳細表示をモーダルダイアログに切り替える。                                                             |
+| `useCalendarHeader`         | `boolean \| Function`       | 任意 | `true`                                   | デフォルトヘッダーの有効化、非表示（`false`）、またはカスタムレンダラーの指定。                        |
+| `readOnly`                  | `boolean \| ReadOnlyConfig` | 任意 | `false`                                  | インタラクションを無効化。真偽値、または詳細制御（ドラッグ/表示）用の設定オブジェクト。                |
+| `customMobileEventRenderer` | `MobileEventRenderer`       | 任意 | —                                        | デフォルトのモバイル用イベントドロワー/ダイアログを置き換えるカスタムコンポーネント。                  |
+| `allDaySortComparator`      | `AllDaySortComparator`      | 任意 | カレンダーグループ順（複数日終日は先頭） | 全ビューでの終日イベントの行順を制御するカスタム比較関数。指定するとデフォルト順を完全に上書きします。 |
 
 ## それぞれのポイント
 
@@ -188,7 +188,15 @@ const calendar = useCalendarApp({
 
 ### allDaySortComparator
 
-全ビュー（日・週・月・年）での終日イベントの行順を制御します。デフォルトでは `calendarId` でグループ化（初出現順）され、グループ内は元の読み込み順が保持されます。
+全ビュー（日・週・月・年）での終日イベントの行順を制御します。
+
+デフォルトでは DayFlow が次のルールで並べます：
+
+- `calendarId` の初出現順でグループ化する
+- 複数日にまたがる終日イベントを単日終日イベントより上に配置する
+- 同じカレンダーの終日イベントはできるだけ隣接した順序を保つ
+
+`allDaySortComparator` は、最終的な順序を完全に自分で決めたい場合にだけ渡してください。指定した場合は、その比較結果がそのまま最終順序として使われます。
 
 比較関数を渡すと完全に制御できます — 2 つの `Event` オブジェクトを受け取り、JavaScript の `Array.sort` と同じ動作です：
 
@@ -198,26 +206,26 @@ const calendar = useCalendarApp({
 });
 ```
 
-**組み込みプリセット**（`@dayflow/core` からエクスポート）：
+**そのまま使えるエクスポート済みヘルパー**（`@dayflow/core` からエクスポート）：
 
-| プリセット             | 動作                                                                                 |
-| :--------------------- | :----------------------------------------------------------------------------------- |
-| `sortAllDayByCalendar` | `calendarId` のアルファベット順でグループ化。`calendarId` がないイベントが先頭に来る |
+| ヘルパー            | 動作                                                                                     |
+| :------------------ | :--------------------------------------------------------------------------------------- |
+| `sortAllDayByTitle` | タイトルのアルファベット順で終日イベントを並べる。デフォルトのグループ順は適用されません |
 
 ```tsx
-import { sortAllDayByCalendar } from '@dayflow/core';
+import { sortAllDayByTitle } from '@dayflow/core';
 
 const calendar = useCalendarApp({
-  allDaySortComparator: sortAllDayByCalendar,
+  allDaySortComparator: sortAllDayByTitle,
 });
 ```
 
 `updateConfig` を使うとランタイムで変更できます：
 
 ```tsx
-calendar.app.updateConfig({ allDaySortComparator: sortAllDayByCalendar });
+calendar.app.updateConfig({ allDaySortComparator: sortAllDayByTitle });
 
-// デフォルト（初出現順グループ）に戻す
+// デフォルトのカレンダーグループ順に戻す
 calendar.app.updateConfig({ allDaySortComparator: undefined });
 ```
 

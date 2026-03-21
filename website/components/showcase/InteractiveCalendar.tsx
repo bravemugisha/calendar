@@ -155,6 +155,10 @@ export function InteractiveCalendar() {
       v.push(
         createMonthView({
           showMonthIndicator: false,
+          scroll: {
+            disabled: true,
+            // timeIndicator: true,
+          },
         })
       );
     if (selectedViews.includes(ViewType.YEAR)) {

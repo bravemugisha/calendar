@@ -7,6 +7,7 @@ import {
 } from 'preact/hooks';
 
 import {
+  AllDaySortComparator,
   CalendarAppConfig,
   UseCalendarAppReturn,
   ViewType,
@@ -21,8 +22,28 @@ import { CalendarApp } from './CalendarApp';
 export function useCalendarApp(
   config: CalendarAppConfig
 ): UseCalendarAppReturn {
+  const comparatorRef = useRef<AllDaySortComparator | undefined>(
+    config.allDaySortComparator
+  );
+  comparatorRef.current = config.allDaySortComparator;
+
+  const stableAllDaySortComparator = useMemo<AllDaySortComparator>(
+    () => (a, b) => comparatorRef.current?.(a, b) ?? 0,
+    []
+  );
+
+  const normalizedConfig = useMemo(
+    () => ({
+      ...config,
+      allDaySortComparator: config.allDaySortComparator
+        ? stableAllDaySortComparator
+        : undefined,
+    }),
+    [config, stableAllDaySortComparator]
+  );
+
   // Create calendar application instance
-  const app = useMemo(() => new CalendarApp(config), []);
+  const app = useMemo(() => new CalendarApp(normalizedConfig), []);
 
   // Reactive state - synchronize state from app instance
   const [currentView, setCurrentView] = useState<ViewType>(
@@ -161,13 +182,13 @@ export function useCalendarApp(
   }, [app]);
 
   // Synchronize configuration updates
-  const lastConfigRef = useRef(config);
+  const lastConfigRef = useRef(normalizedConfig);
   useEffect(() => {
-    if (!isDeepEqual(lastConfigRef.current, config)) {
-      app.updateConfig(config);
-      lastConfigRef.current = config;
+    if (!isDeepEqual(lastConfigRef.current, normalizedConfig)) {
+      app.updateConfig(normalizedConfig);
+      lastConfigRef.current = normalizedConfig;
     }
-  }, [app, config]);
+  }, [app, normalizedConfig]);
 
   // Wrapped methods to ensure state synchronization
   const changeView = useCallback(

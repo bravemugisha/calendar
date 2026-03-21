@@ -10,12 +10,13 @@ const createAllDayEvent = (
   id: string,
   title: string,
   start: string,
-  end: string = start
+  end: string = start,
+  calendarId: string = 'work'
 ) => ({
   id,
   title,
   allDay: true,
-  calendarId: 'work',
+  calendarId,
   start: Temporal.PlainDate.from(start),
   end: Temporal.PlainDate.from(end),
 });
@@ -45,6 +46,11 @@ const createTimedEvent = (
     minute: 0,
   }),
 });
+
+const sortByCalendarId = (
+  a: { calendarId?: string },
+  b: { calendarId?: string }
+) => a.calendarId!.localeCompare(b.calendarId!);
 
 describe('WeekComponent', () => {
   it('lets each month cell decide independently whether to show 3 rows plus more or 4 rows', () => {
@@ -129,5 +135,89 @@ describe('WeekComponent', () => {
     expect(
       within(march13Cell as HTMLElement).getByText('+2 more')
     ).toBeTruthy();
+  });
+
+  it('keeps same-calendar all-day events grouped in MonthView when a sort comparator is provided', () => {
+    const events = [
+      createAllDayEvent('a', 'Event A', '2026-03-12', '2026-03-15', 'a-cal'),
+      createAllDayEvent('b', 'Event B', '2026-03-12', '2026-03-12', 'b-cal'),
+      createAllDayEvent('c', 'Event C', '2026-03-12', '2026-03-12', 'a-cal'),
+    ];
+
+    const app = new CalendarApp({
+      views: [],
+      plugins: [],
+      events,
+      defaultView: ViewType.MONTH,
+      allDaySortComparator: sortByCalendarId,
+      calendars: [
+        {
+          id: 'a-cal',
+          name: 'A',
+          colors: {
+            lineColor: '#2563eb',
+            bgColor: '#dbeafe',
+            textColor: '#1e3a8a',
+          },
+        },
+        {
+          id: 'b-cal',
+          name: 'B',
+          colors: {
+            lineColor: '#16a34a',
+            bgColor: '#dcfce7',
+            textColor: '#166534',
+          },
+        },
+      ],
+    });
+
+    const calendarRef = {
+      current: document.createElement('div'),
+    } as { current: HTMLDivElement };
+
+    const { getByText } = render(
+      <WeekComponent
+        currentMonth='March'
+        currentYear={2026}
+        newlyCreatedEventId={null}
+        screenSize='desktop'
+        isScrolling={false}
+        isDragging={false}
+        showWeekNumbers={false}
+        item={{
+          index: 0,
+          weekData: generateWeekData(new Date(2026, 2, 9)),
+          top: 0,
+          height: 119,
+        }}
+        weekHeight={119}
+        events={events}
+        dragState={{
+          active: false,
+          mode: null,
+          eventId: null,
+          targetDate: null,
+          startDate: null,
+          endDate: null,
+        }}
+        calendarRef={calendarRef}
+        onEventUpdate={jest.fn()}
+        onEventDelete={jest.fn()}
+        onDetailPanelOpen={jest.fn()}
+        app={app}
+      />
+    );
+
+    const eventA = getByText('Event A');
+    const eventB = getByText('Event B');
+    const eventC = getByText('Event C');
+
+    expect(eventA.compareDocumentPosition(eventC)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
+    expect(eventC.compareDocumentPosition(eventB)).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING
+    );
   });
 });
