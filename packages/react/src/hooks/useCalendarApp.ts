@@ -1,14 +1,38 @@
-import type { CalendarAppConfig, UseCalendarAppReturn } from '@dayflow/core';
+import type {
+  AllDaySortComparator,
+  CalendarAppConfig,
+  UseCalendarAppReturn,
+} from '@dayflow/core';
 import { CalendarApp, isDeepEqual } from '@dayflow/core';
 import { useState, useEffect, useMemo, useRef } from 'react';
 
 export function useCalendarApp(
   config: CalendarAppConfig
 ): UseCalendarAppReturn {
+  const comparatorRef = useRef<AllDaySortComparator | undefined>(
+    config.allDaySortComparator
+  );
+  comparatorRef.current = config.allDaySortComparator;
+
+  const stableAllDaySortComparator = useMemo<AllDaySortComparator>(
+    () => (a, b) => comparatorRef.current?.(a, b) ?? 0,
+    []
+  );
+
+  const normalizedConfig = useMemo(
+    () => ({
+      ...config,
+      allDaySortComparator: config.allDaySortComparator
+        ? stableAllDaySortComparator
+        : undefined,
+    }),
+    [config, stableAllDaySortComparator]
+  );
+
   // Use useMemo to ensure app is only created once
-  const app = useMemo(() => new CalendarApp(config), []);
+  const app = useMemo(() => new CalendarApp(normalizedConfig), []);
   const [, setTick] = useState(0);
-  const configRef = useRef(config);
+  const configRef = useRef(normalizedConfig);
 
   useEffect(() => {
     if (!app) {
@@ -26,11 +50,11 @@ export function useCalendarApp(
 
   // Sync config changes to the app instance
   useEffect(() => {
-    if (app && !isDeepEqual(config, configRef.current)) {
-      app.updateConfig(config);
-      configRef.current = config;
+    if (app && !isDeepEqual(normalizedConfig, configRef.current)) {
+      app.updateConfig(normalizedConfig);
+      configRef.current = normalizedConfig;
     }
-  }, [app, config]);
+  }, [app, normalizedConfig]);
 
   // Map app to the UseCalendarAppReturn interface
   // (In a real implementation, we might want a more comprehensive mapping)

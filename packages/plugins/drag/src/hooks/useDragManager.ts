@@ -375,20 +375,20 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
             currentDrag?.initialIndicatorHeight !== undefined;
 
           if (hasInitialAllDayGeometry) {
-            indicator.style.top = `${currentDrag.initialIndicatorTop}px`;
-            indicator.style.width = `${currentDrag.initialIndicatorWidth}px`;
-            indicator.style.height = `${currentDrag.initialIndicatorHeight}px`;
+            indicator.style.top = `${currentDrag!.initialIndicatorTop}px`;
+            indicator.style.width = `${currentDrag!.initialIndicatorWidth}px`;
+            indicator.style.height = `${currentDrag!.initialIndicatorHeight}px`;
 
             if (isDayView) {
-              indicator.style.left = `${currentDrag.initialIndicatorLeft}px`;
+              indicator.style.left = `${currentDrag!.initialIndicatorLeft}px`;
             } else {
               const containerWidth =
                 targetContainer?.getBoundingClientRect().width || 0;
               const daysToShow = options.displayDays || 7;
               const dayColumnWidth = containerWidth / daysToShow;
-              const startDayIndex = currentDrag.startDragDayIndex ?? dayIndex;
+              const startDayIndex = currentDrag!.startDragDayIndex ?? dayIndex;
               const dayDelta = dayIndex - startDayIndex;
-              indicator.style.left = `${currentDrag.initialIndicatorLeft + dayDelta * dayColumnWidth}px`;
+              indicator.style.left = `${currentDrag!.initialIndicatorLeft! + dayDelta * dayColumnWidth}px`;
             }
           } else if (isDayView) {
             indicator.style.top = '2px';

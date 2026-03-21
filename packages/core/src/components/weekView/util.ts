@@ -6,6 +6,7 @@ import {
 import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
 import { Event, EventLayout } from '@/types';
 import { createDateWithHour, getDateByDayIndex } from '@/utils';
+import { createAllDayDisplayComparator } from '@/utils/allDaySort';
 import { temporalToDate, dateToZonedDateTime } from '@/utils/temporal';
 
 // ... existing code ...
@@ -138,10 +139,14 @@ export const organizeAllDaySegments = (
       const id = seg.event.calendarId;
       if (!calendarOrder.has(id)) calendarOrder.set(id, calendarOrder.size);
     });
-    segments.sort(
-      (a: MultiDayEventSegment, b: MultiDayEventSegment) =>
-        (calendarOrder.get(a.event.calendarId) ?? 0) -
-        (calendarOrder.get(b.event.calendarId) ?? 0)
+    const compareByDisplayPriority = createAllDayDisplayComparator(
+      segments.map(segment => segment.event),
+      (left, right) =>
+        (calendarOrder.get(left.calendarId) ?? 0) -
+        (calendarOrder.get(right.calendarId) ?? 0)
+    );
+    segments.sort((a: MultiDayEventSegment, b: MultiDayEventSegment) =>
+      compareByDisplayPriority(a.event, b.event)
     );
   }
 

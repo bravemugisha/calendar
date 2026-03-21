@@ -185,7 +185,7 @@ export const getEventClasses = (
       ${isAllDay ? getAllDayClass() : regularEventRounded}
       `;
     if (!isMultiDay) {
-      monthClasses += ' mb-[2px]';
+      monthClasses += ' mb-[2px] last:mb-0';
     }
     return monthClasses;
   }

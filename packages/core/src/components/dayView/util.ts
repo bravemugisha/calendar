@@ -1,5 +1,6 @@
 import { EventLayoutCalculator } from '@/components/eventLayout';
 import { Event, EventLayout } from '@/types';
+import { createAllDayDisplayComparator } from '@/utils/allDaySort';
 import { temporalToDate, dateToZonedDateTime } from '@/utils/temporal';
 
 // Filter events for the current day
@@ -98,9 +99,12 @@ export const organizeAllDayEvents = (
         calendarOrder.set(e.calendarId, calendarOrder.size);
     });
     allDayEvents.sort(
-      (a, b) =>
-        (calendarOrder.get(a.calendarId) ?? 0) -
-        (calendarOrder.get(b.calendarId) ?? 0)
+      createAllDayDisplayComparator(
+        allDayEvents,
+        (left, right) =>
+          (calendarOrder.get(left.calendarId) ?? 0) -
+          (calendarOrder.get(right.calendarId) ?? 0)
+      )
     );
   }
 

@@ -24,6 +24,7 @@ import {
 } from '@/types';
 import { VirtualWeekItem } from '@/types/monthView';
 import { getWeekNumber, scrollbarTakesSpace } from '@/utils';
+import { createAllDayDisplayComparator } from '@/utils/allDaySort';
 import { extractHourFromDate } from '@/utils/helpers';
 import { logger } from '@/utils/logger';
 import { temporalToDate } from '@/utils/temporal';
@@ -103,8 +104,37 @@ const MULTI_DAY_TOP_OFFSET = 33;
 const MORE_TEXT_HEIGHT = 20; // Height reserved for the "+ x more" indicator
 
 // Organize multi-day event segments
-const organizeMultiDaySegments = (multiDaySegments: MultiDayEventSegment[]) => {
+const organizeMultiDaySegments = (
+  multiDaySegments: MultiDayEventSegment[],
+  comparator?: (a: Event, b: Event) => number
+) => {
+  const compareEvents = comparator
+    ? comparator
+    : createAllDayDisplayComparator(
+        multiDaySegments.map(segment => segment.event),
+        (() => {
+          const calendarOrder = new Map<string | undefined, number>();
+          multiDaySegments.forEach(segment => {
+            const id = segment.event.calendarId;
+            if (!calendarOrder.has(id)) {
+              calendarOrder.set(id, calendarOrder.size);
+            }
+          });
+
+          return (a: Event, b: Event) =>
+            (calendarOrder.get(a.calendarId) ?? 0) -
+            (calendarOrder.get(b.calendarId) ?? 0);
+        })()
+      );
+
   const sortedSegments = [...multiDaySegments].toSorted((a, b) => {
+    if (compareEvents) {
+      const displayPriority = compareEvents(a.event, b.event);
+      if (displayPriority !== 0) {
+        return displayPriority;
+      }
+    }
+
     const aDays = a.endDayIndex - a.startDayIndex + 1;
     const bDays = b.endDayIndex - b.startDayIndex + 1;
 
@@ -166,7 +196,16 @@ const organizeMultiDaySegments = (multiDaySegments: MultiDayEventSegment[]) => {
 
   // Sort each layer by start time
   layers.forEach(layer => {
-    layer.sort((a, b) => a.startDayIndex - b.startDayIndex);
+    layer.sort((a, b) => {
+      if (compareEvents) {
+        const displayPriority = compareEvents(a.event, b.event);
+        if (displayPriority !== 0) {
+          return displayPriority;
+        }
+      }
+
+      return a.startDayIndex - b.startDayIndex;
+    });
   });
 
   return layers;
@@ -464,8 +503,12 @@ const WeekComponent = memo(
 
     // Organize multi-day event segments
     const organizedMultiDaySegments = useMemo(
-      () => organizeMultiDaySegments(multiDaySegments),
-      [multiDaySegments]
+      () =>
+        organizeMultiDaySegments(
+          multiDaySegments,
+          app.state.allDaySortComparator
+        ),
+      [multiDaySegments, app.state.allDaySortComparator]
     );
 
     // Memoize flat segment list to avoid 7× flat() calls inside renderDayCell
