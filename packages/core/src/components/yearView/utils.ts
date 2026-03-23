@@ -1,4 +1,5 @@
 import { Event } from '@/types';
+import { createAllDayDisplayComparator } from '@/utils/allDaySort';
 import { temporalToDate } from '@/utils/temporal';
 
 export interface YearMultiDaySegment {
@@ -40,12 +41,13 @@ export function analyzeMultiDayEventsForRow(
   const rowStart = rowDays[0];
   const rowEnd = rowDays.at(-1)!;
 
-  // Normalize row start/end to midnight
+  // Normalize row start/end to midnight for consistent comparisons
   const rowStartMs = new Date(
     rowStart.getFullYear(),
     rowStart.getMonth(),
     rowStart.getDate()
   ).getTime();
+
   const rowEndMs = new Date(
     rowEnd.getFullYear(),
     rowEnd.getMonth(),
@@ -56,102 +58,68 @@ export function analyzeMultiDayEventsForRow(
     999
   ).getTime();
 
-  // 1. Filter events that overlap with this row
-  const rowEvents = events.filter(event => {
-    if (!event.start) return false;
-    const start = temporalToDate(event.start);
-    const end = event.end ? temporalToDate(event.end) : start;
+  // 1. Filter and normalize events that overlap with this row
+  const eventsWithDates = events
+    .filter(event => !!event.start)
+    .map(event => {
+      const start = temporalToDate(event.start);
+      const end = event.end ? temporalToDate(event.end) : start;
 
-    // Normalize event start/end
-    const eventStartMs = new Date(
-      start.getFullYear(),
-      start.getMonth(),
-      start.getDate()
-    ).getTime();
-    const eventEndMs = new Date(
-      end.getFullYear(),
-      end.getMonth(),
-      end.getDate()
-    ).getTime();
+      const eventStartDay = new Date(
+        start.getFullYear(),
+        start.getMonth(),
+        start.getDate()
+      );
+      const eventEndDay = new Date(
+        end.getFullYear(),
+        end.getMonth(),
+        end.getDate()
+      );
 
-    return eventStartMs <= rowEndMs && eventEndMs >= rowStartMs;
-  });
+      return {
+        event,
+        startMs: eventStartDay.getTime(),
+        endMs: eventEndDay.getTime(),
+      };
+    })
+    .filter(item => item.startMs <= rowEndMs && item.endMs >= rowStartMs);
 
-  if (comparator) {
-    rowEvents.sort(comparator);
-  } else {
-    // Default: group by calendar (first-seen order), then preserve load order
-    const calendarOrder = new Map<string | undefined, number>();
-    rowEvents.forEach(e => {
-      if (!calendarOrder.has(e.calendarId))
-        calendarOrder.set(e.calendarId, calendarOrder.size);
-    });
-    rowEvents.sort(
-      (a, b) =>
-        (calendarOrder.get(a.calendarId) ?? 0) -
-        (calendarOrder.get(b.calendarId) ?? 0)
-    );
-  }
+  if (eventsWithDates.length === 0) return [];
+
+  // 2. Sort events based on the all-day display priority
+  // This matches MonthView and WeekView logic.
+  const allDayComparator = createAllDayDisplayComparator(
+    eventsWithDates.map(d => d.event),
+    comparator
+  );
+  eventsWithDates.sort((a, b) => allDayComparator(a.event, b.event));
 
   const segments: YearMultiDaySegment[] = [];
   const occupiedSlots: boolean[][] = []; // [visualRowIndex][colIndex]
 
-  rowEvents.forEach(event => {
-    const eventStart = temporalToDate(event.start!);
-    const eventEnd = event.end ? temporalToDate(event.end) : eventStart;
-
-    const eventStartMs = new Date(
-      eventStart.getFullYear(),
-      eventStart.getMonth(),
-      eventStart.getDate()
-    ).getTime();
-    const eventEndMs = new Date(
-      eventEnd.getFullYear(),
-      eventEnd.getMonth(),
-      eventEnd.getDate()
-    ).getTime();
-
+  eventsWithDates.forEach(({ event, startMs, endMs }) => {
     // Calculate start and end indices in the current row
-    let startCellIndex = -1;
-    let endCellIndex = -1;
-
-    // Find start index
-    // Optimization: Calculate diff in days from rowStart
-    const daysFromStart = Math.round(
-      (eventStartMs - rowStartMs) / (1000 * 60 * 60 * 24)
+    let startCellIndex = Math.round(
+      (startMs - rowStartMs) / (1000 * 60 * 60 * 24)
     );
-    if (daysFromStart >= 0) {
-      startCellIndex = daysFromStart;
-    } else {
-      startCellIndex = 0; // Starts before this row
-    }
+    let endCellIndex = Math.round((endMs - rowStartMs) / (1000 * 60 * 60 * 24));
 
-    // Find end index
-    const daysFromEnd = Math.round(
-      (eventEndMs - rowStartMs) / (1000 * 60 * 60 * 24)
-    );
-    if (daysFromEnd < rowDays.length) {
-      endCellIndex = daysFromEnd;
-    } else {
-      endCellIndex = rowDays.length - 1; // Ends after this row
-    }
-
-    // Clamp indices
+    // Clamp indices to row boundaries
     startCellIndex = Math.max(0, Math.min(startCellIndex, columnsPerRow - 1));
     endCellIndex = Math.max(0, Math.min(endCellIndex, columnsPerRow - 1));
 
     // Determine if it's the very first/last segment of the entire event
-    const isFirstSegment = eventStartMs >= rowStartMs;
-    const isLastSegment = eventEndMs <= rowEndMs;
+    const isFirstSegment = startMs >= rowStartMs;
+    const isLastSegment = endMs <= rowEndMs;
 
     // Determine visualRowIndex (simple packing algorithm)
     let visualRowIndex = 0;
     while (true) {
-      let overlap = false;
       if (!occupiedSlots[visualRowIndex]) {
         occupiedSlots[visualRowIndex] = [];
       }
 
+      let overlap = false;
       for (let i = startCellIndex; i <= endCellIndex; i++) {
         if (occupiedSlots[visualRowIndex][i]) {
           overlap = true;
@@ -170,7 +138,7 @@ export function analyzeMultiDayEventsForRow(
     }
 
     segments.push({
-      id: `${event.id}_${rowStart.getTime()}`, // Unique ID for key
+      id: `${event.id}_${rowStart.getTime()}`,
       event,
       startCellIndex,
       endCellIndex,

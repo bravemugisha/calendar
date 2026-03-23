@@ -22,6 +22,7 @@ import {
   ICalendarApp,
 } from '@/types';
 import { hasEventChanged } from '@/utils';
+import { createAllDayDisplayComparator } from '@/utils/allDaySort';
 import { temporalToDate } from '@/utils/temporal';
 
 import { YearMultiDaySegment } from './utils';
@@ -66,104 +67,117 @@ function analyzeEventsForMonth(
   const paddingStart = (monthStartDay - startOfWeek + 7) % 7;
 
   const monthStartMs = monthStart.getTime();
-  const monthEnd = new Date(year, monthIndex, daysInMonth, 23, 59, 59, 999);
-  const monthEndMs = monthEnd.getTime();
+  const monthEndMs = new Date(
+    year,
+    monthIndex,
+    daysInMonth,
+    23,
+    59,
+    59,
+    999
+  ).getTime();
 
-  // Filter events that overlap with this month
-  const monthEvents = events.filter(event => {
-    if (!event.start) return false;
-    const eventStart = temporalToDate(event.start);
-    const eventEnd = event.end ? temporalToDate(event.end) : eventStart;
+  // 1. Filter and normalize events that overlap with this month
+  const monthEventsWithDates = events
+    .filter(event => !!event.start)
+    .map(event => {
+      const start = temporalToDate(event.start);
+      const end = event.end ? temporalToDate(event.end) : start;
 
-    const eventStartMs = new Date(
-      eventStart.getFullYear(),
-      eventStart.getMonth(),
-      eventStart.getDate()
-    ).getTime();
-    const eventEndMs = new Date(
-      eventEnd.getFullYear(),
-      eventEnd.getMonth(),
-      eventEnd.getDate()
-    ).getTime();
+      const eventStartDay = new Date(
+        start.getFullYear(),
+        start.getMonth(),
+        start.getDate()
+      );
+      const eventEndDay = new Date(
+        end.getFullYear(),
+        end.getMonth(),
+        end.getDate()
+      );
 
-    return eventStartMs <= monthEndMs && eventEndMs >= monthStartMs;
-  });
+      return {
+        event,
+        startMs: eventStartDay.getTime(),
+        endMs: eventEndDay.getTime(),
+        eventStartDay,
+        eventEndDay,
+      };
+    })
+    .filter(item => item.startMs <= monthEndMs && item.endMs >= monthStartMs);
 
-  // Sort events by length (longer first) then start time
-  monthEvents.sort((a, b) => {
-    const aStart = temporalToDate(a.start!).getTime();
-    const aEnd = a.end ? temporalToDate(a.end).getTime() : aStart;
-    const bStart = temporalToDate(b.start!).getTime();
-    const bEnd = b.end ? temporalToDate(b.end).getTime() : bStart;
+  if (monthEventsWithDates.length === 0) {
+    return { segments: [], maxVisualRow: -1 };
+  }
 
-    const durationA = aEnd - aStart;
-    const durationB = bEnd - bStart;
-
-    if (durationA !== durationB) return durationB - durationA;
-    return aStart - bStart;
-  });
+  // 2. Sort events based on the all-day display priority
+  // This matches MonthView and WeekView logic.
+  const allDayComparator = createAllDayDisplayComparator(
+    monthEventsWithDates.map(i => i.event)
+  );
+  monthEventsWithDates.sort((a, b) => allDayComparator(a.event, b.event));
 
   const segments: MonthEventSegment[] = [];
   const occupiedSlots: boolean[][] = [];
 
-  monthEvents.forEach(event => {
-    const eventStart = temporalToDate(event.start!);
-    const eventEnd = event.end ? temporalToDate(event.end) : eventStart;
+  monthEventsWithDates.forEach(
+    ({ event, startMs, endMs, eventStartDay, eventEndDay }) => {
+      // Day 1 of month is at column = paddingStart
+      // Day N of month is at column = paddingStart + (N - 1)
 
-    // Clamp to month boundaries
-    const clampedStart = new Date(Math.max(eventStart.getTime(), monthStartMs));
-    const clampedEnd = new Date(Math.min(eventEnd.getTime(), monthEndMs));
+      // Calculate column indices based on month boundaries
+      const clampedStartMs = Math.max(startMs, monthStartMs);
+      const clampedEndMs = Math.min(endMs, monthEndMs);
 
-    // Calculate column indices
-    // Day 1 of month is at column = paddingStart
-    // Day N of month is at column = paddingStart + (N - 1)
-    const startDay = clampedStart.getDate();
-    const endDay = clampedEnd.getDate();
+      const startDay = new Date(clampedStartMs).getDate();
+      const endDay = new Date(clampedEndMs).getDate();
 
-    const startCellIndex = paddingStart + (startDay - 1);
-    const endCellIndex = paddingStart + (endDay - 1);
+      const startCellIndex = paddingStart + (startDay - 1);
+      const endCellIndex = paddingStart + (endDay - 1);
 
-    // Determine if it's the first/last segment of the entire event
-    const isFirstSegment =
-      eventStart.getMonth() === monthIndex && eventStart.getFullYear() === year;
-    const isLastSegment =
-      eventEnd.getMonth() === monthIndex && eventEnd.getFullYear() === year;
+      // Determine if it's the first/last segment of the entire event
+      const isFirstSegment =
+        eventStartDay.getMonth() === monthIndex &&
+        eventStartDay.getFullYear() === year;
+      const isLastSegment =
+        eventEndDay.getMonth() === monthIndex &&
+        eventEndDay.getFullYear() === year;
 
-    // Find visual row index (vertical slot)
-    let visualRowIndex = 0;
-    while (true) {
-      let overlap = false;
-      if (!occupiedSlots[visualRowIndex]) {
-        occupiedSlots[visualRowIndex] = [];
-      }
+      // Find visual row index (vertical slot)
+      let visualRowIndex = 0;
+      while (true) {
+        if (!occupiedSlots[visualRowIndex]) {
+          occupiedSlots[visualRowIndex] = [];
+        }
 
-      for (let i = startCellIndex; i <= endCellIndex; i++) {
-        if (occupiedSlots[visualRowIndex][i]) {
-          overlap = true;
+        let overlap = false;
+        for (let i = startCellIndex; i <= endCellIndex; i++) {
+          if (occupiedSlots[visualRowIndex][i]) {
+            overlap = true;
+            break;
+          }
+        }
+
+        if (!overlap) {
+          for (let i = startCellIndex; i <= endCellIndex; i++) {
+            occupiedSlots[visualRowIndex][i] = true;
+          }
           break;
         }
+        visualRowIndex++;
       }
 
-      if (!overlap) {
-        for (let i = startCellIndex; i <= endCellIndex; i++) {
-          occupiedSlots[visualRowIndex][i] = true;
-        }
-        break;
-      }
-      visualRowIndex++;
+      segments.push({
+        id: `${event.id}_month_${monthIndex}`,
+        event,
+        startCellIndex,
+        endCellIndex,
+        isFirstSegment,
+        isLastSegment,
+        visualRowIndex,
+        monthIndex,
+      });
     }
-
-    segments.push({
-      id: `${event.id}_month_${monthIndex}`,
-      event,
-      startCellIndex,
-      endCellIndex,
-      isFirstSegment,
-      isLastSegment,
-      visualRowIndex,
-      monthIndex,
-    });
-  });
+  );
 
   // Calculate max visual row index
   const maxVisualRow =
@@ -359,7 +373,7 @@ export const FixedWeekYearView = ({
         setNewlyCreatedEventId(newEvent.id);
       }
     },
-    [showTimedEvents, handleCreateStart, app]
+    [showTimedEvents, handleCreateStart, app, t]
   );
 
   // Generate week header labels
