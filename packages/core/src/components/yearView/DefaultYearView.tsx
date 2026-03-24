@@ -335,12 +335,15 @@ export const DefaultYearView = ({
     // 2. Map rows to their events
     return rows.map(rowDays => {
       if (rowDays.length === 0) return [];
-      const rowStartMs = new Date(
-        rowDays[0].getFullYear(),
-        rowDays[0].getMonth(),
-        rowDays[0].getDate()
-      ).getTime();
+      const firstDay = rowDays[0];
       const lastDay = rowDays.at(-1);
+      if (!firstDay || !lastDay) return [];
+
+      const rowStartMs = new Date(
+        firstDay.getFullYear(),
+        firstDay.getMonth(),
+        firstDay.getDate()
+      ).getTime();
       const rowEndMs = new Date(
         lastDay.getFullYear(),
         lastDay.getMonth(),

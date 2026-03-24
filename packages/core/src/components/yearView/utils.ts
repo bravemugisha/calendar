@@ -38,13 +38,16 @@ export function analyzeMultiDayEventsForRow(
 ): YearMultiDaySegment[] {
   if (rowDays.length === 0) return [];
 
+  const firstDay = rowDays[0];
+  const lastDay = rowDays.at(-1);
+  if (!firstDay || !lastDay) return [];
+
   const rowStartMs = new Date(
-    rowDays[0].getFullYear(),
-    rowDays[0].getMonth(),
-    rowDays[0].getDate()
+    firstDay.getFullYear(),
+    firstDay.getMonth(),
+    firstDay.getDate()
   ).getTime();
 
-  const lastDay = rowDays.at(-1);
   const rowEndMs = new Date(
     lastDay.getFullYear(),
     lastDay.getMonth(),

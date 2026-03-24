@@ -163,7 +163,7 @@ export function InteractiveCalendar() {
       v.push(
         createYearView({
           mode: yearMode as never,
-          showTimedEventsInYearView: true,
+          // showTimedEventsInYearView: true,
         })
       );
     }
