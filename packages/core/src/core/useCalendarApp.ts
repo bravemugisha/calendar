@@ -94,6 +94,12 @@ export function useCalendarApp(
       setEvents([...app.getEvents()]);
     };
 
+    const originalAddExternalEvents = app.addExternalEvents;
+    app.addExternalEvents = (calendarId: string, newEvents: Event[]) => {
+      originalAddExternalEvents(calendarId, newEvents);
+      setEvents([...app.getEvents()]);
+    };
+
     const originalUpdateEvent = app.updateEvent;
     app.updateEvent = (
       id: string,
@@ -101,14 +107,16 @@ export function useCalendarApp(
       isPending?: boolean,
       source?: 'drag' | 'resize'
     ) => {
-      originalUpdateEvent(id, eventUpdate, isPending, source);
+      const result = originalUpdateEvent(id, eventUpdate, isPending, source);
       setEvents([...app.getEvents()]);
+      return result;
     };
 
     const originalDeleteEvent = app.deleteEvent;
     app.deleteEvent = (id: string) => {
-      originalDeleteEvent(id);
+      const result = originalDeleteEvent(id);
       setEvents([...app.getEvents()]);
+      return result;
     };
 
     const originalSetCalendarVisibility = app.setCalendarVisibility;
@@ -144,18 +152,23 @@ export function useCalendarApp(
 
     const originalCreateCalendar = app.createCalendar;
     app.createCalendar = (calendar: CalendarType) => {
-      originalCreateCalendar(calendar);
+      const result = originalCreateCalendar(calendar);
+      setEvents([...app.getEvents()]);
+      return result;
     };
 
     const originalDeleteCalendar = app.deleteCalendar;
     app.deleteCalendar = (id: string) => {
-      originalDeleteCalendar(id);
+      const result = originalDeleteCalendar(id);
+      setEvents([...app.getEvents()]);
+      return result;
     };
 
     const originalMergeCalendars = app.mergeCalendars;
     app.mergeCalendars = (sourceId: string, targetId: string) => {
-      originalMergeCalendars(sourceId, targetId);
+      const result = originalMergeCalendars(sourceId, targetId);
       setEvents([...app.getEvents()]);
+      return result;
     };
 
     const originalHighlightEvent = app.highlightEvent;
@@ -237,16 +250,18 @@ export function useCalendarApp(
       isPending?: boolean,
       source?: 'drag' | 'resize'
     ) => {
-      app.updateEvent(id, event, isPending, source);
+      const result = app.updateEvent(id, event, isPending, source);
       triggerUpdate();
+      return result;
     },
     [app, triggerUpdate]
   );
 
   const deleteEvent = useCallback(
     (id: string) => {
-      app.deleteEvent(id);
+      const result = app.deleteEvent(id);
       triggerUpdate();
+      return result;
     },
     [app, triggerUpdate]
   );

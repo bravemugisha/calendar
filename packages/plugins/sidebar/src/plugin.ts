@@ -2,6 +2,7 @@ import {
   CalendarPlugin,
   ICalendarApp,
   CalendarType,
+  Event,
   TNode,
   CreateCalendarDialogProps,
   SidebarHeaderSlotArgs,
@@ -50,6 +51,11 @@ export interface CalendarSidebarRenderProps {
   editingCalendarId?: string | null;
   setEditingCalendarId?: (id: string | null) => void;
   onCreateCalendar?: () => void;
+  onSubscribeCalendar?: (
+    calendar: CalendarType,
+    events: Event[]
+  ) => Promise<void>;
+  onLoadSubscription?: (calendar: CalendarType) => Promise<void>;
 }
 
 export interface SidebarPluginConfig {
@@ -64,6 +70,11 @@ export interface SidebarPluginConfig {
   ) => TNode;
   renderSidebarHeader?: (args: SidebarHeaderSlotArgs) => TNode;
   renderCreateCalendarDialog?: (props: CreateCalendarDialogProps) => TNode;
+  onSubscribeCalendar?: (
+    calendar: CalendarType,
+    events: Event[]
+  ) => Promise<void>;
+  onLoadSubscription?: (calendar: CalendarType) => Promise<void>;
   [key: string]: unknown;
 }
 
@@ -167,6 +178,8 @@ export function createSidebarPlugin(
               editingCalendarId,
               setEditingCalendarId,
               onCreateCalendar: handleCreateCalendar,
+              onSubscribeCalendar: config.onSubscribeCalendar,
+              onLoadSubscription: config.onLoadSubscription,
             }),
             [
               app,
@@ -196,8 +209,8 @@ export function createSidebarPlugin(
             if (!showCreateDialog) return null;
 
             const onClose = () => setShowCreateDialog(false);
-            const onCreate = (newCalendar: unknown) => {
-              app.createCalendar(newCalendar as CalendarType);
+            const onCreate = async (newCalendar: unknown) => {
+              await app.createCalendar(newCalendar as CalendarType);
               setShowCreateDialog(false);
               refreshSidebar();
             };

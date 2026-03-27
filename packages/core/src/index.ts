@@ -15,6 +15,8 @@ export * from './types';
 
 // Utils
 export * from './utils';
+export { subscribeCalendar } from './utils/subscriptionUtils';
+export type { SubscribeResult } from './utils/subscriptionUtils';
 
 // Locale
 export * from './locale';
@@ -41,16 +43,26 @@ export {
   ContextMenuSeparator,
   ContextMenuLabel,
   ContextMenuColorPicker,
+  GridContextMenu,
+  EventContextMenu,
 } from './components/contextMenu';
 
 // Calendar Registry helpers
 export { getCalendarColorsForHex } from './core/calendarRegistry';
 
 // Common Components
+export { LoadingButton } from './components/common/LoadingButton';
 export { BlossomColorPicker } from './components/common/BlossomColorPicker';
 export { DefaultColorPicker } from './components/common/DefaultColorPicker';
+export { default as DayflowRangePicker } from './components/rangePicker';
+export type {
+  RangePickerProps,
+  ZonedRange,
+} from './components/rangePicker/types';
 export { MiniCalendar } from './components/common/MiniCalendar';
 export { CreateCalendarDialog } from './components/common/CreateCalendarDialog';
+export { default as DefaultEventDetailPanel } from './components/common/DefaultEventDetailPanel';
+export { default as DefaultEventDetailDialog } from './components/common/DefaultEventDetailDialog';
 export { ContentSlot } from './renderer/ContentSlot';
 export { CalendarEvent } from './components/calendarEvent';
 export type { CalendarEventProps } from './components/calendarEvent/types';
@@ -65,6 +77,8 @@ export {
   ChevronsUpDown,
   Plus,
   AudioLines,
+  Loader2,
+  AlertCircle,
 } from './components/common/Icons';
 
 // Sidebar classNames

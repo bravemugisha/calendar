@@ -225,13 +225,15 @@ export interface ICalendarApp {
     source?: 'drag' | 'resize'
   ) => void;
   addEvent: (event: Event) => void;
+  /** Add events from external sources (like subscriptions) without persisting to main DB */
+  addExternalEvents: (calendarId: string, events: Event[]) => void;
   updateEvent: (
     id: string,
     event: Partial<Event>,
     isPending?: boolean,
     source?: 'drag' | 'resize'
-  ) => void;
-  deleteEvent: (id: string) => void;
+  ) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   getEvents: () => Event[];
   getAllEvents: () => Event[];
   onEventClick: (event: Event) => void;
@@ -247,9 +249,9 @@ export interface ICalendarApp {
     updates: Partial<CalendarType>,
     isPending?: boolean
   ) => void;
-  createCalendar: (calendar: CalendarType) => void;
-  deleteCalendar: (id: string) => void;
-  mergeCalendars: (sourceId: string, targetId: string) => void;
+  createCalendar: (calendar: CalendarType) => Promise<void>;
+  deleteCalendar: (id: string) => Promise<void>;
+  mergeCalendars: (sourceId: string, targetId: string) => Promise<void>;
   setVisibleMonth: (date: Date) => void;
   getVisibleMonth: () => Date;
   emitVisibleRange: (
@@ -321,16 +323,16 @@ export interface UseCalendarAppReturn {
     event: Partial<Event>,
     isPending?: boolean,
     source?: 'drag' | 'resize'
-  ) => void;
-  deleteEvent: (id: string) => void;
+  ) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   goToToday: () => void;
   goToPrevious: () => void;
   goToNext: () => void;
   selectDate: (date: Date) => void;
   undo: () => void;
   getCalendars: () => CalendarType[];
-  createCalendar: (calendar: CalendarType) => void;
-  mergeCalendars: (sourceId: string, targetId: string) => void;
+  createCalendar: (calendar: CalendarType) => Promise<void>;
+  mergeCalendars: (sourceId: string, targetId: string) => Promise<void>;
   setCalendarVisibility: (calendarId: string, visible: boolean) => void;
   setAllCalendarsVisibility: (visible: boolean) => void;
   getAllEvents: () => Event[];
@@ -385,8 +387,8 @@ export interface UseCalendarReturn {
     eventId: string,
     updates: Partial<Event>,
     isPending?: boolean
-  ) => void;
-  deleteEvent: (eventId: string) => void;
+  ) => Promise<void>;
+  deleteEvent: (eventId: string) => Promise<void>;
   addEvent: (event: Omit<Event, 'id'>) => void;
   setEvents: (events: Event[] | ((prev: Event[]) => Event[])) => void;
 }
