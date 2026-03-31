@@ -197,23 +197,25 @@ If your project does **not** use Tailwind, import the full bundle instead:
 
 ### Utility class scanning (`@source`)
 
-DayFlow's components still use Tailwind utility classes (`flex`, `bg-white`, `text-gray-600`, etc.) internally for layout and neutral styling. Your project's Tailwind instance must generate those classes by scanning DayFlow's source files. The old semantic Tailwind names (`bg-primary`, `text-primary`, etc.) are no longer required by DayFlow internals.
+DayFlow's components still use Tailwind utility classes (`flex`, `bg-white`, `text-gray-600`, etc.) internally for layout and neutral styling. Your project's Tailwind instance must generate those classes by scanning DayFlow's files. The old semantic Tailwind names (`bg-primary`, `text-primary`, etc.) are no longer required by DayFlow internals.
 
-**Vite + `@tailwindcss/vite`** — no extra configuration needed. The Vite plugin automatically discovers DayFlow's files through the module graph.
+When you import `@dayflow/core/dist/styles.components.css`, Tailwind still needs to scan DayFlow's published JavaScript files to discover the utility classes used inside the library. Tailwind's automatic source detection does not scan `node_modules`, so this `@source` step is required even with Vite + `@tailwindcss/vite`.
 
-**Other bundlers (webpack, Rspack, Turbopack, etc.) + `@tailwindcss/postcss`** — add `@source` directives in your CSS entry file:
+Add `@source` directives in your CSS entry file:
 
 ```css
 @import '@dayflow/core/dist/styles.components.css';
 @import 'tailwindcss';
 
-/* Required for non-Vite bundlers */
-@source '../node_modules/@dayflow/core/src';
-@source '../node_modules/@dayflow/plugin-drag/src'; /* if using drag plugin */
-@source '../node_modules/@dayflow/plugin-sidebar/src'; /* if using sidebar plugin */
+/* Required when consuming the published npm package */
+@source '../node_modules/@dayflow/core/dist/**/*.js';
+@source '../node_modules/@dayflow/plugin-drag/dist/**/*.js'; /* if using drag plugin */
+@source '../node_modules/@dayflow/plugin-sidebar/dist/**/*.js'; /* if using sidebar plugin */
 ```
 
-Without this, Tailwind will not generate the utility classes used inside DayFlow's components and the UI will appear unstyled.
+Without this, Tailwind will not generate many of the utility classes used inside DayFlow's components and the UI will appear partially or completely unstyled.
+
+If you are working against a local DayFlow workspace checkout instead of the published npm package, point `@source` at the relevant workspace source directories instead.
 
 ```css
 /* app.css — for non-Tailwind projects */
