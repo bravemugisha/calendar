@@ -5,34 +5,26 @@ import { Languages } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
-const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
+import { getLanguageCodeFromPathname, languages } from '@/lib/i18n';
+import type { LanguageCode } from '@/lib/i18n';
+import { BASE_PATH } from '@/lib/site';
 
-const locales = [
-  { code: 'en', name: 'English', prefix: '/docs' },
-  { code: 'zh', name: '中文', prefix: '/docs-zh' },
-  { code: 'ja', name: '日本語', prefix: '/docs-ja' },
-];
-
-function getLocaleFromPath(path: string) {
-  if (path.startsWith('/docs-zh')) return 'zh';
-  if (path.startsWith('/docs-ja')) return 'ja';
-  return 'en';
-}
-
-function switchTo(newLocale: string, currentPath: string) {
-  const current = locales.find(l => l.code === getLocaleFromPath(currentPath));
-  const next = locales.find(l => l.code === newLocale);
+function switchTo(newLocale: LanguageCode, currentPath: string) {
+  const current = languages.find(
+    language => language.code === getLanguageCodeFromPathname(currentPath)
+  );
+  const next = languages.find(language => language.code === newLocale);
   if (!next) return;
 
-  const isDocsPath = locales.some(
-    locale =>
-      currentPath === locale.prefix ||
-      currentPath.startsWith(`${locale.prefix}/`)
+  const isDocsPath = languages.some(
+    language =>
+      currentPath === language.prefix ||
+      currentPath.startsWith(`${language.prefix}/`)
   );
 
   if (!isDocsPath) {
     localStorage.setItem('dayflow-locale', newLocale);
-    window.location.href = BASE + `${next.prefix}/introduction`;
+    window.location.href = BASE_PATH + `${next.prefix}/introduction`;
     return;
   }
 
@@ -48,14 +40,14 @@ function switchTo(newLocale: string, currentPath: string) {
   if (contentPath === '/') newPath = next.prefix;
 
   localStorage.setItem('dayflow-locale', newLocale);
-  window.location.href = BASE + newPath;
+  window.location.href = BASE_PATH + newPath;
 }
 
 export function LanguageSwitcher() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
-  const currentLocale = getLocaleFromPath(pathname);
+  const currentLocale = getLanguageCodeFromPathname(pathname);
 
   // close on outside click
   useEffect(() => {
@@ -81,22 +73,22 @@ export function LanguageSwitcher() {
 
       {open && (
         <div className='bg-fd-background absolute end-0 top-full z-50 mt-1 w-36 rounded-lg border py-1 shadow-md'>
-          {locales.map(locale => (
+          {languages.map(language => (
             <button
-              key={locale.code}
+              key={language.code}
               type='button'
               onClick={() => {
                 setOpen(false);
-                switchTo(locale.code, pathname);
+                switchTo(language.code, pathname);
               }}
               className={`hover:bg-fd-accent hover:text-fd-accent-foreground flex w-full items-center justify-between px-3 py-1.5 text-sm transition-colors ${
-                currentLocale === locale.code
+                currentLocale === language.code
                   ? 'text-fd-primary font-medium'
                   : 'text-fd-muted-foreground'
               }`}
             >
-              {locale.name}
-              {currentLocale === locale.code && (
+              {language.name}
+              {currentLocale === language.code && (
                 <svg
                   className='size-3.5'
                   fill='currentColor'

@@ -22,6 +22,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -30,18 +33,22 @@ jobs:
       - name: Install deps
         run: |
           cd website
-          npm install
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
 
       - name: Build website
         run: |
           cd website
           npm run build
         env:
-          BASE_PATH: /calendar
-          NEXT_PUBLIC_BASE_PATH: /calendar
-          NEXT_PUBLIC_SITE_URL: https://dayflow-js.github.io/calendar
+          BASE_PATH: ''
+          NEXT_PUBLIC_BASE_PATH: ''
+          NEXT_PUBLIC_SITE_URL: https://calendar.dayflow.studio
 
-      - name: Disable Jekyll and verify output
+      - name: Verify output
         run: |
           ls -la website/
           if [ -d "website/out" ]; then
