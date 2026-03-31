@@ -22,9 +22,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v5
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -33,11 +30,7 @@ jobs:
       - name: Install deps
         run: |
           cd website
-          if [ -f package-lock.json ]; then
-            npm ci
-          else
-            npm install
-          fi
+          npm install
 
       - name: Build website
         run: |
@@ -48,12 +41,13 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: ''
           NEXT_PUBLIC_SITE_URL: https://calendar.dayflow.studio
 
-      - name: Verify output
+      - name: Disable Jekyll and verify output
         run: |
           ls -la website/
           if [ -d "website/out" ]; then
             touch website/out/.nojekyll
-            echo "Created .nojekyll in website/out"
+            echo "calendar.dayflow.studio" > website/out/CNAME
+            echo "Created .nojekyll and CNAME in website/out"
           else
             echo "Error: website/out directory not found!"
             exit 1
