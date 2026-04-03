@@ -99,6 +99,31 @@ export function TeamCalendar() {
 - `calendars` defines each calendar type (`id`, `name`, `colors`, visibility). The Calendar Registry automatically picks light/dark colors based on `theme.mode` (`'light' | 'dark' | 'auto'`).
 - `defaultCalendar` determines which calendar new events inherit; if omitted, the first visible calendar wins.
 
+**`CalendarType` properties:**
+
+| Property       | Type                     | Required | Description                                                     |
+| -------------- | ------------------------ | -------- | --------------------------------------------------------------- |
+| `id`           | `string`                 | Yes      | Unique identifier (e.g., `'work'`, `'personal'`).               |
+| `name`         | `string`                 | Yes      | Display name shown in the UI.                                   |
+| `colors`       | `CalendarColors`         | Yes      | Light mode color set (see below).                               |
+| `darkColors`   | `CalendarColors`         | No       | Dark mode color set; falls back to `colors` if omitted.         |
+| `description`  | `string`                 | No       | Optional human-readable description.                            |
+| `icon`         | `string`                 | No       | Emoji or icon name displayed alongside the calendar name.       |
+| `isVisible`    | `boolean`                | No       | Whether events of this calendar are shown. Defaults to `true`.  |
+| `isDefault`    | `boolean`                | No       | Marks this as a system default calendar.                        |
+| `readOnly`     | `boolean`                | No       | Disables drag, resize, and edit UI for events in this calendar. |
+| `source`       | `string`                 | No       | Origin label (e.g., `'Google Calendar'`, `'iCloud'`).           |
+| `subscription` | `{ url, status, meta? }` | No       | Subscription metadata for ICS/remote calendars.                 |
+
+**`CalendarColors` properties:**
+
+| Property             | Type     | Description                                   |
+| -------------------- | -------- | --------------------------------------------- |
+| `eventColor`         | `string` | Event background color (usually translucent). |
+| `eventSelectedColor` | `string` | Event background when selected.               |
+| `lineColor`          | `string` | Accent / border color.                        |
+| `textColor`          | `string` | Event text color.                             |
+
 ### theme
 
 The `theme` configuration controls the visual appearance of the entire calendar:

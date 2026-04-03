@@ -7,8 +7,7 @@ import {
 } from '@/components/common/Icons';
 import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
 import { Event } from '@/types';
-import { daysDifference } from '@/utils';
-import { temporalToDate } from '@/utils/temporal';
+import { daysDifference, temporalToVisualDate } from '@/utils';
 
 export const getEventIcon = (event: Event) => {
   if (event.icon === false) return null;
@@ -55,7 +54,8 @@ export const getEventIcon = (event: Event) => {
 export const analyzeMultiDayEventsForWeek = (
   events: Event[],
   weekStart: Date,
-  daysInWeek: number = 7
+  daysInWeek: number = 7,
+  secondaryTimeZone?: string
 ): MultiDayEventSegment[] => {
   const segments: MultiDayEventSegment[] = [];
 
@@ -66,8 +66,10 @@ export const analyzeMultiDayEventsForWeek = (
 
   events.forEach(event => {
     // Use start and end as the event's start and end times
-    const eventStartFull = temporalToDate(event.start);
-    const eventEndFull = temporalToDate(event.end);
+    const eventStartFull = temporalToVisualDate(event.start, secondaryTimeZone);
+    const eventEndFull = event.end
+      ? temporalToVisualDate(event.end, secondaryTimeZone)
+      : eventStartFull;
 
     // Get the date portion
     const eventStartDate = new Date(eventStartFull);
@@ -225,7 +227,8 @@ export const analyzeMultiDayEventsForWeek = (
 export const analyzeMultiDayRegularEvent = (
   event: Event,
   weekStart: Date,
-  daysInWeek: number = 7
+  daysInWeek: number = 7,
+  secondaryTimeZone?: string
 ): {
   dayIndex: number;
   startHour: number;
@@ -235,8 +238,10 @@ export const analyzeMultiDayRegularEvent = (
 }[] => {
   if (event.allDay) return [];
 
-  const eventStart = temporalToDate(event.start);
-  const eventEnd = temporalToDate(event.end);
+  const eventStart = temporalToVisualDate(event.start, secondaryTimeZone);
+  const eventEnd = event.end
+    ? temporalToVisualDate(event.end, secondaryTimeZone)
+    : eventStart;
 
   // Get the date portion (without time)
   const startDate = new Date(eventStart);

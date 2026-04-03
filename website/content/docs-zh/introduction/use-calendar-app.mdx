@@ -116,6 +116,31 @@ const calendar = useCalendarApp({
 - 用 `calendars` 声明不同的日历类别（工作/个人…）及颜色
 - 不指定 `defaultCalendar` 时会使用第一个可见日历
 
+**`CalendarType` 属性：**
+
+| 属性           | 类型                     | 必填 | 说明                                             |
+| -------------- | ------------------------ | ---- | ------------------------------------------------ |
+| `id`           | `string`                 | 是   | 唯一标识符（如 `'work'`、`'personal'`）。        |
+| `name`         | `string`                 | 是   | 界面中显示的名称。                               |
+| `colors`       | `CalendarColors`         | 是   | 浅色模式颜色配置（见下表）。                     |
+| `darkColors`   | `CalendarColors`         | 否   | 深色模式颜色配置；未提供时回退到 `colors`。      |
+| `description`  | `string`                 | 否   | 可选的描述文字。                                 |
+| `icon`         | `string`                 | 否   | 显示在日历名称旁的 Emoji 或图标名。              |
+| `isVisible`    | `boolean`                | 否   | 是否显示该日历的事件，默认为 `true`。            |
+| `isDefault`    | `boolean`                | 否   | 标记为系统默认日历。                             |
+| `readOnly`     | `boolean`                | 否   | 禁用该日历事件的拖拽、调整大小和编辑操作。       |
+| `source`       | `string`                 | 否   | 来源标签（如 `'Google Calendar'`、`'iCloud'`）。 |
+| `subscription` | `{ url, status, meta? }` | 否   | ICS / 远程日历的订阅元数据。                     |
+
+**`CalendarColors` 属性：**
+
+| 属性                 | 类型     | 说明                         |
+| -------------------- | -------- | ---------------------------- |
+| `eventColor`         | `string` | 事件背景色（通常为半透明）。 |
+| `eventSelectedColor` | `string` | 事件选中时的背景色。         |
+| `lineColor`          | `string` | 强调色 / 边框颜色。          |
+| `textColor`          | `string` | 事件文字颜色。               |
+
 ### theme
 
 `theme` 控制全局配色与明暗模式：

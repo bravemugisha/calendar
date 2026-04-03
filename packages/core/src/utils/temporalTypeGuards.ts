@@ -7,6 +7,8 @@
 
 import { Temporal } from 'temporal-polyfill';
 
+import { logger } from '@/utils/logger';
+
 // ============================================================================
 // Type Guards
 // ============================================================================
@@ -37,6 +39,7 @@ export function isPlainDateTime(
     typeof temporal === 'object' &&
     'hour' in temporal &&
     !('timeZone' in temporal) &&
+    !('timeZoneId' in temporal) &&
     'year' in temporal &&
     !(temporal instanceof Date)
   );
@@ -51,7 +54,7 @@ export function isZonedDateTime(
   return (
     temporal !== null &&
     typeof temporal === 'object' &&
-    'timeZone' in temporal &&
+    ('timeZone' in temporal || 'timeZoneId' in temporal) &&
     'year' in temporal &&
     !(temporal instanceof Date)
   );
@@ -98,9 +101,21 @@ export function temporalToDate(
     // ZonedDateTime: convert via Instant to preserve timezone information
     try {
       // If it's a real Temporal instance
-      if (typeof temporal.toInstant === 'function') {
-        const instant = temporal.toInstant();
+      if (
+        typeof (temporal as Temporal.ZonedDateTime).toInstant === 'function'
+      ) {
+        const instant = (temporal as Temporal.ZonedDateTime).toInstant();
         return new Date(instant.epochMilliseconds);
+      }
+      // If it has epochMilliseconds property (some polyfills/serialized)
+      if (
+        typeof (temporal as unknown as Record<string, unknown>)
+          .epochMilliseconds === 'number'
+      ) {
+        return new Date(
+          (temporal as unknown as Record<string, unknown>)
+            .epochMilliseconds as number
+        );
       }
       // Fallback for plain objects that look like ZonedDateTime (from JSON)
       return new Date(
@@ -122,7 +137,118 @@ export function temporalToDate(
   }
 
   // Fallback for other types
-  return new Date(temporal);
+  return new Date(temporal as string | number);
+}
+
+/**
+ * Convert any Temporal type or Date to a "Visual" Date based on a target timezone.
+ * Unlike temporalToDate, this shifts the wall time to match the target timezone
+ * while returning a local Date object that reflects that shifted time.
+ */
+export function temporalToVisualDate(
+  temporal:
+    | Temporal.PlainDate
+    | Temporal.PlainDateTime
+    | Temporal.ZonedDateTime
+    | Date,
+  targetTz?: string
+): Date {
+  if (temporal instanceof Date) {
+    return temporal;
+  }
+
+  if (!targetTz) {
+    return temporalToDate(temporal);
+  }
+
+  try {
+    // 1. Handle ZonedDateTime (either instance or plain object)
+    if (isZonedDateTime(temporal)) {
+      const zdt =
+        typeof (temporal as unknown as Record<string, unknown>).withTimeZone ===
+        'function'
+          ? (temporal as Temporal.ZonedDateTime)
+          : Temporal.ZonedDateTime.from(temporal as Temporal.ZonedDateTimeLike);
+      const shifted = zdt.withTimeZone(targetTz);
+      return new Date(
+        shifted.year,
+        shifted.month - 1,
+        shifted.day,
+        shifted.hour,
+        shifted.minute,
+        shifted.second || 0,
+        shifted.millisecond || 0
+      );
+    }
+
+    // 2. Handle PlainDateTime (either instance or plain object)
+    if (isPlainDateTime(temporal)) {
+      const pdt =
+        typeof (temporal as unknown as Record<string, unknown>)
+          .toZonedDateTime === 'function'
+          ? (temporal as Temporal.PlainDateTime)
+          : Temporal.PlainDateTime.from(temporal as Temporal.PlainDateTimeLike);
+      // Assume PlainDateTime is in local wall time, convert to ZDT using local TZ then shift
+      const zdt = pdt.toZonedDateTime(Temporal.Now.timeZoneId());
+      const shifted = zdt.withTimeZone(targetTz);
+      return new Date(
+        shifted.year,
+        shifted.month - 1,
+        shifted.day,
+        shifted.hour,
+        shifted.minute,
+        shifted.second || 0,
+        shifted.millisecond || 0
+      );
+    }
+  } catch (e) {
+    logger.error('Failed to shift visual timezone:', e);
+  }
+
+  // PlainDate remains unchanged or error fallback
+  return temporalToDate(temporal);
+}
+
+/**
+ * Convert any Temporal type to a "Visual" Temporal based on a target timezone.
+ * Unlike temporalToVisualDate, this returns a Temporal object (ZonedDateTime).
+ */
+export function temporalToVisualTemporal(
+  temporal:
+    | Temporal.PlainDate
+    | Temporal.PlainDateTime
+    | Temporal.ZonedDateTime,
+  targetTz?: string
+): Temporal.PlainDate | Temporal.PlainDateTime | Temporal.ZonedDateTime {
+  if (!targetTz) {
+    return temporal;
+  }
+
+  try {
+    if (isZonedDateTime(temporal)) {
+      const zdt =
+        typeof (temporal as unknown as Record<string, unknown>).withTimeZone ===
+        'function'
+          ? (temporal as Temporal.ZonedDateTime)
+          : Temporal.ZonedDateTime.from(temporal as Temporal.ZonedDateTimeLike);
+      return zdt.withTimeZone(targetTz);
+    }
+
+    if (isPlainDateTime(temporal)) {
+      const pdt =
+        typeof (temporal as unknown as Record<string, unknown>)
+          .toZonedDateTime === 'function'
+          ? (temporal as Temporal.PlainDateTime)
+          : Temporal.PlainDateTime.from(temporal as Temporal.PlainDateTimeLike);
+      return pdt
+        .toZonedDateTime(Temporal.Now.timeZoneId())
+        .withTimeZone(targetTz);
+    }
+  } catch (e) {
+    logger.error('Failed to shift visual temporal:', e);
+  }
+
+  return temporal;
 }
 
 /**
@@ -242,7 +368,7 @@ export function setHourInTemporal(
   }
 
   // PlainDateTime
-  return temporal.with({
+  return (temporal as Temporal.PlainDateTime).with({
     hour: hours,
     minute: minutes,
     second: 0,

@@ -1,6 +1,6 @@
 import { Event } from '@/types';
+import { temporalToVisualDate } from '@/utils';
 import { createAllDayDisplayComparator } from '@/utils/allDaySort';
-import { temporalToDate } from '@/utils/temporal';
 
 export interface YearMultiDaySegment {
   id: string;
@@ -34,7 +34,8 @@ export function analyzeMultiDayEventsForRow(
   events: Event[],
   rowDays: Date[],
   columnsPerRow: number,
-  comparator?: (a: Event, b: Event) => number
+  comparator?: (a: Event, b: Event) => number,
+  secondaryTimeZone?: string
 ): YearMultiDaySegment[] {
   if (rowDays.length === 0) return [];
 
@@ -61,8 +62,10 @@ export function analyzeMultiDayEventsForRow(
   // 1. Filter and normalize events that overlap with this row
   const eventsWithDates = events
     .map(event => {
-      const start = temporalToDate(event.start);
-      const end = event.end ? temporalToDate(event.end) : start;
+      const start = temporalToVisualDate(event.start, secondaryTimeZone);
+      const end = event.end
+        ? temporalToVisualDate(event.end, secondaryTimeZone)
+        : start;
 
       const startMs = new Date(
         start.getFullYear(),

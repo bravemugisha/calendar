@@ -176,13 +176,15 @@ export function InteractiveCalendar() {
       v.push(
         createMonthView({
           showMonthIndicator: false,
+          secondaryTimeZone: secondaryTimeZone as never,
         })
       );
     if (selectedViews.includes(ViewType.YEAR)) {
       v.push(
         createYearView({
           mode: yearMode as never,
-          // showTimedEventsInYearView: true,
+          secondaryTimeZone: secondaryTimeZone as never,
+          showTimedEventsInYearView: true,
         })
       );
     }
@@ -527,9 +529,11 @@ export function InteractiveCalendar() {
           {/*
           Using locale and features in the key to force a total re-mount of the calendar application.
           This ensures all internal translated strings and plugin states are reset correctly.
+          We removed secondaryTimeZone from the key to prevent flickering during timezone switches,
+          as the calendar app handles this configuration change reactively.
         */}
           <CalendarViewer
-            key={`${locale}-${secondaryTimeZone || 'none'}-${selectedViews.join(',')}-${yearMode}-${showSidebar}-${showHeader}-${enableDrag}-${enableShortcuts}-${themeMode}`}
+            key={`${locale}-${selectedViews.join(',')}-${yearMode}-${showSidebar}-${showHeader}-${enableDrag}-${enableShortcuts}`}
             config={config}
             calendarRef={calendarRef}
           />

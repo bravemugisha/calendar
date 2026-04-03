@@ -41,6 +41,7 @@ interface YearRowComponentProps {
   customDetailPanelContent?: EventDetailContentRenderer;
   customEventDetailDialog?: EventDetailDialogRenderer;
   onContextMenu: (menu: { x: number; y: number; date: Date } | null) => void;
+  secondaryTimeZone?: string;
 }
 
 export const YearRowComponent = memo(
@@ -66,6 +67,7 @@ export const YearRowComponent = memo(
     customDetailPanelContent,
     customEventDetailDialog,
     onContextMenu,
+    secondaryTimeZone,
   }: YearRowComponentProps) => {
     const MAX_VISIBLE_ROWS = 3;
     const HEADER_HEIGHT = 26;
@@ -94,9 +96,16 @@ export const YearRowComponent = memo(
           events,
           rowDays,
           columnsPerRow,
-          app.state.allDaySortComparator
+          app.state.allDaySortComparator,
+          secondaryTimeZone
         ),
-      [events, rowDays, columnsPerRow, app.state.allDaySortComparator]
+      [
+        events,
+        rowDays,
+        columnsPerRow,
+        app.state.allDaySortComparator,
+        secondaryTimeZone,
+      ]
     );
 
     const { visibleSegments, moreCounts } = useMemo(() => {
@@ -220,6 +229,7 @@ export const YearRowComponent = memo(
                     app.updateEvent(updated.id, updated)
                   }
                   onEventDelete={id => app.deleteEvent(id)}
+                  secondaryTimeZone={secondaryTimeZone}
                 />
               </div>
             ))}

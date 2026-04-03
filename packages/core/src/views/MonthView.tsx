@@ -32,8 +32,11 @@ import {
   MonthViewProps,
   WeeksData,
 } from '@/types';
-import { hasEventChanged, generateWeekData } from '@/utils';
-import { temporalToDate } from '@/utils/temporal';
+import {
+  hasEventChanged,
+  generateWeekData,
+  temporalToVisualDate,
+} from '@/utils';
 
 /** Compute the 6 weeks that fill a month-view grid for the given date. */
 const getMonthWeeks = (date: Date, startOfWeek: number): WeeksData[] => {
@@ -171,8 +174,13 @@ const MonthView = ({
     events.forEach(event => {
       if (!event.start) return;
 
-      const startFull = temporalToDate(event.start);
-      const endFull = event.end ? temporalToDate(event.end) : startFull;
+      const startFull = temporalToVisualDate(
+        event.start,
+        config.secondaryTimeZone
+      );
+      const endFull = event.end
+        ? temporalToVisualDate(event.end, config.secondaryTimeZone)
+        : startFull;
 
       // Normalize to day boundaries
       const startDate = new Date(startFull);
@@ -216,7 +224,7 @@ const MonthView = ({
     });
 
     return map;
-  }, [events, startOfWeek]);
+  }, [events, startOfWeek, config.secondaryTimeZone]);
 
   // Responsive configuration
   const { screenSize } = useResponsiveMonthConfig();
@@ -632,13 +640,11 @@ const MonthView = ({
     [screenSize, isTouch, setSelectedEventId]
   );
 
-  // Pending: remove getCustomTitle and using app.currentDate to fixed
   const getCustomTitle = () => {
     const isAsianLocale = locale.startsWith('zh') || locale.startsWith('ja');
 
     if (isFadeMode) {
-      const isAsian = locale.startsWith('zh') || locale.startsWith('ja');
-      const labels = getMonthLabels(locale, isAsian ? 'short' : 'long');
+      const labels = getMonthLabels(locale, isAsianLocale ? 'short' : 'long');
       const monthName = labels[fadeDisplayDate.getMonth()];
       const year = fadeDisplayDate.getFullYear();
       return isAsianLocale ? `${year}年${monthName}` : `${monthName} ${year}`;
@@ -740,6 +746,7 @@ const MonthView = ({
                   calendarSignature={calendarSignature}
                   app={app}
                   enableTouch={isTouch}
+                  secondaryTimeZone={config.secondaryTimeZone as string}
                 />
               );
             })}
@@ -810,6 +817,7 @@ const MonthView = ({
                 calendarSignature={calendarSignature}
                 app={app}
                 enableTouch={isTouch}
+                secondaryTimeZone={config.secondaryTimeZone as string}
               />
             );
           })}

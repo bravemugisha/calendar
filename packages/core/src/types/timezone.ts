@@ -23,7 +23,6 @@ export enum TimeZone {
   HALIFAX = 'America/Halifax',
   ST_JOHNS = 'America/St_Johns',
   DETROIT = 'America/Detroit',
-  MIAMI = 'America/Miami',
 
   // Europe
   LONDON = 'Europe/London',

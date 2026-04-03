@@ -4,6 +4,7 @@ import { h } from 'preact';
 import {
   MonthViewConfig,
   MonthViewProps,
+  ViewAdapterProps,
   ViewFactory,
   ViewType,
 } from '@/types';
@@ -19,32 +20,21 @@ const defaultMonthViewConfig: MonthViewConfig = {
   startOfWeek: 1, // Monday
 };
 
+// Stable adapter component
+const MonthViewAdapter = (props: MonthViewProps) =>
+  h(ViewAdapter, {
+    ...(props as ViewAdapterProps),
+    viewType: ViewType.MONTH,
+    originalComponent: MonthView,
+    className: 'month-view-factory',
+  });
+
+MonthViewAdapter.displayName = 'MonthViewAdapter';
+
 // Month view factory function
 export const createMonthView: ViewFactory<MonthViewConfig> = (config = {}) => {
   // Merge configuration
   const finalConfig = { ...defaultMonthViewConfig, ...config };
-
-  // Create adapter component
-  const MonthViewAdapter = (props: MonthViewProps) =>
-    h(ViewAdapter, {
-      viewType: ViewType.MONTH,
-      originalComponent: MonthView,
-      app: props.app,
-      config: finalConfig,
-      className: 'month-view-factory',
-      customDetailPanelContent: props.customDetailPanelContent,
-      customEventDetailDialog: props.customEventDetailDialog,
-      calendarRef: props.calendarRef,
-      switcherMode: props.switcherMode,
-      meta: props.meta,
-      selectedEventId: props.selectedEventId,
-      detailPanelEventId: props.detailPanelEventId,
-      onEventSelect: props.onEventSelect,
-      onDetailPanelToggle: props.onDetailPanelToggle,
-    });
-
-  // Set display name for debugging
-  MonthViewAdapter.displayName = 'MonthViewAdapter';
 
   return {
     type: ViewType.MONTH,

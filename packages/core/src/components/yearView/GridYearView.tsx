@@ -4,7 +4,7 @@ import ViewHeader from '@/components/common/ViewHeader';
 import { useLocale } from '@/locale';
 import { monthViewContainer } from '@/styles/classNames';
 import { Event, ICalendarApp, ViewType, YearViewConfig } from '@/types';
-import { temporalToDate } from '@/utils/temporal';
+import { temporalToVisualDate } from '@/utils';
 
 import { GridDayPopup } from './GridDayPopup';
 
@@ -27,7 +27,8 @@ function getIntensityStyle(
 function buildDayEventMap(
   events: Event[],
   year: number,
-  showTimedEvents: boolean
+  showTimedEvents: boolean,
+  secondaryTimeZone?: string
 ): Map<string, Event[]> {
   const map = new Map<string, Event[]>();
 
@@ -39,8 +40,10 @@ function buildDayEventMap(
     if (!event.start) continue;
     if (!showTimedEvents && !event.allDay) continue;
 
-    const start = temporalToDate(event.start);
-    const end = event.end ? temporalToDate(event.end) : new Date(start);
+    const start = temporalToVisualDate(event.start, secondaryTimeZone);
+    const end = event.end
+      ? temporalToVisualDate(event.end, secondaryTimeZone)
+      : new Date(start);
     start.setHours(0, 0, 0, 0);
     end.setHours(0, 0, 0, 0);
 
@@ -132,14 +135,21 @@ export const GridYearView = ({ app, config }: GridYearViewProps) => {
 
   // Heatmap event map (respects showTimedEvents filter)
   const heatmapEventMap = useMemo(
-    () => buildDayEventMap(rawEvents, currentYear, showTimedEvents),
-    [rawEvents, currentYear, showTimedEvents]
+    () =>
+      buildDayEventMap(
+        rawEvents,
+        currentYear,
+        showTimedEvents,
+        config?.secondaryTimeZone
+      ),
+    [rawEvents, currentYear, showTimedEvents, config?.secondaryTimeZone]
   );
 
   // Full event map for popup (shows all events regardless of filter)
   const fullEventMap = useMemo(
-    () => buildDayEventMap(rawEvents, currentYear, true),
-    [rawEvents, currentYear]
+    () =>
+      buildDayEventMap(rawEvents, currentYear, true, config?.secondaryTimeZone),
+    [rawEvents, currentYear, config?.secondaryTimeZone]
   );
 
   // Week day header labels (narrow: M T W T F S S)
@@ -379,6 +389,7 @@ export const GridYearView = ({ app, config }: GridYearViewProps) => {
           locale={locale}
           app={app}
           customContent={config?.gridPopupContent}
+          secondaryTimeZone={config?.secondaryTimeZone as string}
         />
       )}
     </div>

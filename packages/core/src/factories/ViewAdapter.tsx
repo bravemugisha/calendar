@@ -13,6 +13,7 @@ import {
 export const ViewAdapter = ({
   originalComponent: OriginalComponent,
   app,
+  viewType,
   config,
   customDetailPanelContent,
   customEventDetailDialog,
@@ -85,7 +86,10 @@ export const ViewAdapter = ({
   );
 
   // Merge configuration
-  const mergedConfig = useMemo(() => ({ ...config }), [config]);
+  const mergedConfig = useMemo(() => {
+    const viewConfig = app.getViewConfig(viewType);
+    return { ...viewConfig, ...config };
+  }, [config, app.state.views, viewType]);
 
   // Prepare props to pass to original component
   const viewProps: BaseViewProps = useMemo(

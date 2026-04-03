@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'preact/hooks';
 
 import { useLocale } from '@/locale';
 import { ICalendarApp, Event } from '@/types';
-import { temporalToDate } from '@/utils/temporal';
+import { temporalToVisualDate } from '@/utils';
 
 interface GridDayPopupProps {
   date: Date;
@@ -16,6 +16,7 @@ interface GridDayPopupProps {
   locale: string;
   app: ICalendarApp;
   customContent?: (date: Date, events: Event[]) => ComponentChildren;
+  secondaryTimeZone?: string;
 }
 
 export const GridDayPopup = ({
@@ -27,6 +28,7 @@ export const GridDayPopup = ({
   locale,
   app,
   customContent,
+  secondaryTimeZone,
 }: GridDayPopupProps) => {
   const { t } = useLocale();
   const popupRef = useRef<HTMLDivElement>(null);
@@ -83,14 +85,20 @@ export const GridDayPopup = ({
 
             let timeStr = '';
             if (!event.allDay && event.start) {
-              const startDate = temporalToDate(event.start);
+              const startDate = temporalToVisualDate(
+                event.start,
+                secondaryTimeZone
+              );
               timeStr = startDate.toLocaleTimeString(locale, {
                 hour: '2-digit',
                 minute: '2-digit',
                 hour12: false,
               });
               if (event.end) {
-                const endDate = temporalToDate(event.end);
+                const endDate = temporalToVisualDate(
+                  event.end,
+                  secondaryTimeZone
+                );
                 timeStr += ` – ${endDate.toLocaleTimeString(locale, {
                   hour: '2-digit',
                   minute: '2-digit',

@@ -116,6 +116,31 @@ const calendar = useCalendarApp({
 - `calendars` に `id`, `name`, `colors`, `darkColors`, `isVisible` などを定義すると、イベントが `calendarId` を通じてスタイルを引き継ぎます。
 - `defaultCalendar` を設定しない場合は最初に可視状態のカレンダーが使われます。
 
+**`CalendarType` のプロパティ：**
+
+| プロパティ     | 型                       | 必須   | 説明                                                             |
+| -------------- | ------------------------ | ------ | ---------------------------------------------------------------- |
+| `id`           | `string`                 | はい   | 一意の識別子（例：`'work'`、`'personal'`）。                     |
+| `name`         | `string`                 | はい   | UI に表示される名前。                                            |
+| `colors`       | `CalendarColors`         | はい   | ライトモードのカラーセット（下表参照）。                         |
+| `darkColors`   | `CalendarColors`         | いいえ | ダークモードのカラーセット；省略時は `colors` にフォールバック。 |
+| `description`  | `string`                 | いいえ | 任意の説明文。                                                   |
+| `icon`         | `string`                 | いいえ | カレンダー名の横に表示する絵文字またはアイコン名。               |
+| `isVisible`    | `boolean`                | いいえ | このカレンダーのイベントを表示するか。デフォルト `true`。        |
+| `isDefault`    | `boolean`                | いいえ | システムデフォルトカレンダーとしてマークする。                   |
+| `readOnly`     | `boolean`                | いいえ | ドラッグ・リサイズ・編集 UI を無効化する。                       |
+| `source`       | `string`                 | いいえ | 取得元ラベル（例：`'Google Calendar'`、`'iCloud'`）。            |
+| `subscription` | `{ url, status, meta? }` | いいえ | ICS / リモートカレンダーのサブスクリプションメタデータ。         |
+
+**`CalendarColors` のプロパティ：**
+
+| プロパティ           | 型       | 説明                               |
+| -------------------- | -------- | ---------------------------------- |
+| `eventColor`         | `string` | イベントの背景色（通常は半透明）。 |
+| `eventSelectedColor` | `string` | 選択時のイベント背景色。           |
+| `lineColor`          | `string` | アクセント / ボーダーカラー。      |
+| `textColor`          | `string` | イベントのテキストカラー。         |
+
 ### theme
 
 ```tsx

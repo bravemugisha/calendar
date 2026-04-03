@@ -28,8 +28,7 @@ import {
   ICalendarApp,
   YearViewConfig,
 } from '@/types';
-import { hasEventChanged } from '@/utils';
-import { temporalToDate } from '@/utils/temporal';
+import { hasEventChanged, temporalToVisualDate } from '@/utils';
 
 export interface YearViewProps {
   app: ICalendarApp;
@@ -307,18 +306,25 @@ export const DefaultYearView = ({
       if (!event.start) return false;
       // If showTimedEvents is false, only show all-day events
       if (!showTimedEvents && !event.allDay) return false;
-      const s = temporalToDate(event.start);
-      const e = event.end ? temporalToDate(event.end) : s;
+      const s = temporalToVisualDate(event.start, config?.secondaryTimeZone);
+      const e = event.end
+        ? temporalToVisualDate(event.end, config?.secondaryTimeZone)
+        : s;
       return s <= yearEnd && e >= yearStart;
     });
-  }, [rawEvents, currentYear, showTimedEvents]);
+  }, [rawEvents, currentYear, showTimedEvents, config?.secondaryTimeZone]);
 
   // Group events by row for better performance
   const eventsByRow = useMemo(() => {
     // 1. Pre-normalize event dates for the year once
     const yearEventsWithDates = yearEvents.map(event => {
-      const start = temporalToDate(event.start);
-      const end = event.end ? temporalToDate(event.end) : start;
+      const start = temporalToVisualDate(
+        event.start,
+        config?.secondaryTimeZone
+      );
+      const end = event.end
+        ? temporalToVisualDate(event.end, config?.secondaryTimeZone)
+        : start;
       return {
         event,
         startMs: new Date(
@@ -364,7 +370,7 @@ export const DefaultYearView = ({
         .filter(item => item.startMs <= rowEndMs && item.endMs >= rowStartMs)
         .map(item => item.event);
     });
-  }, [rows, yearEvents]);
+  }, [rows, yearEvents, config?.secondaryTimeZone]);
 
   const getCustomTitle = () => {
     const isAsianLocale = locale.startsWith('zh') || locale.startsWith('ja');
@@ -434,6 +440,7 @@ export const DefaultYearView = ({
                 if (!isEditable) return;
                 setContextMenu(menu);
               }}
+              secondaryTimeZone={config?.secondaryTimeZone as string}
             />
           ))}
         </div>

@@ -6,6 +6,7 @@ import {
   useMemo,
   useContext,
 } from 'preact/hooks';
+import { Temporal } from 'temporal-polyfill';
 
 import { EventContextMenu } from '@/components/contextMenu';
 import { ContentSlot } from '@/renderer/ContentSlot';
@@ -15,6 +16,7 @@ import {
   getSelectedBgColor,
   getEventBgColor,
   getEventTextColor,
+  temporalToVisualTemporal,
 } from '@/utils';
 
 import { EventContent } from './components/EventContent';
@@ -75,10 +77,27 @@ const CalendarEvent = ({
   disableDefaultStyle = false,
   renderVisualContent,
   resizeHandleOrientation,
+  secondaryTimeZone,
 }: CalendarEventProps) => {
   const customRenderingStore = useContext(CustomRenderingContext);
   const isTouchEnabled = enableTouch ?? isMobile;
   const isYearView = viewType === ViewType.YEAR;
+
+  // Visual event for display (shifted walls)
+  const visualEvent = useMemo(() => {
+    if (!secondaryTimeZone || event.allDay) return event;
+    const start = temporalToVisualTemporal(
+      event.start as Temporal.PlainDate,
+      secondaryTimeZone
+    );
+    const end = event.end
+      ? temporalToVisualTemporal(
+          event.end as Temporal.PlainDate,
+          secondaryTimeZone
+        )
+      : undefined;
+    return { ...event, start, end } as Event;
+  }, [event, secondaryTimeZone]);
   const [contextMenuPosition, setContextMenuPosition] = useState<{
     x: number;
     y: number;
@@ -453,7 +472,7 @@ const CalendarEvent = ({
         onTouchEnd={handleTouchEnd}
       >
         <EventContent
-          event={event}
+          event={visualEvent}
           viewType={viewType}
           isAllDay={isAllDay}
           isMultiDay={isMultiDay}

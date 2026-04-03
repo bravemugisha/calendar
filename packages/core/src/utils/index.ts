@@ -15,6 +15,8 @@ export {
   isZonedDateTime,
   // Temporal to Date conversions
   temporalToDate,
+  temporalToVisualDate,
+  temporalToVisualTemporal,
   plainDateToDate,
   plainDateTimeToDate,
   // Date to Temporal conversions

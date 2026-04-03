@@ -20,10 +20,10 @@ import {
   EventDetailContentRenderer,
   EventDetailDialogRenderer,
   ICalendarApp,
+  YearViewConfig,
 } from '@/types';
-import { hasEventChanged } from '@/utils';
+import { hasEventChanged, temporalToVisualDate } from '@/utils';
 import { createAllDayDisplayComparator } from '@/utils/allDaySort';
-import { temporalToDate } from '@/utils/temporal';
 
 import { YearMultiDaySegment } from './utils';
 
@@ -32,10 +32,7 @@ interface FixedWeekYearViewProps {
   calendarRef: RefObject<HTMLDivElement>;
   customDetailPanelContent?: EventDetailContentRenderer;
   customEventDetailDialog?: EventDetailDialogRenderer;
-  config?: {
-    showTimedEventsInYearView?: boolean;
-    startOfWeek?: number;
-  };
+  config?: YearViewConfig;
   selectedEventId?: string | null;
   onEventSelect?: (eventId: string | null) => void;
   detailPanelEventId?: string | null;
@@ -59,7 +56,8 @@ function analyzeEventsForMonth(
   events: Event[],
   monthIndex: number,
   year: number,
-  startOfWeek: number = 1
+  startOfWeek: number = 1,
+  secondaryTimeZone?: string
 ): { segments: MonthEventSegment[]; maxVisualRow: number } {
   const monthStart = new Date(year, monthIndex, 1);
   const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
@@ -81,8 +79,10 @@ function analyzeEventsForMonth(
   const monthEventsWithDates = events
     .filter(event => !!event.start)
     .map(event => {
-      const start = temporalToDate(event.start);
-      const end = event.end ? temporalToDate(event.end) : start;
+      const start = temporalToVisualDate(event.start, secondaryTimeZone);
+      const end = event.end
+        ? temporalToVisualDate(event.end, secondaryTimeZone)
+        : start;
 
       const eventStartDay = new Date(
         start.getFullYear(),
@@ -423,11 +423,13 @@ export const FixedWeekYearView = ({
       if (!event.start) return false;
       // If showTimedEvents is false, only show all-day events
       if (!showTimedEvents && !event.allDay) return false;
-      const s = temporalToDate(event.start);
-      const e = event.end ? temporalToDate(event.end) : s;
+      const s = temporalToVisualDate(event.start, config?.secondaryTimeZone);
+      const e = event.end
+        ? temporalToVisualDate(event.end, config?.secondaryTimeZone)
+        : s;
       return s <= yearEnd && e >= yearStart;
     });
-  }, [rawEvents, currentYear, showTimedEvents]);
+  }, [rawEvents, currentYear, showTimedEvents, config?.secondaryTimeZone]);
 
   // Generate data for all 12 months with event segments
   const monthsData = useMemo(() => {
@@ -464,7 +466,8 @@ export const FixedWeekYearView = ({
         yearEvents,
         month,
         currentYear,
-        startOfWeek
+        startOfWeek,
+        config?.secondaryTimeZone
       );
 
       // Calculate dynamic row height based on number of event rows
@@ -483,7 +486,14 @@ export const FixedWeekYearView = ({
       });
     }
     return data;
-  }, [currentYear, locale, totalColumns, yearEvents, startOfWeek]);
+  }, [
+    currentYear,
+    locale,
+    totalColumns,
+    yearEvents,
+    startOfWeek,
+    config?.secondaryTimeZone,
+  ]);
 
   // Handle scroll synchronization
   const handleContentScroll = useCallback(
@@ -729,6 +739,9 @@ export const FixedWeekYearView = ({
                             app.updateEvent(updated.id, updated)
                           }
                           onEventDelete={id => app.deleteEvent(id)}
+                          secondaryTimeZone={
+                            config?.secondaryTimeZone as string
+                          }
                         />
                       </div>
                     ))}

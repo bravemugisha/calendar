@@ -1,8 +1,10 @@
 import { ComponentChildren } from 'preact';
 import { memo } from 'preact/compat';
-import { useState, useRef } from 'preact/hooks';
+import { useState, useRef, useMemo } from 'preact/hooks';
+import { Temporal } from 'temporal-polyfill';
 
 import { getEventIcon } from '@/components/monthView/util';
+import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
 import { monthEventColorBar } from '@/styles/classNames';
 import { Event } from '@/types';
 import {
@@ -14,27 +16,8 @@ import {
   formatTime,
   extractHourFromDate,
   getEventEndHour,
+  temporalToVisualTemporal,
 } from '@/utils';
-
-export interface MultiDayEventSegment {
-  id: string;
-  originalEventId: string;
-  event: Event;
-  startDayIndex: number;
-  endDayIndex: number;
-  segmentType:
-    | 'start'
-    | 'middle'
-    | 'end'
-    | 'single'
-    | 'start-week-end'
-    | 'end-week-start';
-  totalDays: number;
-  segmentIndex: number;
-  isFirstSegment: boolean;
-  isLastSegment: boolean;
-  yPosition?: number;
-}
 
 interface MultiDayEventProps {
   segment: MultiDayEventSegment;
@@ -56,6 +39,7 @@ interface MultiDayEventProps {
   isPopping?: boolean;
   /** Optional slot renderer — receives the default visual content and wraps it in a ContentSlot */
   renderSlot?: (defaultContent: ComponentChildren) => ComponentChildren;
+  secondaryTimeZone?: string;
 }
 
 const ROW_HEIGHT = 16;
@@ -92,9 +76,25 @@ export const MultiDayEvent = memo(
     viewable = true,
     isPopping,
     renderSlot,
+    secondaryTimeZone,
   }: MultiDayEventProps) => {
     const [isPressed, setIsPressed] = useState(false);
     const HORIZONTAL_MARGIN = 2; // 2px spacing on left and right
+
+    const visualEvent = useMemo(() => {
+      if (!secondaryTimeZone || segment.event.allDay) return segment.event;
+      const start = temporalToVisualTemporal(
+        segment.event.start as Temporal.PlainDate,
+        secondaryTimeZone
+      );
+      const end = segment.event.end
+        ? temporalToVisualTemporal(
+            segment.event.end as Temporal.PlainDate,
+            secondaryTimeZone
+          )
+        : undefined;
+      return { ...segment.event, start, end } as Event;
+    }, [segment.event, secondaryTimeZone]);
 
     const startPercent = (segment.startDayIndex / 7) * 100;
     const widthPercent =
@@ -218,24 +218,24 @@ export const MultiDayEvent = memo(
     };
 
     const renderEventContent = () => {
-      const isAllDayEvent = segment.event.allDay;
-      const calendarId = segment.event.calendarId || 'blue';
-      const startHour = extractHourFromDate(segment.event.start);
-      const endHour = getEventEndHour(segment.event);
+      const isAllDayEvent = visualEvent.allDay;
+      const calendarId = visualEvent.calendarId || 'blue';
+      const startHour = extractHourFromDate(visualEvent.start);
+      const endHour = getEventEndHour(visualEvent);
       const startTimeText = formatTime(startHour);
       const endTimeText = formatTime(endHour);
 
       if (isAllDayEvent) {
         const getDisplayText = () => {
-          if (segment.isFirstSegment) return segment.event.title;
+          if (segment.isFirstSegment) return visualEvent.title;
           if (segment.segmentType === 'middle') return '···';
           if (segment.isLastSegment && segment.totalDays > 1) return '···';
-          return segment.event.title;
+          return visualEvent.title;
         };
 
         return (
           <div className='pointer-events-auto flex w-full min-w-0 items-center'>
-            {segment.isFirstSegment && getEventIcon(segment.event) && (
+            {segment.isFirstSegment && getEventIcon(visualEvent) && (
               <div className='mr-1 shrink-0'>
                 <div
                   className='flex items-center justify-center rounded-full p-0.5 text-white'
@@ -245,7 +245,7 @@ export const MultiDayEvent = memo(
                     height: '12px',
                   }}
                 >
-                  {getEventIcon(segment.event)}
+                  {getEventIcon(visualEvent)}
                 </div>
               </div>
             )}
@@ -265,7 +265,7 @@ export const MultiDayEvent = memo(
 
       const titleText =
         segment.isFirstSegment || segment.isLastSegment
-          ? segment.event.title
+          ? visualEvent.title
           : '···';
 
       const segmentDays = segment.endDayIndex - segment.startDayIndex + 1;
@@ -304,7 +304,7 @@ export const MultiDayEvent = memo(
             </span>
           )}
           {segment.isLastSegment &&
-            !segment.event.allDay &&
+            !visualEvent.allDay &&
             endHour !== 24 &&
             !isMobile && (
               <span className='ml-auto text-xs font-medium whitespace-nowrap'>
