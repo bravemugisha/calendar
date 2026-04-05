@@ -1,5 +1,6 @@
 import { useMemo } from 'preact/hooks';
 
+import { CalendarRegistry } from '@/core/calendarRegistry';
 import { useLocale, getWeekDaysLabels } from '@/locale';
 import {
   miniCalendarDay,
@@ -10,6 +11,8 @@ import {
   miniCalendarToday,
   miniCalendarSelected,
 } from '@/styles/classNames';
+import type { Event } from '@/types/event';
+import { getLineColor, temporalToVisualDate } from '@/utils';
 
 import { ChevronLeft, ChevronRight } from './Icons';
 
@@ -20,6 +23,10 @@ interface MiniCalendarProps {
   onMonthChange: (offset: number) => void;
   onDateSelect: (date: Date) => void;
   locale?: string;
+  events?: Event[];
+  showEventDots?: boolean;
+  calendarRegistry?: CalendarRegistry;
+  timeZone?: string;
 }
 
 export const MiniCalendar = ({
@@ -28,6 +35,10 @@ export const MiniCalendar = ({
   showHeader = false,
   onMonthChange,
   onDateSelect,
+  events = [],
+  showEventDots = false,
+  calendarRegistry,
+  timeZone,
 }: MiniCalendarProps) => {
   const { locale } = useLocale();
   const todayKey = useMemo(() => new Date().toDateString(), []);
@@ -46,6 +57,64 @@ export const MiniCalendar = ({
       }),
     [visibleMonth, locale]
   );
+
+  const eventDotsByDate = useMemo(() => {
+    if (!showEventDots || !events?.length) return null;
+    const map = new Map<string, string[]>();
+
+    events.forEach(event => {
+      const startFull = temporalToVisualDate(event.start, timeZone);
+      const endFull = event.end
+        ? temporalToVisualDate(event.end, timeZone)
+        : startFull;
+
+      // Normalize to day boundaries
+      const startDate = new Date(startFull);
+      startDate.setHours(0, 0, 0, 0);
+
+      const endDate = new Date(endFull);
+      endDate.setHours(0, 0, 0, 0);
+
+      let adjustedEnd = new Date(endDate);
+
+      // Match MonthView's logic for non all-day events ending at midnight
+      if (!event.allDay) {
+        const hasTimeComponent =
+          endFull.getHours() !== 0 ||
+          endFull.getMinutes() !== 0 ||
+          endFull.getSeconds() !== 0 ||
+          endFull.getMilliseconds() !== 0;
+
+        if (!hasTimeComponent) {
+          adjustedEnd.setDate(adjustedEnd.getDate() - 1);
+        }
+      }
+
+      if (adjustedEnd < startDate) {
+        adjustedEnd = new Date(startDate);
+      }
+
+      const color = getLineColor(
+        event.calendarId || 'default',
+        calendarRegistry
+      ).toLowerCase();
+
+      // Iterate through all days the event spans
+      for (
+        let current = new Date(startDate);
+        current <= adjustedEnd;
+        current = new Date(current.getTime() + 86400000)
+      ) {
+        const key = current.toDateString();
+        const existing = map.get(key) ?? [];
+        // Only add if this resolved color isn't already represented for this day
+        if (!existing.includes(color)) {
+          map.set(key, [...existing, color]);
+        }
+      }
+    });
+    return map;
+  }, [showEventDots, events, timeZone, calendarRegistry]);
 
   const miniCalendarDays = useMemo(() => {
     const year = visibleMonth.getFullYear();
@@ -112,24 +181,40 @@ export const MiniCalendar = ({
             {label}
           </div>
         ))}
-        {miniCalendarDays.map(day => (
-          <button
-            type='button'
-            key={day.fullDate.getTime()}
-            className={` ${miniCalendarDay} ${
-              day.isToday
-                ? miniCalendarToday
-                : day.isSelected
-                  ? miniCalendarSelected
-                  : day.isCurrentMonth
-                    ? miniCalendarCurrentMonth
-                    : miniCalendarOtherMonth
-            } `}
-            onClick={() => onDateSelect(day.fullDate)}
-          >
-            {day.date}
-          </button>
-        ))}
+        {miniCalendarDays.map(day => {
+          const dots = eventDotsByDate?.get(day.fullDate.toDateString()) ?? [];
+          return (
+            <button
+              type='button'
+              key={day.fullDate.getTime()}
+              className={` ${miniCalendarDay} ${
+                day.isToday
+                  ? miniCalendarToday
+                  : day.isSelected
+                    ? miniCalendarSelected
+                    : day.isCurrentMonth
+                      ? miniCalendarCurrentMonth
+                      : miniCalendarOtherMonth
+              } relative flex flex-col items-center justify-center pt-1 pb-1`}
+              onClick={() => onDateSelect(day.fullDate)}
+            >
+              <span className='z-10'>{day.date}</span>
+              {showEventDots && dots.length > 0 && (
+                <div className='absolute bottom-0.5 flex gap-0.5'>
+                  {dots.slice(0, 3).map((color, index) => (
+                    <div
+                      key={`${color}-${index}`}
+                      className='h-1 w-1 rounded-full'
+                      style={{
+                        backgroundColor: color,
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

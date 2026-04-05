@@ -34,6 +34,7 @@ interface RightPanelProps {
   handleDateSelect: (date: Date) => void;
   switcherMode: string;
   timeFormat?: '12h' | '24h';
+  showEventDots?: boolean;
 }
 
 export const RightPanel = ({
@@ -47,6 +48,7 @@ export const RightPanel = ({
   handleDateSelect,
   switcherMode,
   timeFormat = '24h',
+  showEventDots = true,
 }: RightPanelProps) => {
   const { t, locale } = useLocale();
 
@@ -83,6 +85,13 @@ export const RightPanel = ({
               showHeader={true}
               onMonthChange={handleMonthChange}
               onDateSelect={handleDateSelect}
+              events={app.getEvents()}
+              showEventDots={showEventDots}
+              calendarRegistry={app.getCalendarRegistry()}
+              timeZone={
+                (app.getViewConfig(app.state.currentView)
+                  ?.secondaryTimeZone as string) || undefined
+              }
             />
           </div>
         </div>

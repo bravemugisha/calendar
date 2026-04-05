@@ -66,6 +66,7 @@ const DayView = ({
     showAllDay = true,
     timeFormat = '24h',
     secondaryTimeZone,
+    showEventDots = true,
   } = config;
 
   const HOUR_HEIGHT = configHourHeight;
@@ -558,6 +559,7 @@ const DayView = ({
         handleDateSelect={handleDateSelect}
         switcherMode={switcherMode}
         timeFormat={timeFormat}
+        showEventDots={showEventDots}
       />
       <MobileEventDrawerComponent
         isOpen={isDrawerOpen}

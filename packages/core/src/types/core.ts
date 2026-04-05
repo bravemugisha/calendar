@@ -40,7 +40,7 @@ export type CalendarViewType = ViewType | string;
 export interface CalendarPlugin {
   name: string;
   install: (app: ICalendarApp) => void;
-  config?: Record<string, unknown>;
+  config?: any;
   api?: unknown;
 }
 

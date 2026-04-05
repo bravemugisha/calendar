@@ -23,17 +23,20 @@ export const defaultViewConfigs = {
     showWeekends: true,
     showAllDay: true,
     scrollToCurrentTime: true,
+    showEventDots: false,
   },
   week: {
     showWeekends: true,
     showAllDay: true,
     startOfWeek: 1, // Monday
     scrollToCurrentTime: true,
+    showEventDots: false,
   },
   month: {
     showWeekends: true,
     showAllDay: true,
     weekHeight: 120,
+    showEventDots: false,
   },
 };
 

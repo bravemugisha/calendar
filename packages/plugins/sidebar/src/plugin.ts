@@ -41,6 +41,7 @@ export interface CalendarSidebarRenderProps {
   toggleAll: (visible: boolean) => void;
   isCollapsed: boolean;
   setCollapsed: (collapsed: boolean) => void;
+  showEventDots?: boolean;
   renderCalendarContextMenu?: (
     calendar: CalendarType,
     onClose: () => void
@@ -57,11 +58,11 @@ export interface CalendarSidebarRenderProps {
   ) => Promise<void>;
   onLoadSubscription?: (calendar: CalendarType) => Promise<void>;
 }
-
 export interface SidebarPluginConfig {
   width?: number | string;
   miniWidth?: string;
   initialCollapsed?: boolean;
+  showEventDots?: boolean;
   createCalendarMode?: 'inline' | 'modal';
   render?: (props: CalendarSidebarRenderProps) => TNode;
   renderCalendarContextMenu?: (
@@ -75,7 +76,6 @@ export interface SidebarPluginConfig {
     events: Event[]
   ) => Promise<void>;
   onLoadSubscription?: (calendar: CalendarType) => Promise<void>;
-  [key: string]: unknown;
 }
 
 export function createSidebarPlugin(
@@ -181,6 +181,7 @@ export function createSidebarPlugin(
               toggleAll: handleToggleAllCalendars,
               isCollapsed,
               setCollapsed: setIsCollapsed,
+              showEventDots: config.showEventDots,
               renderCalendarContextMenu: config.renderCalendarContextMenu,
               renderSidebarHeader: config.renderSidebarHeader,
               createCalendarMode: config.createCalendarMode,

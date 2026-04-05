@@ -1,54 +1,50 @@
 import { Locale } from '@/locale/types';
 import { isValidLocale } from '@/locale/utils';
-// Pending: refactor to split into multiple files if it grows too large
 import {
-  ICalendarApp,
   CalendarAppConfig,
   CalendarAppState,
-  CalendarPlugin,
+  CalendarCallbacks,
+  CalendarHeaderProps,
+  CalendarType,
   CalendarView,
   CalendarViewType,
-  ViewType,
-  CalendarCallbacks,
-  CalendarType,
+  Event,
+  ICalendarApp,
   MobileEventRenderer,
+  RangeChangeReason,
   ReadOnlyConfig,
   TNode,
-  RangeChangeReason,
-  EventChange,
-  Event,
-  CalendarHeaderProps,
+  ViewType,
 } from '@/types';
 import { ThemeMode } from '@/types/calendarTypes';
-import { getWeekRange } from '@/utils/dateRangeUtils';
 import { isDeepEqual } from '@/utils/helpers';
-import { logger } from '@/utils/logger';
 
 import {
   CalendarRegistry,
   setDefaultCalendarRegistry,
 } from './calendarRegistry';
-import { CalendarStore } from './CalendarStore';
+import { EventManager } from './events/EventManager';
+import { NavigationController } from './navigation/NavigationController';
+import {
+  canMutateFromUI,
+  getReadOnlyConfig,
+} from './permissions/CalendarPermissions';
+import { PluginManager } from './plugins/PluginManager';
 
 export class CalendarApp implements ICalendarApp {
   public state: CalendarAppState;
   private callbacks: CalendarCallbacks;
   private calendarRegistry: CalendarRegistry;
-  private store: CalendarStore;
-  private visibleMonth: Date;
+  private themeChangeListeners: Set<(theme: ThemeMode) => void>;
+  private listeners: Set<(app: ICalendarApp) => void>;
+  private eventManager: EventManager;
+  private navigation: NavigationController;
+  private pluginManager: PluginManager;
   private useEventDetailDialog: boolean;
   private useCalendarHeader: boolean | ((props: CalendarHeaderProps) => TNode);
   private customMobileEventRenderer?: MobileEventRenderer;
-  private themeChangeListeners: Set<(theme: ThemeMode) => void>;
-  private listeners: Set<(app: ICalendarApp) => void>;
-  private undoStack: Array<{ type: string; data: unknown }> = [];
-  private pendingSnapshot: Event[] | null = null;
-  private pendingChangeSource: 'drag' | 'resize' | null = null;
-  private readonly MAX_UNDO_STACK = 50;
-  private externalEvents: Map<string, Event[]> = new Map();
 
   constructor(config: CalendarAppConfig) {
-    // Initialize state
     this.state = {
       currentView: config.defaultView || ViewType.WEEK,
       currentDate: config.initialDate || new Date(),
@@ -68,87 +64,46 @@ export class CalendarApp implements ICalendarApp {
     this.themeChangeListeners = new Set();
     this.listeners = new Set();
 
-    // Initialize CalendarStore
-    this.store = new CalendarStore(config.events || []);
-    this.setupStoreListeners();
-
-    // Ensure state.events matches store on init
-    this.syncExternalEventsToState();
-
-    // Initialize CalendarRegistry
     this.calendarRegistry = new CalendarRegistry(
       config.calendars,
       config.defaultCalendar,
       config.theme?.mode || 'light'
     );
-
     setDefaultCalendarRegistry(this.calendarRegistry);
 
-    const current = this.state.currentDate;
-    this.visibleMonth = new Date(current.getFullYear(), current.getMonth(), 1);
+    this.eventManager = new EventManager(
+      this.state,
+      this.calendarRegistry,
+      () => this.callbacks,
+      this.notify,
+      this.triggerRender,
+      config.events || []
+    );
+
+    this.navigation = new NavigationController(
+      this.state,
+      () => this.callbacks,
+      this.notify,
+      this.state.currentDate
+    );
+
+    this.pluginManager = new PluginManager(this.state, this.notify);
+
     this.useEventDetailDialog = config.useEventDetailDialog ?? false;
     this.useCalendarHeader = config.useCalendarHeader ?? true;
     this.customMobileEventRenderer = config.customMobileEventRenderer;
 
-    // Register views
-    config.views.forEach(view => {
-      this.state.views.set(view.type, view);
-    });
-
-    // Install plugins
-    config.plugins?.forEach(plugin => {
-      this.installPlugin(plugin);
-    });
+    config.views.forEach(view => this.state.views.set(view.type, view));
+    config.plugins?.forEach(plugin => this.pluginManager.install(plugin, this));
 
     this.handleVisibleRangeChange('initial');
   }
 
-  private setupStoreListeners(): void {
-    this.store.onEventChange = (change: EventChange) => {
-      // Sync local state including external events
-      this.syncExternalEventsToState();
-
-      let callbackPromise = null;
-      if (change.type === 'create') {
-        callbackPromise = this.callbacks.onEventCreate?.(change.event);
-      } else if (change.type === 'update') {
-        callbackPromise = this.callbacks.onEventUpdate?.(change.after);
-      }
-
-      this.triggerRender();
-      this.notify();
-      return callbackPromise ?? undefined;
-    };
-
-    this.store.onEventBatchChange = (_changes: EventChange[]) => {
-      // Sync local state including external events
-      this.syncExternalEventsToState();
-
-      let callbackPromise = null;
-      if (
-        this.pendingChangeSource !== 'drag' &&
-        this.pendingChangeSource !== 'resize'
-      ) {
-        // Trigger generic batch callback
-        callbackPromise = this.callbacks.onEventBatchChange?.(_changes);
-      }
-      this.pendingChangeSource = null;
-
-      this.triggerRender();
-      this.notify();
-      return callbackPromise ?? undefined;
-    };
-  }
-
   private static resolveLocale(locale?: string | Locale): string | Locale {
-    if (!locale) {
-      return 'en-US';
-    }
-
+    if (!locale) return 'en-US';
     if (typeof locale === 'string') {
       return isValidLocale(locale) ? locale : 'en-US';
     }
-
     if (
       locale &&
       typeof locale === 'object' &&
@@ -156,11 +111,11 @@ export class CalendarApp implements ICalendarApp {
     ) {
       return { ...(locale as Locale), code: 'en-US' };
     }
-
     return locale;
   }
 
-  // Subscription management
+  // Subscription
+
   subscribe = (listener: (app: ICalendarApp) => void): (() => void) => {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -170,285 +125,46 @@ export class CalendarApp implements ICalendarApp {
     this.listeners.forEach(listener => listener(this));
   };
 
-  private pushToUndo = (eventsSnapshot?: Event[]): void => {
-    // Store a snapshot of events array (shallow copy)
-    this.undoStack.push({
-      type: 'events_snapshot',
-      data: eventsSnapshot || [...this.state.events],
-    });
-
-    if (this.undoStack.length > this.MAX_UNDO_STACK) {
-      this.undoStack.shift();
-    }
-  };
-
-  public undo = (): void => {
-    if (this.undoStack.length === 0) return;
-
-    const lastState = this.undoStack.pop();
-    if (lastState?.type === 'events_snapshot') {
-      this.state.events = lastState.data as Event[];
-      this.store = new CalendarStore(this.state.events);
-      this.setupStoreListeners();
-
-      this.triggerRender();
-      this.notify();
-    }
-  };
-
-  getReadOnlyConfig = (id?: string): ReadOnlyConfig => {
-    const ro = this.state.readOnly;
-
-    // 1. Start with global config
-    let draggable = true;
-    let viewable = true;
-
-    if (ro === true) {
-      draggable = false;
-      viewable = false;
-    } else if (ro === false) {
-      draggable = true;
-      viewable = true;
-    } else {
-      draggable = ro.draggable ?? true;
-      viewable = ro.viewable ?? true;
-    }
-
-    // 2. If ID provided, check for per-calendar readOnly and subscription status
-    if (id && (draggable || viewable)) {
-      let calendarId = id;
-      const event = this.state.events.find(e => e.id === id);
-      if (event && event.calendarId) {
-        calendarId = event.calendarId;
-      }
-
-      const calendar = this.calendarRegistry.get(calendarId);
-      if (calendar) {
-        // If calendar explicitly defines readOnly, it overrides global draggable/viewable
-        if (calendar.readOnly === true) {
-          draggable = false;
-          // Note: we don't necessarily hide viewing just because it's readOnly,
-          // but canMutateFromUI(id) will return false.
-          // Usually readOnly on calendar means no edits.
-        }
-
-        // Subscribed calendars are read-only (not draggable) by default
-        if (calendar.subscription && calendar.readOnly === undefined) {
-          draggable = false;
-        }
-      }
-    }
-
-    return {
-      draggable,
-      viewable,
-    };
-  };
-
-  canMutateFromUI = (id?: string): boolean => {
-    // 1. If global readOnly is set, respect it
-    if (this.state.readOnly !== false) return false;
-
-    // 2. If an ID is provided, check the specific calendar's status
-    if (id) {
-      // Try to find if it's an event ID first
-      let calendarId = id;
-      const event = this.state.events.find(e => e.id === id);
-      if (event && event.calendarId) {
-        calendarId = event.calendarId;
-      }
-
-      const calendar = this.calendarRegistry.get(calendarId);
-      if (calendar) {
-        // If calendar explicitly defines readOnly, use it
-        if (calendar.readOnly !== undefined) {
-          return !calendar.readOnly;
-        }
-        // Subscribed calendars are read-only by default
-        if (calendar.subscription) {
-          return false;
-        }
-      }
-    }
-
-    return true;
-  };
-
-  // View management
-  changeView = (view: CalendarViewType): void => {
-    if (!this.state.views.has(view)) {
-      throw new Error(`View ${view} is not registered`);
-    }
-
-    this.state.currentView = view;
-    this.state.highlightedEventId = null;
-    this.callbacks.onViewChange?.(view);
-    this.handleVisibleRangeChange('viewChange');
+  triggerRender = (): void => {
+    this.callbacks.onRender?.();
     this.notify();
   };
 
-  getCurrentView = (): CalendarView => {
-    const view = this.state.views.get(this.state.currentView);
-    if (!view) {
-      throw new Error(
-        `Current view ${this.state.currentView} is not registered`
-      );
-    }
-    return view;
-  };
+  // Navigation (delegated)
+
+  changeView = (view: CalendarViewType): void =>
+    this.navigation.changeView(view);
+
+  getCurrentView = (): CalendarView => this.navigation.getCurrentView();
 
   emitVisibleRange = (
     start: Date,
     end: Date,
-    reason: RangeChangeReason = 'navigation'
-  ): void => {
-    this.callbacks.onVisibleRangeChange?.(
-      new Date(start),
-      new Date(end),
-      reason
-    );
-  };
+    reason?: RangeChangeReason
+  ): void => this.navigation.emitVisibleRange(start, end, reason);
 
-  handleVisibleRangeChange = (reason: RangeChangeReason): void => {
-    const view = this.state.views.get(this.state.currentView);
-    switch (view?.type) {
-      case ViewType.DAY: {
-        const start = new Date(this.state.currentDate);
-        start.setHours(0, 0, 0, 0);
+  handleVisibleRangeChange = (reason: RangeChangeReason): void =>
+    this.navigation.handleVisibleRangeChange(reason);
 
-        const end = new Date(start);
-        end.setDate(end.getDate() + 1);
+  setCurrentDate = (date: Date): void => this.navigation.setCurrentDate(date);
 
-        this.emitVisibleRange(start, end, reason);
-        break;
-      }
-      case ViewType.WEEK: {
-        const startOfWeek = (view?.config?.startOfWeek as number) ?? 1;
-        const { monday } = getWeekRange(this.state.currentDate, startOfWeek);
-        const start = new Date(monday);
-        const end = new Date(monday);
-        end.setDate(end.getDate() + 7);
+  getCurrentDate = (): Date => this.navigation.getCurrentDate();
 
-        this.emitVisibleRange(start, end, reason);
-        break;
-      }
-      case ViewType.MONTH: {
-        if (reason === 'navigation') {
-          // ignore, MonthView emits itself, based on vscroll position
-          break;
-        }
+  setVisibleMonth = (date: Date): void => this.navigation.setVisibleMonth(date);
 
-        const firstDayOfMonth = new Date(
-          this.state.currentDate.getFullYear(),
-          this.state.currentDate.getMonth(),
-          1
-        );
-        const startOfWeek = (view?.config?.startOfWeek as number) ?? 1;
-        const { monday } = getWeekRange(firstDayOfMonth, startOfWeek);
-        const start = new Date(monday);
+  getVisibleMonth = (): Date => this.navigation.getVisibleMonth();
 
-        const end = new Date(monday);
-        end.setDate(end.getDate() + 42);
+  goToToday = (): void => this.navigation.goToToday();
+  goToPrevious = (): void => this.navigation.goToPrevious();
+  goToNext = (): void => this.navigation.goToNext();
 
-        this.emitVisibleRange(start, end, reason);
-        break;
-      }
-      case ViewType.YEAR: {
-        const start = new Date(this.state.currentDate.getFullYear(), 0, 1);
-        start.setHours(0, 0, 0, 0);
+  selectDate = (date: Date): void => this.navigation.selectDate(date);
 
-        const end = new Date(this.state.currentDate.getFullYear(), 11, 31);
-        end.setDate(end.getDate() + 1);
+  // Events (delegated)
 
-        this.emitVisibleRange(start, end, reason);
-        break;
-      }
-      default:
-        break;
-    }
-  };
+  undo = (): void => this.eventManager.undo();
 
-  // Date management
-  setCurrentDate = (date: Date): void => {
-    this.state.currentDate = new Date(date);
-    this.callbacks.onDateChange?.(this.state.currentDate);
-    this.setVisibleMonth(this.state.currentDate);
-    this.handleVisibleRangeChange('navigation');
-    this.notify();
-  };
-
-  getCurrentDate = (): Date => new Date(this.state.currentDate);
-
-  setVisibleMonth = (date: Date): void => {
-    const next = new Date(date.getFullYear(), date.getMonth(), 1);
-    if (
-      this.visibleMonth.getFullYear() === next.getFullYear() &&
-      this.visibleMonth.getMonth() === next.getMonth()
-    ) {
-      return;
-    }
-    this.visibleMonth = next;
-    this.callbacks.onVisibleMonthChange?.(new Date(this.visibleMonth));
-    this.notify();
-  };
-
-  getVisibleMonth = (): Date => new Date(this.visibleMonth);
-
-  goToToday = (): void => {
-    this.setCurrentDate(new Date());
-  };
-
-  goToPrevious = (): void => {
-    const newDate = new Date(this.state.currentDate);
-    switch (this.state.currentView) {
-      case ViewType.DAY:
-        newDate.setDate(newDate.getDate() - 1);
-        break;
-      case ViewType.WEEK:
-        newDate.setDate(newDate.getDate() - 7);
-        break;
-      case ViewType.MONTH:
-        newDate.setMonth(newDate.getMonth() - 1);
-        break;
-      case ViewType.YEAR:
-        newDate.setFullYear(newDate.getFullYear() - 1);
-        break;
-      default:
-        break;
-    }
-    this.setCurrentDate(newDate);
-  };
-
-  goToNext = (): void => {
-    const newDate = new Date(this.state.currentDate);
-    switch (this.state.currentView) {
-      case ViewType.DAY:
-        newDate.setDate(newDate.getDate() + 1);
-        break;
-      case ViewType.WEEK:
-        newDate.setDate(newDate.getDate() + 7);
-        break;
-      case ViewType.MONTH:
-        newDate.setMonth(newDate.getMonth() + 1);
-        break;
-      case ViewType.YEAR:
-        newDate.setFullYear(newDate.getFullYear() + 1);
-        break;
-      default:
-        break;
-    }
-    this.setCurrentDate(newDate);
-  };
-
-  // Date selection method
-  selectDate = (date: Date): void => {
-    this.setCurrentDate(date);
-    this.callbacks.onDateChange?.(new Date(date));
-  };
-
-  // Event management
-
-  public applyEventsChanges = (
+  applyEventsChanges = (
     changes: {
       add?: Event[];
       update?: Array<{ id: string; updates: Partial<Event> }>;
@@ -456,262 +172,75 @@ export class CalendarApp implements ICalendarApp {
     },
     isPending?: boolean,
     source?: 'drag' | 'resize'
-  ): void => {
-    if (isPending) {
-      // Starting or continuing a multi-step operation (drag/resize)
-      // Only capture the INITIAL state before the first change
-      if (!this.pendingSnapshot) {
-        this.pendingSnapshot = [...this.state.events];
-      }
-    } else if (this.pendingSnapshot) {
-      // Finalizing an operation
-      // We have a snapshot from the start of the interaction
-      this.pushToUndo(this.pendingSnapshot);
-      this.pendingSnapshot = null;
-    } else {
-      // Single step operation (like delete or paste)
-      this.pushToUndo();
-    }
+  ): void => this.eventManager.applyEventsChanges(changes, isPending, source);
 
-    // Handle Pending State (Direct Mutation)
-    if (isPending) {
-      let newEvents = [...this.state.events];
+  addEvent = (event: Event): void => this.eventManager.addEvent(event);
 
-      if (changes.delete) {
-        const deleteIds = new Set(changes.delete);
-        newEvents = newEvents.filter(e => !deleteIds.has(e.id));
-      }
+  addExternalEvents = (calendarId: string, events: Event[]): void =>
+    this.eventManager.addExternalEvents(calendarId, events);
 
-      if (changes.update) {
-        changes.update.forEach(({ id, updates }) => {
-          const index = newEvents.findIndex(e => e.id === id);
-          if (index !== -1) {
-            newEvents[index] = { ...newEvents[index], ...updates };
-          }
-        });
-      }
-
-      if (changes.add) {
-        newEvents = [...newEvents, ...changes.add];
-      }
-
-      this.state.events = newEvents;
-      this.notify();
-      return;
-    }
-
-    // Handle Committed State (Through Store)
-    if (source) {
-      this.pendingChangeSource = source;
-    }
-    this.store.beginTransaction();
-
-    if (changes.delete) {
-      changes.delete.forEach(id => this.store.deleteEvent(id));
-    }
-
-    if (changes.update) {
-      changes.update.forEach(({ id, updates }) => {
-        try {
-          this.store.updateEvent(id, updates);
-        } catch (e) {
-          console.warn(`Failed to update event ${id}:`, e);
-        }
-      });
-    }
-
-    if (changes.add) {
-      changes.add.forEach(event => {
-        try {
-          this.store.createEvent(event);
-        } catch (e) {
-          console.warn(`Failed to create event ${event.id}:`, e);
-        }
-      });
-    }
-
-    this.store.endTransaction();
-  };
-
-  addEvent = (event: Event): void => {
-    this.pendingSnapshot = null; // New operation, clear any pending
-    this.pushToUndo();
-
-    // Delegate to store
-    this.store.createEvent(event);
-  };
-
-  /**
-   * Add external events to the state without persisting to the core store.
-   * This is used for temporary/subscription-based events.
-   */
-  addExternalEvents = (calendarId: string, events: Event[]): void => {
-    // Ensure all events are associated with this calendarId
-    const eventsWithCalendarId = events.map(event => ({
-      ...event,
-      calendarId,
-    }));
-
-    this.externalEvents.set(calendarId, eventsWithCalendarId);
-    this.syncExternalEventsToState();
-    this.notify();
-  };
-
-  /**
-   * Synchronize all events (core + external) into the main state.events array.
-   * This ensures all views and plugins that listen to state.events see the combined list.
-   */
-  private syncExternalEventsToState = (): void => {
-    // 1. Get core events from store
-    const coreEvents = this.store.getAllEvents();
-
-    // 2. Build a map of events by ID to ensure uniqueness
-    // We use a Map to ensure each event ID only appears once.
-    // Core events are added first, then external events override them if IDs match.
-    const eventsById = new Map<string, Event>();
-
-    // Initial pass with core events
-    coreEvents.forEach(event => {
-      eventsById.set(event.id, event);
-    });
-
-    // Second pass with external events (overwrites core events with same ID)
-    if (this.externalEvents.size > 0) {
-      for (const events of this.externalEvents.values()) {
-        events.forEach(event => {
-          eventsById.set(event.id, event);
-        });
-      }
-    }
-
-    // 3. Update state.events with a NEW array reference
-    this.state.events = Array.from(eventsById.values());
-  };
-
-  updateEvent = async (
+  updateEvent = (
     id: string,
     eventUpdate: Partial<Event>,
     isPending?: boolean,
     source?: 'drag' | 'resize'
-  ): Promise<void> => {
-    if (source) {
-      this.pendingChangeSource = source;
-    }
+  ): Promise<void> =>
+    this.eventManager.updateEvent(id, eventUpdate, isPending, source);
 
-    // Save state before update (Snapshotting)
-    if (isPending) {
-      if (!this.pendingSnapshot) {
-        this.pendingSnapshot = [...this.state.events];
-      }
-    } else if (this.pendingSnapshot) {
-      this.pushToUndo(this.pendingSnapshot);
-      this.pendingSnapshot = null;
-    } else {
-      this.pushToUndo();
-    }
+  deleteEvent = (id: string): Promise<void> =>
+    this.eventManager.deleteEvent(id);
 
-    if (isPending) {
-      // Direct local mutation for pending state
-      const eventIndex = this.state.events.findIndex(e => e.id === id);
-      if (eventIndex === -1) {
-        throw new Error(`Event with id ${id} not found`);
-      }
+  getAllEvents = (): Event[] => this.eventManager.getAllEvents();
+  getEvents = (): Event[] => this.eventManager.getEvents();
 
-      const updatedEvent = { ...this.state.events[eventIndex], ...eventUpdate };
-      this.state.events = [
-        ...this.state.events.slice(0, eventIndex),
-        updatedEvent,
-        ...this.state.events.slice(eventIndex + 1),
-      ];
-      this.notify();
-      return;
-    }
+  onEventClick = (event: Event): void => this.eventManager.onEventClick(event);
 
-    // Committed update -> Store
-    await this.store.updateEvent(id, eventUpdate);
-  };
+  onMoreEventsClick = (date: Date): void =>
+    this.eventManager.onMoreEventsClick(date);
 
-  deleteEvent = async (id: string): Promise<void> => {
-    await this.callbacks.onEventDelete?.(id);
+  highlightEvent = (eventId: string | null): void =>
+    this.eventManager.highlightEvent(eventId);
 
-    this.pendingSnapshot = null;
-    this.pushToUndo();
+  selectEvent = (eventId: string | null): void =>
+    this.eventManager.selectEvent(eventId);
 
-    await this.store.deleteEvent(id);
-  };
+  dismissUI = (): void => this.eventManager.dismissUI();
 
-  getAllEvents = (): Event[] => [...this.state.events];
+  // Permissions (pure functions)
 
-  onEventClick = (event: Event): void => {
-    this.callbacks.onEventClick?.(event);
-  };
-
-  onMoreEventsClick = (date: Date): void => {
-    this.callbacks.onMoreEventsClick?.(date);
-  };
-
-  highlightEvent = (eventId: string | null): void => {
-    if (this.state.highlightedEventId === eventId) return;
-    this.state.highlightedEventId = eventId;
-    this.callbacks.onRender?.();
-    this.notify();
-  };
-
-  selectEvent = (eventId: string | null): void => {
-    if (this.state.selectedEventId === eventId) return;
-    this.state.selectedEventId = eventId;
-    this.callbacks.onRender?.();
-    this.notify();
-  };
-
-  dismissUI = (): void => {
-    this.callbacks.onDismissUI?.();
-    // Also notify listeners so components can react to UI dismiss signal if they prefer
-    this.notify();
-  };
-
-  getEvents = (): Event[] => {
-    // 1. Get all combined events from state (synced core + external)
-    const allEvents = this.state.events || [];
-
-    // 2. Filter by visible calendars from registry
-    const visibleCalendars = new Set(
-      this.calendarRegistry
-        .getAll()
-        .filter(calendar => calendar.isVisible !== false)
-        .map(calendar => calendar.id)
+  getReadOnlyConfig = (id?: string): ReadOnlyConfig =>
+    getReadOnlyConfig(
+      this.state.readOnly,
+      id,
+      this.calendarRegistry,
+      this.state.events
     );
 
-    return allEvents.filter(event => {
-      // Strict mode: Every event MUST have a calendarId to be displayed.
-      // If it doesn't, it's considered orphaned data and hidden.
-      if (!event.calendarId) {
-        return false;
-      }
+  canMutateFromUI = (id?: string): boolean =>
+    canMutateFromUI(
+      this.state.readOnly,
+      id,
+      this.calendarRegistry,
+      this.state.events
+    );
 
-      // Check visibility from the registry
-      return visibleCalendars.has(event.calendarId);
-    });
-  };
+  // Calendars
 
   getCalendars = (): CalendarType[] => this.calendarRegistry.getAll();
 
   reorderCalendars = (fromIndex: number, toIndex: number): void => {
     this.calendarRegistry.reorder(fromIndex, toIndex);
-    this.callbacks.onRender?.();
-    this.notify();
+    this.triggerRender();
   };
 
   setCalendarVisibility = (calendarId: string, visible: boolean): void => {
     this.calendarRegistry.setVisibility(calendarId, visible);
-    this.callbacks.onRender?.();
-    this.notify();
+    this.triggerRender();
   };
 
   setAllCalendarsVisibility = (visible: boolean): void => {
     this.calendarRegistry.setAllVisibility(visible);
-    this.callbacks.onRender?.();
-    this.notify();
+    this.triggerRender();
   };
 
   updateCalendar = (
@@ -728,115 +257,98 @@ export class CalendarApp implements ICalendarApp {
     if (updatedCalendar) {
       this.callbacks.onCalendarUpdate?.(updatedCalendar);
     }
-    this.callbacks.onRender?.();
-    this.notify();
+    this.triggerRender();
   };
 
   createCalendar = async (calendar: CalendarType): Promise<void> => {
     this.calendarRegistry.register(calendar);
     await this.callbacks.onCalendarCreate?.(calendar);
-    this.callbacks.onRender?.();
-    this.notify();
+    this.triggerRender();
   };
 
   deleteCalendar = async (id: string): Promise<void> => {
     this.calendarRegistry.unregister(id);
     await this.callbacks.onCalendarDelete?.(id);
-    this.callbacks.onRender?.();
-    this.notify();
+    this.triggerRender();
   };
 
   mergeCalendars = async (
     sourceId: string,
     targetId: string
   ): Promise<void> => {
-    const sourceEvents = this.store
+    const store = this.eventManager.getStore();
+    const sourceEvents = store
       .getAllEvents()
       .filter(e => e.calendarId === sourceId);
 
-    this.pushToUndo();
+    this.eventManager.pushToUndo();
+    store.beginTransaction();
+    sourceEvents.forEach(event =>
+      store.updateEvent(event.id, { calendarId: targetId })
+    );
+    await store.endTransaction();
 
-    // Use Transaction for batch update
-    this.store.beginTransaction();
-
-    // Update all events from source calendar to target calendar
-    sourceEvents.forEach(event => {
-      this.store.updateEvent(event.id, { calendarId: targetId });
-    });
-
-    await this.store.endTransaction();
-
-    // Delete source calendar
     await this.deleteCalendar(sourceId);
-
-    // Call callback
     await this.callbacks.onCalendarMerge?.(sourceId, targetId);
-    // onRender and notify will be triggered by store callbacks
+    // onRender and notify are triggered by store batch-change listener
   };
 
-  getCalendarHeaderConfig = ():
-    | boolean
-    | ((props: CalendarHeaderProps) => TNode) => this.useCalendarHeader;
+  // Plugins (delegated)
 
-  // Plugin management
-  private installPlugin = (plugin: CalendarPlugin): void => {
-    if (this.state.plugins.has(plugin.name)) {
-      logger.warn(`Plugin ${plugin.name} is already installed`);
-      return;
-    }
+  getPlugin = <T = unknown>(name: string): T | undefined =>
+    this.pluginManager.getPlugin<T>(name);
 
-    this.state.plugins.set(plugin.name, plugin);
-    plugin.install(this);
-  };
+  hasPlugin = (name: string): boolean => this.pluginManager.hasPlugin(name);
 
-  getPlugin = <T = unknown>(name: string): T | undefined => {
-    const plugin = this.state.plugins.get(name);
-    return plugin?.api as T;
-  };
+  getPluginConfig = (pluginName: string): Record<string, unknown> =>
+    this.pluginManager.getPluginConfig(pluginName);
 
-  hasPlugin = (name: string): boolean => this.state.plugins.has(name);
-
-  // Get plugin configuration
-  getPluginConfig = (pluginName: string): Record<string, unknown> => {
-    const plugin = this.state.plugins.get(pluginName);
-    return plugin?.config || {};
-  };
-
-  // Update plugin configuration
   updatePluginConfig = (
     pluginName: string,
     config: Record<string, unknown>
-  ): void => {
-    const plugin = this.state.plugins.get(pluginName);
-    if (plugin) {
-      plugin.config = { ...plugin.config, ...config };
-      this.notify();
-    }
+  ): void => this.pluginManager.updatePluginConfig(pluginName, config);
+
+  // Theme
+
+  setTheme = (mode: ThemeMode): void => {
+    this.calendarRegistry.setTheme(mode);
+    this.themeChangeListeners.forEach(listener => listener(mode));
+    this.triggerRender();
   };
 
-  // Get view configuration
+  getTheme = (): ThemeMode => this.calendarRegistry.getTheme();
+
+  subscribeThemeChange = (
+    callback: (theme: ThemeMode) => void
+  ): (() => void) => {
+    this.themeChangeListeners.add(callback);
+    return () => this.unsubscribeThemeChange(callback);
+  };
+
+  unsubscribeThemeChange = (callback: (theme: ThemeMode) => void): void => {
+    this.themeChangeListeners.delete(callback);
+  };
+
+  // ── Config ───────────────────────────────────────────────────────────────────
+
   getViewConfig = (viewType: CalendarViewType): Record<string, unknown> => {
     const view = this.state.views.get(viewType);
     return view?.config || {};
   };
 
-  // Trigger render callback
-  triggerRender = (): void => {
-    this.callbacks.onRender?.();
-    this.notify();
-  };
-
-  // Get CalendarRegistry instance
   getCalendarRegistry = (): CalendarRegistry => this.calendarRegistry;
-
-  // Get whether to use event detail dialog
   getUseEventDetailDialog = (): boolean => this.useEventDetailDialog;
-
-  // Get custom mobile event renderer
   getCustomMobileEventRenderer = (): MobileEventRenderer | undefined =>
     this.customMobileEventRenderer;
+  getCalendarHeaderConfig = ():
+    | boolean
+    | ((props: CalendarHeaderProps) => TNode) => this.useCalendarHeader;
 
-  // Update configuration dynamically
+  setOverrides = (overrides: string[]): void => {
+    this.state.overrides = overrides;
+    this.triggerRender();
+  };
+
   updateConfig = (config: Partial<CalendarAppConfig>): void => {
     let hasChanged = false;
 
@@ -869,7 +381,6 @@ export class CalendarApp implements ICalendarApp {
       hasChanged = true;
     }
     if (config.callbacks) {
-      // We update callbacks but don't trigger re-render as they don't affect visual state
       this.callbacks = { ...this.callbacks, ...config.callbacks };
     }
     if (
@@ -877,7 +388,7 @@ export class CalendarApp implements ICalendarApp {
       config.theme.mode !== this.getTheme()
     ) {
       this.setTheme(config.theme.mode);
-      // setTheme already triggers re-render via onRender callback
+      // setTheme already triggers re-render
     }
     if (
       config.switcherMode !== undefined &&
@@ -900,65 +411,25 @@ export class CalendarApp implements ICalendarApp {
       this.state.allDaySortComparator = config.allDaySortComparator;
       hasChanged = true;
     }
+    if (config.views !== undefined) {
+      const newViews = new Map(this.state.views);
+      let viewsChanged = false;
+      config.views.forEach(view => {
+        const existingView = newViews.get(view.type);
+        if (!existingView || !isDeepEqual(view.config, existingView.config)) {
+          newViews.set(view.type, view);
+          viewsChanged = true;
+        }
+      });
+      if (viewsChanged) {
+        this.state.views = newViews;
+        this.state = { ...this.state };
+        hasChanged = true;
+      }
+    }
 
     if (hasChanged) {
-      // Trigger re-render to reflect changes
       this.triggerRender();
-      this.notify();
     }
-  };
-
-  setOverrides = (overrides: string[]): void => {
-    this.state.overrides = overrides;
-    this.triggerRender();
-    this.notify();
-  };
-
-  // Theme management
-  /**
-   * Set theme mode
-   * @param mode - Theme mode ('light', 'dark', or 'auto')
-   */
-  setTheme = (mode: ThemeMode): void => {
-    this.calendarRegistry.setTheme(mode);
-
-    // Notify all listeners
-    this.themeChangeListeners.forEach(listener => {
-      listener(mode);
-    });
-
-    // Trigger re-render
-    this.callbacks.onRender?.();
-    this.notify();
-  };
-
-  /**
-   * Get current theme mode
-   * @returns Current theme mode
-   */
-  getTheme = (): ThemeMode => this.calendarRegistry.getTheme();
-
-  /**
-   * Subscribe to theme changes
-   * @param callback - Function to call when theme changes
-   * @returns Unsubscribe function
-   */
-  subscribeThemeChange = (
-    callback: (theme: ThemeMode) => void
-  ): (() => void) => {
-    this.themeChangeListeners.add(callback);
-
-    // Return unsubscribe function
-    return () => {
-      this.unsubscribeThemeChange(callback);
-    };
-  };
-
-  /**
-   * Unsubscribe from theme changes
-   * @param callback - Function to remove from listeners
-   */
-  unsubscribeThemeChange = (callback: (theme: ThemeMode) => void): void => {
-    this.themeChangeListeners.delete(callback);
   };
 }

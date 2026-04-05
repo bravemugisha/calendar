@@ -173,7 +173,19 @@ export function temporalToDate(
 
   // At this point, temporal must be ZonedDateTime or looks like it
   if (temporal && typeof temporal === 'object' && 'year' in temporal) {
-    return zonedDateTimeToDate(temporal as Temporal.ZonedDateTime);
+    const zdt = temporal as Temporal.ZonedDateTime;
+    if (timeZone && typeof zdt.withTimeZone === 'function') {
+      const shifted = zdt.withTimeZone(timeZone);
+      // To get the local date in the target timezone, we use its year/month/day
+      return new Date(
+        shifted.year,
+        shifted.month - 1,
+        shifted.day,
+        shifted.hour,
+        shifted.minute
+      );
+    }
+    return zonedDateTimeToDate(zdt);
   }
 
   // Last resort

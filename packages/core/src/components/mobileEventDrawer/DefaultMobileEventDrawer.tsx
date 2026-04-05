@@ -444,6 +444,12 @@ export const MobileEventDrawer = ({
                   onDateSelect={d => handleDateChange('start', d)}
                   onMonthChange={offset => handleMonthChange('start', offset)}
                   showHeader
+                  events={app.getEvents()}
+                  calendarRegistry={app.getCalendarRegistry()}
+                  timeZone={
+                    (app.getViewConfig(app.state.currentView)
+                      ?.secondaryTimeZone as string) || undefined
+                  }
                 />
               </div>
             </div>
@@ -501,6 +507,12 @@ export const MobileEventDrawer = ({
                   onDateSelect={d => handleDateChange('end', d)}
                   onMonthChange={offset => handleMonthChange('end', offset)}
                   showHeader
+                  events={app.getEvents()}
+                  calendarRegistry={app.getCalendarRegistry()}
+                  timeZone={
+                    (app.getViewConfig(app.state.currentView)
+                      ?.secondaryTimeZone as string) || undefined
+                  }
                 />
               </div>
             </div>
