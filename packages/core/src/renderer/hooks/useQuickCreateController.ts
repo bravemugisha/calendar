@@ -48,6 +48,10 @@ export function useQuickCreateController(
     ) => {
       const isEditable = app.canMutateFromUI();
       if (!isEditable) return;
+      const writableCal = app
+        .getCalendarRegistry()
+        .getDefaultWritableCalendar();
+      if (!writableCal) return;
 
       if (isMobile) {
         const { start, end } = getNextHourRangeInTimeZone(app.timeZone);
@@ -57,9 +61,7 @@ export function useQuickCreateController(
           title: '',
           start: dateToZonedDateTime(start, app.timeZone),
           end: dateToZonedDateTime(end, app.timeZone),
-          calendarId:
-            app.getCalendars().find(c => c.isVisible !== false)?.id ||
-            app.getCalendars()[0]?.id,
+          calendarId: writableCal.id,
         };
         setMobileDraftEvent(draft);
         setIsMobileDrawerOpen(true);

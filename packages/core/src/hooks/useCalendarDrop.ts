@@ -108,6 +108,14 @@ export function useCalendarDrop(
           end = dateToZonedDateTime(endDate, app.timeZone);
         }
 
+        // Block drop if the target calendar is read-only
+        const targetCalendar = app
+          .getCalendarRegistry()
+          .get(dragData.calendarId);
+        if (targetCalendar?.readOnly || targetCalendar?.subscription) {
+          return null;
+        }
+
         // Generate unique event ID
         const eventId = `event-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 

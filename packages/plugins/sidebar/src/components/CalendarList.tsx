@@ -98,7 +98,12 @@ const CalendarItem = ({
         <div className='pointer-events-none absolute top-0 right-0 left-0 z-10 h-0.5 bg-[var(--df-color-primary)]' />
       )}
       <div
-        draggable={isDraggable && !editingId}
+        draggable={
+          isDraggable &&
+          !editingId &&
+          !calendar.readOnly &&
+          !calendar.subscription
+        }
         onDragStart={e => onDragStart(calendar, e)}
         onDragEnd={onDragEnd}
         className={`rounded transition ${

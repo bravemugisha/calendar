@@ -1467,14 +1467,17 @@ export const useDragHandlers = (
             ? dateToPlainDate(endDate)
             : dateToZonedDateTime(endDate, getAppTimeZone());
 
+          const writableCalendar = app
+            ?.getCalendarRegistry()
+            ?.getDefaultWritableCalendar();
+          if (!writableCalendar) return;
           onEventCreate?.({
             id: String(Date.now()),
             title: isAllDay ? t('newAllDayEvent') : t('newEvent'),
             day: drag.dayIndex,
             start: startTemporal,
             end: endTemporal,
-            calendarId:
-              app?.getCalendarRegistry()?.getDefaultCalendar()?.id ?? 'blue',
+            calendarId: writableCalendar.id,
             allDay: isAllDay,
           });
         } else if (drag.mode === 'move' || drag.mode === 'resize') {
@@ -1618,6 +1621,7 @@ export const useDragHandlers = (
   const handleCreateStart = useCallback(
     (e: MouseEvent | TouchEvent, ...args: (Date | number)[]) => {
       if (app?.state.readOnly) return; // Non-editable if readOnly exists
+      if (!app?.getCalendarRegistry()?.getDefaultWritableCalendar()) return; // All calendars are read-only
 
       // Prevent scrolling on touch devices
       if ('cancelable' in e && e.cancelable) {
@@ -1647,7 +1651,8 @@ export const useDragHandlers = (
           end: endTemporal,
           day: targetDate.getDay(),
           calendarId:
-            app?.getCalendarRegistry()?.getDefaultCalendar()?.id ?? 'blue',
+            app?.getCalendarRegistry()?.getDefaultWritableCalendar()?.id ??
+            'blue',
           allDay: false,
         };
 
@@ -1701,7 +1706,10 @@ export const useDragHandlers = (
           drag.startHour,
           drag.endHour
         );
-        createDragIndicator(drag, 'blue', t('newEvent'), newEventLayout);
+        const writableCalId =
+          app?.getCalendarRegistry()?.getDefaultWritableCalendar()?.id ??
+          'blue';
+        createDragIndicator(drag, writableCalId, t('newEvent'), newEventLayout);
         drag.sourceElement = null;
         drag.indicatorVisible = true;
         document.addEventListener('mousemove', handleDragMove);
