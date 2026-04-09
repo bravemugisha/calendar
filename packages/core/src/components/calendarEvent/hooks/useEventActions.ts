@@ -2,7 +2,7 @@ import { RefObject } from 'preact';
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 
 import { getCalendarContentElement } from '@/components/calendarEvent/utils';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import { Event, ViewType, ICalendarApp, EventDetailPosition } from '@/types';
 import { extractHourFromDate, getEventEndHour } from '@/utils';
 

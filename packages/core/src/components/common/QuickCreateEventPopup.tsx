@@ -116,13 +116,19 @@ export const QuickCreateEventPopup = ({
     let targetCalendarId = historyEvent?.calendarId;
 
     if (!targetCalendarId) {
-      // Pick random calendar if no history
-      const visibleCalendars = calendars.filter(c => c.isVisible !== false);
-      if (visibleCalendars.length > 0) {
-        const randomIndex = Math.floor(Math.random() * visibleCalendars.length);
-        targetCalendarId = visibleCalendars[randomIndex].id;
-      } else if (calendars.length > 0) {
-        targetCalendarId = calendars[0].id;
+      // Use the default writable calendar (respects per-calendar readOnly)
+      targetCalendarId = app
+        .getCalendarRegistry()
+        .getDefaultWritableCalendar()?.id;
+    }
+
+    // If the resolved calendar is read-only, redirect to the default writable one
+    if (targetCalendarId) {
+      const resolved = app.getCalendarRegistry().get(targetCalendarId);
+      if (resolved?.readOnly || resolved?.subscription) {
+        targetCalendarId = app
+          .getCalendarRegistry()
+          .getDefaultWritableCalendar()?.id;
       }
     }
 
@@ -143,11 +149,12 @@ export const QuickCreateEventPopup = ({
     // Deduplicate by title
     const seenTitles = new Set<string>([inputValue.toLowerCase()]); // Don't show exact match again in history if it's same as input
 
-    const matchedEvents = allEvents.filter(
-      e =>
-        e.title.toLowerCase().includes(lowerInput) &&
-        !seenTitles.has(e.title.toLowerCase())
-    );
+    const matchedEvents = allEvents.filter(e => {
+      if (!e.title.toLowerCase().includes(lowerInput)) return false;
+      if (seenTitles.has(e.title.toLowerCase())) return false;
+      const cal = app.getCalendarRegistry().get(e.calendarId ?? '');
+      return !(cal?.readOnly || cal?.subscription);
+    });
 
     matchedEvents.slice(0, 5).forEach(e => {
       seenTitles.add(e.title.toLowerCase());

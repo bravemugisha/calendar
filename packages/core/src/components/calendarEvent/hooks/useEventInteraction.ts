@@ -1,6 +1,6 @@
 import { useRef, useState } from 'preact/hooks';
 
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import { Event, ICalendarApp } from '@/types';
 
 interface UseEventInteractionProps {

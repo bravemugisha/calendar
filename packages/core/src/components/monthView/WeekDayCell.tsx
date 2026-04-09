@@ -1,0 +1,403 @@
+import { ComponentChild, RefObject } from 'preact';
+import { useRef } from 'preact/hooks';
+
+import CalendarEvent from '@/components/calendarEvent';
+import {
+  monthDayCell,
+  monthDateNumberContainer,
+  monthDateNumber,
+  miniCalendarToday,
+  monthMoreEvents,
+  cn,
+} from '@/styles/classNames';
+import {
+  Event,
+  EventDetailContentRenderer,
+  EventDetailDialogRenderer,
+  ICalendarApp,
+  MonthEventDragState,
+  ViewType,
+} from '@/types';
+import { DayData } from '@/types/calendar';
+import { getWeekNumber } from '@/utils';
+import { extractHourFromDate } from '@/utils/helpers';
+
+import {
+  MonthDayLayoutData,
+  MultiDayEventSegment,
+  createDateString,
+} from './util';
+
+interface WeekDayCellProps {
+  app: ICalendarApp;
+  appTimeZone?: string;
+  calendarRef: RefObject<HTMLDivElement>;
+  currentMonth: string;
+  currentYear: number;
+  customDetailPanelContent?: EventDetailContentRenderer;
+  customEventDetailDialog?: EventDetailDialogRenderer;
+  day: DayData;
+  dayIndex: number;
+  dayLayout: MonthDayLayoutData;
+  detailPanelEventId?: string | null;
+  dragState: MonthEventDragState;
+  enableTouch?: boolean;
+  hasScrollbarSpace: boolean;
+  isDragging: boolean;
+  locale: string;
+  moreLabel: string;
+  newlyCreatedEventId: string | null;
+  onCalendarDragOver?: (e: DragEvent) => void;
+  onCalendarDrop?: (
+    e: DragEvent,
+    dropDate: Date,
+    dropHour?: number,
+    isAllDay?: boolean
+  ) => Event | null;
+  onChangeView?: (view: ViewType) => void;
+  onContextMenu: (e: MouseEvent, date: Date) => void;
+  onCreateStart?: (e: MouseEvent | TouchEvent, targetDate: Date) => void;
+  onDetailPanelOpen: () => void;
+  onDetailPanelToggle?: (eventId: string | null) => void;
+  onEventDelete: (eventId: string) => void;
+  onEventLongPress?: (eventId: string) => void;
+  onEventSelect?: (eventId: string | null) => void;
+  onEventUpdate: (updatedEvent: Event) => void;
+  onMoreEventsClick?: (date: Date) => void;
+  onMoveStart?: (e: MouseEvent | TouchEvent, event: Event) => void;
+  onResizeStart?: (
+    e: MouseEvent | TouchEvent,
+    event: Event,
+    direction: string
+  ) => void;
+  onSelectDate?: (date: Date) => void;
+  organizedMultiDaySegments: MultiDayEventSegment[][];
+  overlayVisibleLayerCount: number;
+  screenSize: 'mobile' | 'tablet' | 'desktop';
+  selectedEventId?: string | null;
+  showWeekNumbers?: boolean;
+  totalSlotsNeeded: number;
+  weekHeightPx: string;
+}
+
+const ROW_SPACING = 17;
+
+const WeekDayCell = ({
+  app,
+  appTimeZone,
+  calendarRef,
+  currentMonth,
+  currentYear,
+  customDetailPanelContent,
+  customEventDetailDialog,
+  day,
+  dayIndex,
+  dayLayout,
+  detailPanelEventId,
+  dragState,
+  enableTouch,
+  hasScrollbarSpace,
+  isDragging,
+  locale,
+  moreLabel,
+  newlyCreatedEventId,
+  onCalendarDragOver,
+  onCalendarDrop,
+  onChangeView,
+  onContextMenu,
+  onCreateStart,
+  onDetailPanelOpen,
+  onDetailPanelToggle,
+  onEventDelete,
+  onEventLongPress,
+  onEventSelect,
+  onEventUpdate,
+  onMoreEventsClick,
+  onMoveStart,
+  onResizeStart,
+  onSelectDate,
+  organizedMultiDaySegments,
+  overlayVisibleLayerCount,
+  screenSize,
+  selectedEventId,
+  showWeekNumbers,
+  totalSlotsNeeded,
+  weekHeightPx,
+}: WeekDayCellProps) => {
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+
+  const dayMonthName = day.date.toLocaleDateString(locale, {
+    month:
+      locale.startsWith('zh') || locale.startsWith('ja') ? 'short' : 'long',
+  });
+
+  const belongsToCurrentMonth =
+    dayMonthName === currentMonth && day.year === currentYear;
+
+  const {
+    hasMore: hasMoreEvents,
+    limit: displaySlotLimit,
+    timedEventsOnly,
+    gapLayers,
+    occupiedLayers,
+    maxOccupiedLayer,
+    segmentIsHidden,
+  } = dayLayout;
+
+  let hiddenSegmentCount = 0;
+  organizedMultiDaySegments.slice(displaySlotLimit).forEach(layer => {
+    layer.forEach(segment => {
+      if (
+        segment.startDayIndex <= dayIndex &&
+        segment.endDayIndex >= dayIndex
+      ) {
+        hiddenSegmentCount++;
+      }
+    });
+  });
+
+  organizedMultiDaySegments.slice(0, displaySlotLimit).forEach(layer => {
+    layer.forEach(segment => {
+      if (
+        segment.startDayIndex <= dayIndex &&
+        segment.endDayIndex >= dayIndex &&
+        segmentIsHidden.has(segment.id)
+      ) {
+        hiddenSegmentCount++;
+      }
+    });
+  });
+
+  const gapsWithinLimit = gapLayers.filter(
+    layer => layer < displaySlotLimit
+  ).length;
+  const hiddenSegmentsInVisibleLayers = organizedMultiDaySegments
+    .slice(0, displaySlotLimit)
+    .filter(layer =>
+      layer.some(
+        segment =>
+          segment.startDayIndex <= dayIndex &&
+          segment.endDayIndex >= dayIndex &&
+          segmentIsHidden.has(segment.id)
+      )
+    ).length;
+
+  const slotsAfterMultiDayWithinLimit = Math.max(
+    0,
+    displaySlotLimit - Math.max(maxOccupiedLayer + 1, 0)
+  );
+
+  const displayCount = Math.min(
+    timedEventsOnly.length,
+    gapsWithinLimit +
+      slotsAfterMultiDayWithinLimit +
+      hiddenSegmentsInVisibleLayers
+  );
+
+  const displayEvents = timedEventsOnly.slice(0, displayCount);
+  const hiddenEventsCount =
+    hiddenSegmentCount + (timedEventsOnly.length - displayCount);
+  const maskHiddenOverlayRows =
+    hasMoreEvents && overlayVisibleLayerCount > displaySlotLimit;
+  const hiddenOverlayHeight =
+    (overlayVisibleLayerCount - displaySlotLimit) * ROW_SPACING;
+
+  const dragEventId =
+    isDragging && dragState.eventId ? dragState.eventId : null;
+  const dragEventInDisplay = dragEventId
+    ? displayEvents.find(event => event.id === dragEventId)
+    : null;
+  const dragEventInTimedOnly =
+    dragEventId && !dragEventInDisplay
+      ? timedEventsOnly.find(event => event.id === dragEventId)
+      : null;
+  const orderedDisplayEvents = dragEventInDisplay
+    ? [
+        dragEventInDisplay,
+        ...displayEvents.filter(event => event.id !== dragEventId),
+      ]
+    : dragEventInTimedOnly && displayEvents.length > 0
+      ? [dragEventInTimedOnly, ...displayEvents.slice(0, -1)]
+      : dragEventInTimedOnly
+        ? [dragEventInTimedOnly]
+        : displayEvents;
+
+  const renderElements: ComponentChild[] = [];
+  let timedEventIndex = 0;
+  const slotsToRender = Math.min(displaySlotLimit, totalSlotsNeeded);
+
+  for (let slot = 0; slot < slotsToRender; slot++) {
+    if (
+      occupiedLayers.has(slot) &&
+      !organizedMultiDaySegments[slot].some(
+        segment =>
+          segment.startDayIndex <= dayIndex &&
+          segment.endDayIndex >= dayIndex &&
+          segmentIsHidden.has(segment.id)
+      )
+    ) {
+      renderElements.push(
+        <div
+          key={`placeholder-layer-${slot}-${day.date.getTime()}`}
+          className='shrink-0'
+          style={{
+            height: `${ROW_SPACING}px`,
+            minHeight: `${ROW_SPACING}px`,
+          }}
+        />
+      );
+    } else if (timedEventIndex < orderedDisplayEvents.length) {
+      const event = orderedDisplayEvents[timedEventIndex];
+
+      renderElements.push(
+        <CalendarEvent
+          key={`${event.id}-${event.day}-${extractHourFromDate(event.start)}-${timedEventIndex}`}
+          event={event}
+          isAllDay={!!event.allDay}
+          viewType={ViewType.MONTH}
+          isBeingDragged={
+            isDragging &&
+            dragState.eventId === event.id &&
+            dragState.mode === 'move'
+          }
+          calendarRef={calendarRef}
+          hourHeight={72}
+          firstHour={0}
+          onEventUpdate={onEventUpdate}
+          onEventDelete={onEventDelete}
+          onMoveStart={onMoveStart}
+          onResizeStart={onResizeStart}
+          onDetailPanelOpen={onDetailPanelOpen}
+          onEventSelect={onEventSelect}
+          onEventLongPress={onEventLongPress}
+          newlyCreatedEventId={newlyCreatedEventId}
+          selectedEventId={selectedEventId}
+          detailPanelEventId={detailPanelEventId}
+          onDetailPanelToggle={onDetailPanelToggle}
+          customDetailPanelContent={customDetailPanelContent}
+          customEventDetailDialog={customEventDetailDialog}
+          app={app}
+          isMobile={screenSize !== 'desktop'}
+          enableTouch={enableTouch}
+          appTimeZone={appTimeZone}
+        />
+      );
+      timedEventIndex++;
+    }
+  }
+
+  return (
+    <div
+      key={`day-${day.date.getTime()}`}
+      className={cn(
+        monthDayCell,
+        belongsToCurrentMonth
+          ? 'text-gray-800 dark:text-gray-100'
+          : 'text-gray-400 dark:text-gray-600',
+        dayIndex === 6
+          ? hasScrollbarSpace
+            ? 'last:border-r'
+            : 'border-r-0'
+          : ''
+      )}
+      style={{ height: weekHeightPx }}
+      data-date={createDateString(day.date)}
+      onClick={() => belongsToCurrentMonth && onSelectDate?.(day.date)}
+      onDblClick={event => onCreateStart?.(event, day.date)}
+      onTouchStart={event => {
+        if (screenSize !== 'mobile' && !enableTouch) return;
+        const touch = event.touches[0];
+        touchStartPosRef.current = { x: touch.clientX, y: touch.clientY };
+
+        longPressTimerRef.current = setTimeout(() => {
+          onCreateStart?.(event as unknown as TouchEvent, day.date);
+          longPressTimerRef.current = null;
+          if (navigator.vibrate) navigator.vibrate(50);
+        }, 500);
+      }}
+      onTouchMove={event => {
+        if (longPressTimerRef.current && touchStartPosRef.current) {
+          const dx = Math.abs(
+            event.touches[0].clientX - touchStartPosRef.current.x
+          );
+          const dy = Math.abs(
+            event.touches[0].clientY - touchStartPosRef.current.y
+          );
+          if (dx > 10 || dy > 10) {
+            clearTimeout(longPressTimerRef.current);
+            longPressTimerRef.current = null;
+          }
+        }
+      }}
+      onTouchEnd={() => {
+        if (longPressTimerRef.current) {
+          clearTimeout(longPressTimerRef.current);
+          longPressTimerRef.current = null;
+        }
+        touchStartPosRef.current = null;
+      }}
+      onDragOver={onCalendarDragOver}
+      onDrop={event => onCalendarDrop?.(event, day.date)}
+      onContextMenu={event => onContextMenu(event, day.date)}
+    >
+      <div className={monthDateNumberContainer}>
+        {showWeekNumbers && dayIndex === 0 && screenSize !== 'mobile' && (
+          <span className='mr-auto ml-1 text-[10px] font-medium text-gray-400 dark:text-gray-500'>
+            {getWeekNumber(day.date)}
+          </span>
+        )}
+        <span
+          className={` ${monthDateNumber} ${day.isToday ? miniCalendarToday : belongsToCurrentMonth ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-600'} `}
+        >
+          {day.day === 1 && screenSize === 'desktop'
+            ? day.date.toLocaleDateString(locale, {
+                month: 'short',
+                day: 'numeric',
+              })
+            : day.day}
+        </span>
+      </div>
+
+      <div className='pointer-events-none relative flex-1 overflow-hidden px-1'>
+        {maskHiddenOverlayRows && (
+          <div
+            className='pointer-events-none absolute right-0 left-0 z-100 bg-white dark:bg-gray-900'
+            style={{
+              top: `${displaySlotLimit * ROW_SPACING}px`,
+              height: `${hiddenOverlayHeight}px`,
+            }}
+          />
+        )}
+        {renderElements}
+
+        {hasMoreEvents && (
+          <div
+            className={cn(
+              monthMoreEvents,
+              screenSize === 'desktop'
+                ? 'text-left font-normal'
+                : 'text-center font-medium',
+              'pointer-events-auto',
+              'z-100'
+            )}
+            onClick={event => {
+              event.stopPropagation();
+              if (onMoreEventsClick) {
+                onMoreEventsClick(day.date);
+              } else {
+                onSelectDate?.(day.date);
+                onChangeView?.(ViewType.DAY);
+              }
+            }}
+          >
+            +{hiddenEventsCount}
+            {screenSize === 'desktop' ? ` ${moreLabel}` : ''}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default WeekDayCell;

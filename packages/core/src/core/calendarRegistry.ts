@@ -2,6 +2,8 @@
 
 import { CalendarType, ThemeMode, CalendarColors } from '@/types/calendarTypes';
 
+const isWritable = (cal: CalendarType) => !cal.readOnly && !cal.subscription;
+
 /**
  * Default calendar types
  */
@@ -348,6 +350,17 @@ export class CalendarRegistry {
       return this.getAll()[0];
     }
     return calendar;
+  }
+
+  /**
+   * Get the first writable (non-readOnly, non-subscription) calendar for event creation.
+   * Prefers the default calendar; falls back to the first writable calendar.
+   * Returns undefined if every calendar is read-only.
+   */
+  getDefaultWritableCalendar(): CalendarType | undefined {
+    const defaultCal = this.getDefaultCalendar();
+    if (defaultCal && isWritable(defaultCal)) return defaultCal;
+    return this.getAll().find(isWritable);
   }
 
   /**

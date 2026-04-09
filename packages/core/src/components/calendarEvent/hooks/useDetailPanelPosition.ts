@@ -2,7 +2,7 @@ import { RefObject } from 'preact';
 import { useState, useCallback, useEffect } from 'preact/hooks';
 
 import { getTimeColumnWidth } from '@/components/calendarEvent/utils';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import { YearMultiDaySegment } from '@/components/yearView/utils';
 import { Event, ViewType, EventDetailPosition } from '@/types';
 

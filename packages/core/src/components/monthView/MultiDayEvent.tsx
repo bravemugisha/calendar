@@ -3,8 +3,10 @@ import { memo } from 'preact/compat';
 import { useState, useRef, useMemo } from 'preact/hooks';
 import { Temporal } from 'temporal-polyfill';
 
-import { getEventIcon } from '@/components/monthView/util';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import {
+  MultiDayEventSegment,
+  getEventIcon,
+} from '@/components/monthView/util';
 import { monthEventColorBar } from '@/styles/classNames';
 import { Event } from '@/types';
 import {

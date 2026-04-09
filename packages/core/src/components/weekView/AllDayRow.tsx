@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from 'preact/hooks';
 
 import CalendarEventComponent from '@/components/calendarEvent';
 import { GridContextMenu } from '@/components/contextMenu';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import {
   allDayRow,
   allDayContent,

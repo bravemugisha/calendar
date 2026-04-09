@@ -1,4 +1,4 @@
-import { RefObject, JSX } from 'preact';
+import { RefObject } from 'preact';
 import {
   useState,
   useEffect,
@@ -7,7 +7,6 @@ import {
   useLayoutEffect,
   useCallback,
 } from 'preact/hooks';
-import { Temporal } from 'temporal-polyfill';
 
 import ViewHeader from '@/components/common/ViewHeader';
 import { MobileEventDrawer } from '@/components/mobileEventDrawer';
@@ -23,6 +22,7 @@ import {
 } from '@/components/weekView/util';
 import { defaultDragConfig } from '@/core/config';
 import { useCalendarDrop } from '@/hooks/useCalendarDrop';
+import { useWeekViewSwipe } from '@/hooks/useWeekViewSwipe';
 import { useResponsiveMonthConfig } from '@/hooks/virtualScroll';
 import { useLocale } from '@/locale';
 import { useDragForView } from '@/plugins/dragBridge';
@@ -43,6 +43,13 @@ import {
   getNowInTimeZone,
   getTodayInTimeZone,
 } from '@/utils';
+
+import {
+  buildFullWeekDates,
+  buildMobileWeekDayLabels,
+  buildWeekDates,
+  buildWeekDayLabels,
+} from './utils/weekView';
 
 const WeekView = ({
   app,
@@ -115,47 +122,7 @@ const WeekView = ({
     [currentDate, startOfWeek]
   );
 
-  // Mobile Page Start (Synced with currentDate)
-  // Sliding window: always start exactly at currentDate
-  const [mobilePageStart, setMobilePageStart] = useState<Date>(() => {
-    const d = new Date(currentDate);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  });
-
-  // Sync mobilePageStart with currentDate
-  useEffect(() => {
-    if (!isSlidingView) return;
-    setMobilePageStart(prev => {
-      const target = new Date(currentDate);
-      target.setHours(0, 0, 0, 0);
-
-      const windowStart = new Date(prev);
-      const windowEnd = new Date(prev);
-      windowEnd.setDate(windowEnd.getDate() + columnsPerPage - 1);
-
-      // If the new date is already within the visible window, don't move the window anchor
-      if (target >= windowStart && target <= windowEnd) {
-        return prev;
-      }
-
-      return target;
-    });
-  }, [currentDate, isSlidingView, columnsPerPage]);
-
-  const currentWeekStart = isSlidingView ? mobilePageStart : standardWeekStart;
-
-  // For mobile sliding mode, we render 3 pages to allow for smooth swipe transitions
-  // Page 1: Previous columns
-  // Page 2: Current columns (mobilePageStart)
-  // Page 3: Next columns
   const displayDays = isSlidingView ? columnsPerPage * 3 : 7;
-  const displayStart = useMemo(() => {
-    if (!isSlidingView) return currentWeekStart;
-    const d = new Date(currentWeekStart);
-    d.setDate(d.getDate() - columnsPerPage);
-    return d;
-  }, [currentWeekStart, isSlidingView, columnsPerPage]);
 
   const [currentTime, setCurrentTime] = useState<Date | null>(null);
 
@@ -199,10 +166,6 @@ const WeekView = ({
   const [draftEvent, setDraftEvent] = useState<Event | null>(null);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Mobile Swipe Navigation Logic
-  const [swipeOffset, setSwipeOffset] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
   // References
   const allDayRowRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -210,151 +173,25 @@ const WeekView = ({
   const leftFrozenContentRef = useRef<HTMLDivElement>(null);
   const swipeContentRef = useRef<HTMLDivElement>(null);
 
-  const handleScroll = (
-    e: JSX.TargetedEvent<HTMLDivElement, globalThis.Event>
-  ) => {
-    const { scrollLeft } = e.currentTarget;
-    if (topFrozenContentRef.current) {
-      const baseTranslateX = isSlidingView ? 'calc(-100% / 3)' : '0px';
-      const horizontalOffset = isSlidingView
-        ? `${swipeOffset}px`
-        : `-${scrollLeft}px`;
-      topFrozenContentRef.current.style.transform = `translateX(calc(${baseTranslateX} + ${horizontalOffset}))`;
-      topFrozenContentRef.current.style.transition =
-        isSlidingView && isTransitioning ? 'transform 0.3s ease-out' : 'none';
-    }
-    // Note: leftFrozenContentRef is now inside the scroller and scrolls natively.
-    // No JS sync needed.
-  };
-
-  const touchStartPos = useRef({ x: 0, y: 0 });
-  const isHorizontalSwipe = useRef(false);
-  // Tracks the live drag offset during touchmove without triggering React re-renders
-  const liveSwipeOffsetRef = useRef(0);
-
-  useEffect(() => {
-    if (!isSlidingView) return;
-
-    const scroller = scrollerRef.current;
-    if (!scroller) return;
-
-    const handleScrollerTouchStart = (e: TouchEvent) => {
-      touchStartPos.current = {
-        x: e.touches[0].clientX,
-        y: e.touches[0].clientY,
-      };
-      isHorizontalSwipe.current = false;
-      liveSwipeOffsetRef.current = 0;
-      setIsTransitioning(false);
-    };
-
-    const handleScrollerTouchMove = (e: TouchEvent) => {
-      if (isTransitioning) return;
-
-      const deltaX = e.touches[0].clientX - touchStartPos.current.x;
-      const deltaY = e.touches[0].clientY - touchStartPos.current.y;
-
-      // Detect horizontal swipe on first move
-      if (
-        !isHorizontalSwipe.current &&
-        Math.abs(deltaX) > 10 &&
-        Math.abs(deltaX) > Math.abs(deltaY)
-      ) {
-        isHorizontalSwipe.current = true;
-      }
-
-      if (isHorizontalSwipe.current) {
-        if (e.cancelable) e.preventDefault();
-        const containerWidth = scroller.clientWidth;
-        const maxOffset = containerWidth / 2;
-        const offset = Math.max(-maxOffset, Math.min(maxOffset, deltaX));
-
-        // Direct DOM update — bypass React state/useEffect to eliminate per-frame lag
-        const transform = `translateX(calc(-100% / 3 + ${offset}px))`;
-        if (topFrozenContentRef.current) {
-          topFrozenContentRef.current.style.transition = 'none';
-          topFrozenContentRef.current.style.transform = transform;
-        }
-        if (swipeContentRef.current) {
-          swipeContentRef.current.style.transition = 'none';
-          swipeContentRef.current.style.transform = transform;
-        }
-        liveSwipeOffsetRef.current = offset;
-      }
-    };
-
-    const handleScrollerTouchEnd = () => {
-      if (!isHorizontalSwipe.current) {
-        liveSwipeOffsetRef.current = 0;
-        return;
-      }
-
-      const offset = liveSwipeOffsetRef.current;
-      const threshold = 100; // Snap threshold
-      const containerWidth =
-        swipeContentRef.current?.clientWidth || scroller.clientWidth;
-      const dayWidth = containerWidth / displayDays;
-
-      if (offset > threshold) {
-        // Snap to Previous Day — CSS transition takes over from current drag position
-        setIsTransitioning(true);
-        setSwipeOffset(dayWidth);
-        setTimeout(() => {
-          const nextDate = new Date(mobilePageStart);
-          nextDate.setDate(nextDate.getDate() - 1);
-          setMobilePageStart(nextDate); // Explicitly move the window anchor
-          app.setCurrentDate(nextDate);
-          setSwipeOffset(0);
-          liveSwipeOffsetRef.current = 0;
-          setIsTransitioning(false);
-        }, 300);
-      } else if (offset < -threshold) {
-        // Snap to Next Day
-        setIsTransitioning(true);
-        setSwipeOffset(-dayWidth);
-        setTimeout(() => {
-          const nextDate = new Date(mobilePageStart);
-          nextDate.setDate(nextDate.getDate() + 1);
-          setMobilePageStart(nextDate); // Explicitly move the window anchor
-          app.setCurrentDate(nextDate);
-          setSwipeOffset(0);
-          liveSwipeOffsetRef.current = 0;
-          setIsTransitioning(false);
-        }, 300);
-      } else {
-        // Bounce back
-        setIsTransitioning(true);
-        setSwipeOffset(0);
-        liveSwipeOffsetRef.current = 0;
-        setTimeout(() => {
-          setIsTransitioning(false);
-        }, 300);
-      }
-    };
-
-    scroller.addEventListener('touchstart', handleScrollerTouchStart, {
-      passive: true,
-    });
-    scroller.addEventListener('touchmove', handleScrollerTouchMove, {
-      passive: false,
-    });
-    scroller.addEventListener('touchend', handleScrollerTouchEnd, {
-      passive: true,
+  const { handleScroll, goToNext, goToPrevious, mobilePageStart } =
+    useWeekViewSwipe({
+      app,
+      columnsPerPage,
+      currentDate,
+      displayDays,
+      isSlidingView,
+      scrollerRef,
+      swipeContentRef,
+      topFrozenContentRef,
     });
 
-    return () => {
-      scroller.removeEventListener('touchstart', handleScrollerTouchStart);
-      scroller.removeEventListener('touchmove', handleScrollerTouchMove);
-      scroller.removeEventListener('touchend', handleScrollerTouchEnd);
-    };
-  }, [
-    isSlidingView,
-    app,
-    currentWeekStart,
-    isTransitioning,
-    columnsPerPage,
-    displayDays,
-  ]);
+  const currentWeekStart = isSlidingView ? mobilePageStart : standardWeekStart;
+  const displayStart = useMemo(() => {
+    if (!isSlidingView) return currentWeekStart;
+    const date = new Date(currentWeekStart);
+    date.setDate(date.getDate() - columnsPerPage);
+    return date;
+  }, [columnsPerPage, currentWeekStart, isSlidingView]);
 
   const appTimeZone = app.timeZone;
 
@@ -633,41 +470,36 @@ const WeekView = ({
     },
   });
 
-  const weekDaysLabels = useMemo(() => {
-    if (isSlidingView) {
-      return Array.from({ length: displayDays }, (_, i) => {
-        const d = new Date(displayStart);
-        d.setDate(d.getDate() + i);
-        return d.toLocaleDateString(locale, { weekday: 'short' });
-      });
-    }
-    return getWeekDaysLabels(locale, 'short', startOfWeek);
-  }, [
-    locale,
-    getWeekDaysLabels,
-    isSlidingView,
-    displayStart,
-    displayDays,
-    startOfWeek,
-  ]);
+  const weekDaysLabels = useMemo(
+    () =>
+      buildWeekDayLabels({
+        displayDays,
+        displayStart,
+        getWeekDaysLabels,
+        isSlidingView,
+        locale,
+        startOfWeek,
+      }),
+    [
+      displayDays,
+      displayStart,
+      getWeekDaysLabels,
+      isSlidingView,
+      locale,
+      startOfWeek,
+    ]
+  );
 
-  const mobileWeekDaysLabels = useMemo(() => {
-    if (!isMobile) return [];
-    const lang = locale.split('-')[0].toLowerCase();
-    if (lang === 'zh' || lang === 'ja') {
-      return getWeekDaysLabels(locale, 'narrow');
-    }
-    // English or other languages: M, Tu, W, Th, F, Sa, Su
-    return weekDaysLabels.map(label => {
-      if (lang === 'en') {
-        if (label.startsWith('Tu')) return 'Tu';
-        if (label.startsWith('Th')) return 'Th';
-        if (label.startsWith('Sa')) return 'Sa';
-        if (label.startsWith('Su')) return 'Su';
-      }
-      return label.charAt(0);
-    });
-  }, [isMobile, locale, getWeekDaysLabels, weekDaysLabels]);
+  const mobileWeekDaysLabels = useMemo(
+    () =>
+      buildMobileWeekDayLabels(
+        isMobile,
+        locale,
+        getWeekDaysLabels,
+        weekDaysLabels
+      ),
+    [getWeekDaysLabels, isMobile, locale, weekDaysLabels]
+  );
 
   const allDayLabelText = useMemo(() => t('allDay'), [t]);
 
@@ -707,89 +539,16 @@ const WeekView = ({
     [secondaryTimeZone, currentDate]
   );
 
-  // Generate week date data
-  const weekDates = useMemo(() => {
-    const todayInTz = Temporal.Now.plainDateISO(appTimeZone);
-    const todayLocal = new Date(
-      todayInTz.year,
-      todayInTz.month - 1,
-      todayInTz.day
-    );
-    const todayKey = todayLocal.toDateString();
-    return weekDaysLabels.map((_, index) => {
-      const date = new Date(displayStart);
-      date.setDate(displayStart.getDate() + index);
-      return {
-        date: date.getDate(),
-        month: date.toLocaleString(locale, { month: 'short' }),
-        fullDate: new Date(date),
-        isToday: date.toDateString() === todayKey,
-      };
-    });
-  }, [displayStart, weekDaysLabels, locale, appTimeZone]);
+  const weekDates = useMemo(
+    () => buildWeekDates(displayStart, weekDaysLabels, locale, appTimeZone),
+    [appTimeZone, displayStart, locale, weekDaysLabels]
+  );
 
-  // Generate full 7-day week data for mobile header
-  const fullWeekDates = useMemo(() => {
-    const todayInTz = Temporal.Now.plainDateISO(appTimeZone);
-    const todayLocal = new Date(
-      todayInTz.year,
-      todayInTz.month - 1,
-      todayInTz.day
-    );
-    const todayKey = todayLocal.toDateString();
-    const currentDateMidnight = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      currentDate.getDate()
-    ).getTime();
-    const start = standardWeekStart;
-    return Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(start);
-      date.setDate(start.getDate() + i);
-      const dateOnly = new Date(
-        date.getFullYear(),
-        date.getMonth(),
-        date.getDate()
-      );
-      return {
-        date: date.getDate(),
-        month: date.toLocaleString(locale, { month: 'short' }),
-        fullDate: new Date(date),
-        isToday: date.toDateString() === todayKey,
-        isCurrent: dateOnly.getTime() === currentDateMidnight,
-        dayName: date.toLocaleDateString(locale, { weekday: 'short' }),
-      };
-    });
-  }, [standardWeekStart, locale, currentDate, appTimeZone]);
-
-  // Sync horizontal transform for swipe
-  useEffect(() => {
-    if (!isSlidingView) {
-      if (topFrozenContentRef.current) {
-        topFrozenContentRef.current.style.transform = '';
-        topFrozenContentRef.current.style.transition = '';
-      }
-      if (swipeContentRef.current) {
-        swipeContentRef.current.style.transform = '';
-        swipeContentRef.current.style.transition = '';
-      }
-      return;
-    }
-
-    const baseTranslateX = 'calc(-100% / 3)';
-    const transition = isTransitioning ? 'transform 0.3s ease-out' : 'none';
-    const transform = `translateX(calc(${baseTranslateX} + ${swipeOffset}px))`;
-
-    if (topFrozenContentRef.current) {
-      topFrozenContentRef.current.style.transition = transition;
-      topFrozenContentRef.current.style.transform = transform;
-    }
-
-    if (swipeContentRef.current) {
-      swipeContentRef.current.style.transition = transition;
-      swipeContentRef.current.style.transform = transform;
-    }
-  }, [swipeOffset, isTransitioning, isSlidingView]);
+  const fullWeekDates = useMemo(
+    () =>
+      buildFullWeekDates(standardWeekStart, locale, currentDate, appTimeZone),
+    [appTimeZone, currentDate, locale, standardWeekStart]
+  );
 
   // Event handling functions
   const handleEventUpdate = (updatedEvent: Event) =>
@@ -843,30 +602,12 @@ const WeekView = ({
         viewType={ViewType.WEEK}
         currentDate={currentDate}
         onPrevious={() => {
-          if (isSlidingView) {
-            const d = new Date(currentDate);
-            d.setDate(d.getDate() - 1);
-            setMobilePageStart(prev => {
-              const next = new Date(prev);
-              next.setDate(next.getDate() - 1);
-              return next;
-            });
-            app.setCurrentDate(d);
-          } else {
+          if (!goToPrevious()) {
             app.goToPrevious();
           }
         }}
         onNext={() => {
-          if (isSlidingView) {
-            const d = new Date(currentDate);
-            d.setDate(d.getDate() + 1);
-            setMobilePageStart(prev => {
-              const next = new Date(prev);
-              next.setDate(next.getDate() + 1);
-              return next;
-            });
-            app.setCurrentDate(d);
-          } else {
+          if (!goToNext()) {
             app.goToNext();
           }
         }}
