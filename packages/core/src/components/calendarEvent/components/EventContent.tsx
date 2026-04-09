@@ -1,7 +1,7 @@
 import { ComponentChildren } from 'preact';
 
 import MultiDayEvent from '@/components/monthView/MultiDayEvent';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import { YearMultiDaySegment } from '@/components/yearView/utils';
 import { ContentSlot } from '@/renderer/ContentSlot';
 import { CustomRenderingStore } from '@/renderer/CustomRenderingStore';

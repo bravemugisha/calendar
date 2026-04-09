@@ -1,6 +1,6 @@
 import { ComponentChildren, RefObject } from 'preact';
 
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import { YearMultiDaySegment } from '@/components/yearView/utils';
 import {
   Event,

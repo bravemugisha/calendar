@@ -5,7 +5,7 @@ import {
   getCalendarContentElement,
   getTimeColumnWidth,
 } from '@/components/calendarEvent/utils';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import { YearMultiDaySegment } from '@/components/yearView/utils';
 import { ViewType, Event, EventLayout } from '@/types';
 import { extractHourFromDate, getEventEndHour } from '@/utils';

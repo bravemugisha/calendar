@@ -1,3 +1,5 @@
+import { Temporal } from 'temporal-polyfill';
+
 import {
   CalendarDays,
   Gift,
@@ -5,9 +7,44 @@ import {
   MapPin,
   Star,
 } from '@/components/common/Icons';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
 import { Event } from '@/types';
 import { daysDifference, temporalToVisualDate } from '@/utils';
+import { createAllDayDisplayComparator } from '@/utils/allDaySort';
+import { extractHourFromDate } from '@/utils/helpers';
+import { logger } from '@/utils/logger';
+
+export interface MultiDayEventSegment {
+  id: string;
+  originalEventId: string;
+  event: Event;
+  startDayIndex: number;
+  endDayIndex: number;
+  segmentType:
+    | 'start'
+    | 'middle'
+    | 'end'
+    | 'single'
+    | 'start-week-end'
+    | 'end-week-start';
+  totalDays: number;
+  segmentIndex: number;
+  isFirstSegment: boolean;
+  isLastSegment: boolean;
+  yPosition?: number;
+}
+
+export interface MonthDayLayoutData {
+  totalSlotsNeeded: number;
+  hasMore: boolean;
+  limit: number;
+  timedEventsOnly: Event[];
+  gapLayers: number[];
+  occupiedLayers: Set<number>;
+  maxOccupiedLayer: number;
+  segmentIsHidden: Set<string>;
+}
+
+const ROW_HEIGHT = 16;
 
 export const getEventIcon = (event: Event) => {
   if (event.icon === false) return null;
@@ -221,6 +258,219 @@ export const analyzeMultiDayEventsForWeek = (
   });
 
   return segments;
+};
+
+export const organizeMultiDaySegments = (
+  multiDaySegments: MultiDayEventSegment[],
+  comparator?: (a: Event, b: Event) => number
+) => {
+  const compareEvents = comparator
+    ? comparator
+    : createAllDayDisplayComparator(
+        multiDaySegments.map(segment => segment.event),
+        (() => {
+          const calendarOrder = new Map<string | undefined, number>();
+          multiDaySegments.forEach(segment => {
+            const id = segment.event.calendarId;
+            if (!calendarOrder.has(id)) {
+              calendarOrder.set(id, calendarOrder.size);
+            }
+          });
+
+          return (a: Event, b: Event) =>
+            (calendarOrder.get(a.calendarId) ?? 0) -
+            (calendarOrder.get(b.calendarId) ?? 0);
+        })()
+      );
+
+  const sortedSegments = [...multiDaySegments].toSorted((a, b) => {
+    if (compareEvents) {
+      const displayPriority = compareEvents(a.event, b.event);
+      if (displayPriority !== 0) {
+        return displayPriority;
+      }
+    }
+
+    const aDays = a.endDayIndex - a.startDayIndex + 1;
+    const bDays = b.endDayIndex - b.startDayIndex + 1;
+
+    if (a.startDayIndex > b.startDayIndex) {
+      return 1;
+    }
+
+    if (aDays !== bDays) {
+      return bDays - aDays;
+    }
+
+    return a.startDayIndex - b.startDayIndex;
+  });
+
+  const segmentsWithPosition: MultiDayEventSegment[] = [];
+
+  sortedSegments.forEach(segment => {
+    let yPosition = 0;
+    let positionFound = false;
+
+    while (!positionFound) {
+      let hasConflict = false;
+      for (const existingSegment of segmentsWithPosition) {
+        const yConflict =
+          Math.abs((existingSegment.yPosition ?? 0) - yPosition) < ROW_HEIGHT;
+        const timeConflict = !(
+          segment.endDayIndex < existingSegment.startDayIndex ||
+          segment.startDayIndex > existingSegment.endDayIndex
+        );
+        if (yConflict && timeConflict) {
+          hasConflict = true;
+          break;
+        }
+      }
+
+      if (hasConflict) {
+        yPosition += ROW_HEIGHT;
+      } else {
+        positionFound = true;
+      }
+    }
+
+    segmentsWithPosition.push({ ...segment, yPosition });
+  });
+
+  const layers: MultiDayEventSegment[][] = [];
+
+  segmentsWithPosition.forEach(segment => {
+    const layerIndex = Math.floor((segment.yPosition ?? 0) / ROW_HEIGHT);
+
+    if (!layers[layerIndex]) {
+      layers[layerIndex] = [];
+    }
+
+    layers[layerIndex].push(segment);
+  });
+
+  layers.forEach(layer => {
+    layer.sort((a, b) => {
+      if (compareEvents) {
+        const displayPriority = compareEvents(a.event, b.event);
+        if (displayPriority !== 0) {
+          return displayPriority;
+        }
+      }
+
+      return a.startDayIndex - b.startDayIndex;
+    });
+  });
+
+  return layers;
+};
+
+export const constructRenderEvents = (
+  events: Event[],
+  weekStart: Date,
+  appTimeZone?: string
+): Event[] => {
+  const renderEvents: Event[] = [];
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekEnd.getDate() + 6);
+  weekEnd.setHours(23, 59, 59, 999);
+
+  events.forEach(event => {
+    if (!event.start || !event.end) {
+      logger.warn('Event missing start or end date:', event);
+      return;
+    }
+
+    const start = temporalToVisualDate(event.start, appTimeZone);
+    const end = event.end
+      ? temporalToVisualDate(event.end, appTimeZone)
+      : start;
+    const startDate = new Date(start);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(end);
+    endDate.setHours(0, 0, 0, 0);
+
+    let adjustedEndDate = new Date(endDate);
+    if (!event.allDay) {
+      const endHasTime =
+        end.getHours() !== 0 ||
+        end.getMinutes() !== 0 ||
+        end.getSeconds() !== 0;
+      if (!endHasTime) {
+        const durationMs = end.getTime() - start.getTime();
+        const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+        if (durationMs > 0 && durationMs < ONE_DAY_MS) {
+          adjustedEndDate = new Date(endDate);
+          adjustedEndDate.setDate(adjustedEndDate.getDate() - 1);
+        }
+      }
+    }
+
+    const isMultiDay =
+      startDate.toDateString() !== adjustedEndDate.toDateString();
+
+    if (isMultiDay && !event.allDay) {
+      return;
+    }
+
+    if (isMultiDay && event.allDay) {
+      let current = new Date(start);
+      if (current < weekStart) {
+        current = new Date(weekStart);
+        current.setHours(0, 0, 0, 0);
+      }
+
+      const loopEnd = end > weekEnd ? weekEnd : end;
+
+      for (
+        let t = start.getTime();
+        t <= loopEnd.getTime();
+        t += 24 * 60 * 60 * 1000
+      ) {
+        const currentLoopDate = new Date(t);
+        if (currentLoopDate < weekStart) continue;
+
+        const currentTemporal = Temporal.PlainDate.from({
+          year: currentLoopDate.getFullYear(),
+          month: currentLoopDate.getMonth() + 1,
+          day: currentLoopDate.getDate(),
+        });
+
+        renderEvents.push({
+          ...event,
+          start: currentTemporal,
+          end: currentTemporal,
+          day: current.getDay(),
+        });
+      }
+    } else {
+      renderEvents.push({
+        ...event,
+        start: event.start,
+        end: event.end,
+        day: start.getDay(),
+      });
+    }
+  });
+
+  return renderEvents;
+};
+
+export const sortDayEvents = (events: Event[]): Event[] =>
+  [...events].toSorted((a, b) => {
+    if (a.allDay !== b.allDay) {
+      return a.allDay ? -1 : 1;
+    }
+
+    if (a.allDay && b.allDay) return 0;
+
+    return extractHourFromDate(a.start) - extractHourFromDate(b.start);
+  });
+
+export const createDateString = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 // Check if a regular event spans multiple days and return time segment information for each day

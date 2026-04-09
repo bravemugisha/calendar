@@ -1,7 +1,7 @@
 import { ComponentChildren } from 'preact';
 
 import { CalendarDays } from '@/components/common/Icons';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
+import { MultiDayEventSegment } from '@/components/monthView/util';
 import {
   eventIcon,
   eventTitleSmall,

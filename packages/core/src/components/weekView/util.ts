@@ -2,8 +2,8 @@ import { EventLayoutCalculator } from '@/components/eventLayout';
 import {
   analyzeMultiDayRegularEvent,
   analyzeMultiDayEventsForWeek,
+  MultiDayEventSegment,
 } from '@/components/monthView/util';
-import { MultiDayEventSegment } from '@/components/monthView/WeekComponent';
 import { Event, EventLayout } from '@/types';
 import { createDateWithHour, getDateByDayIndex } from '@/utils';
 import { createAllDayDisplayComparator } from '@/utils/allDaySort';

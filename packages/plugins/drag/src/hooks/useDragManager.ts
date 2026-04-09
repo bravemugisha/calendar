@@ -106,11 +106,6 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
             : Math.min(sourceRect.width, 120);
           indicatorHeight = sourceRect.height;
           indicator.className = `rounded-sm shadow-sm ${sourceElement.className}`;
-          // Clamp dragOffset so cursor stays within the indicator pill
-          const initialDragOffset = drag.dragOffset ?? indicatorWidth / 2;
-          if (initialDragOffset > indicatorWidth / 2) {
-            drag.dragOffset = Math.round(indicatorWidth / 2);
-          }
         } else {
           indicatorWidth = 120;
           indicatorHeight = 22;
@@ -123,9 +118,7 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
         indicator.style.top = '0px';
         indicator.style.willChange = 'transform';
 
-        const dragOffset = drag.dragOffset ?? indicatorWidth / 2;
-        const dragOffsetY = drag.dragOffsetY ?? indicatorHeight / 2;
-        indicator.style.transform = `translate3d(${drag.startX - dragOffset}px, ${drag.startY - dragOffsetY}px, 0)`;
+        indicator.style.transform = `translate3d(${drag.startX - indicatorWidth / 2}px, ${drag.startY - indicatorHeight / 2}px, 0)`;
 
         document.body.append(indicator);
 
@@ -378,11 +371,8 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
         const [clientX, clientY] = args as [number, number];
         const width = Number.parseFloat(indicator.style.width) || 120;
         const height = Number.parseFloat(indicator.style.height) || 22;
-        const dragOffset = dragPropsRef.current?.drag.dragOffset ?? width / 2;
-        const dragOffsetY =
-          dragPropsRef.current?.drag.dragOffsetY ?? height / 2;
 
-        indicator.style.transform = `translate3d(${clientX - dragOffset}px, ${clientY - dragOffsetY}px, 0)`;
+        indicator.style.transform = `translate3d(${clientX - width / 2}px, ${clientY - height / 2}px, 0)`;
         indicator.style.transition = 'none';
       } else {
         const [dayIndex, startHour, endHour, isAllDay = false, layout] =
