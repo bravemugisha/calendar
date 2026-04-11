@@ -5,6 +5,7 @@ import { getCalendarContentElement } from '@/components/calendarEvent/utils';
 import { MultiDayEventSegment } from '@/components/monthView/util';
 import { Event, ViewType, ICalendarApp, EventDetailPosition } from '@/types';
 import { extractHourFromDate, getEventEndHour } from '@/utils';
+import { logger } from '@/utils/logger';
 
 interface UseEventActionsProps {
   event: Event;
@@ -347,23 +348,41 @@ export const useEventActions = ({
         setActiveDayIndex(event.day ?? null);
       }
 
-      if (app) app.onEventClick(event);
       setIsSelected(true);
       onEventSelect?.(event.id);
 
-      scrollEventToCenter().then(() => {
-        if (!isMobile) {
-          onDetailPanelToggle?.(detailPanelKey);
-          setDetailPanelPosition({
-            top: -9999,
-            left: -9999,
-            eventHeight: 0,
-            eventMiddleY: 0,
-            isSunday: false,
-          });
-          requestAnimationFrame(() => updatePanelPosition());
-        }
-      });
+      const openDetailPanel = () => {
+        scrollEventToCenter().then(() => {
+          if (!isMobile) {
+            onDetailPanelToggle?.(detailPanelKey);
+            setDetailPanelPosition({
+              top: -9999,
+              left: -9999,
+              eventHeight: 0,
+              eventMiddleY: 0,
+              isSunday: false,
+            });
+            requestAnimationFrame(() => updatePanelPosition());
+          }
+        });
+      };
+
+      if (!app) {
+        openDetailPanel();
+        return;
+      }
+
+      app.onEventClick(event);
+
+      Promise.resolve(app.onEventDoubleClick?.(event, e))
+        .then(result => {
+          if (result === false) return;
+          openDetailPanel();
+        })
+        .catch(error => {
+          logger.error('Failed to handle event double click callback', error);
+          openDetailPanel();
+        });
     },
     [
       clearPendingClick,

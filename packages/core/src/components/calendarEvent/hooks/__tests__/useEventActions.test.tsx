@@ -172,6 +172,68 @@ describe('useEventActions', () => {
     expect(setIsSelected).toHaveBeenCalledWith(true);
   });
 
+  it('allows onEventDoubleClick to suppress the default detail panel', async () => {
+    const app = {
+      onEventClick: jest.fn(),
+      onEventDoubleClick: jest.fn(() => false),
+    } as unknown as import('@/types').ICalendarApp;
+    const onEventSelect = jest.fn();
+    const onDetailPanelToggle = jest.fn();
+    const selectedEventElementRef = { current: null as HTMLElement | null };
+    const setIsSelected = jest.fn();
+
+    const DayHarness = () => {
+      const handlers = useEventActions({
+        event: baseEvent,
+        viewType: ViewType.DAY,
+        isAllDay: true,
+        isMultiDay: false,
+        app,
+        calendarRef: { current: document.createElement('div') },
+        firstHour: 0,
+        hourHeight: 56,
+        isMobile: false,
+        canOpenDetail: true,
+        detailPanelKey: 'event-1',
+        onEventSelect,
+        onDetailPanelToggle,
+        setIsSelected,
+        setDetailPanelPosition: jest.fn(),
+        setContextMenuPosition: jest.fn(),
+        setActiveDayIndex: jest.fn(),
+        getClickedDayIdx: jest.fn(),
+        updatePanelPosition: jest.fn(),
+        selectedEventElementRef,
+      });
+
+      return (
+        <button
+          type='button'
+          data-testid='day-event-suppress'
+          onDblClick={handlers.handleDoubleClick}
+        >
+          Event
+        </button>
+      );
+    };
+
+    const { getByTestId } = render(<DayHarness />);
+
+    await act(async () => {
+      fireEvent.dblClick(getByTestId('day-event-suppress'), { clientX: 24 });
+      await Promise.resolve();
+    });
+
+    expect(app.onEventClick).toHaveBeenCalledWith(baseEvent);
+    expect(app.onEventDoubleClick).toHaveBeenCalledWith(
+      baseEvent,
+      expect.any(MouseEvent)
+    );
+    expect(onEventSelect).toHaveBeenCalledWith('event-1');
+    expect(setIsSelected).toHaveBeenCalledWith(true);
+    expect(onDetailPanelToggle).not.toHaveBeenCalled();
+  });
+
   it('waits for resource-view scrolling to settle before opening the detail panel', async () => {
     const app = {
       onEventClick: jest.fn(),

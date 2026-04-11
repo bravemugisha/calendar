@@ -246,8 +246,6 @@ export const buildDateGridPreviewUpdate = ({
       const normalizedOriginalStart = new Date(drag.originalStartDate);
       normalizedOriginalStart.setHours(0, 0, 0, 0);
 
-      // Adjust target by how far into the event the user grabbed, so the
-      // grab point stays under the cursor rather than the event start snapping to it.
       const grabOffsetDays = drag.grabDayOffset ?? 0;
       const adjustedTargetDate =
         grabOffsetDays > 0
