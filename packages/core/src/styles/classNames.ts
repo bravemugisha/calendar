@@ -1,6 +1,6 @@
 /**
- * Tailwind CSS class name constants
- * Centralized management of calendar component style class names for easy maintenance and reuse
+ * Shared DayFlow style constants that are still referenced from core components
+ * during the final cleanup phase of the style refactor.
  */
 
 // ==================== Container Styles ====================
@@ -35,26 +35,6 @@ export const headerTitle = 'df-view-header-title';
 export const headerSubtitle = 'df-view-header-subtitle';
 
 // ==================== Button Styles ====================
-
-/**
- * Navigation button container
- */
-export const buttonGroup = 'df-navigation';
-
-/**
- * Navigation button (forward/backward)
- */
-export const navButton = 'df-calendar-nav-button';
-
-/**
- * Today button
- */
-export const todayButton = 'df-today-button df-calendar-today-button';
-
-/**
- * Icon button size
- */
-export const iconSize = 'h-5 w-5';
 
 /**
  * Cancel button
@@ -99,11 +79,6 @@ export const dateNumber = 'df-date-number';
  * Virtual scroll container
  */
 export const scrollContainer = 'df-scroll-container';
-
-/**
- * Month view 6-row grid container - fixed 6-row equal height layout
- */
-export const monthGrid6Rows = 'df-month-grid';
 
 /**
  * Month day cell
@@ -217,78 +192,42 @@ export const allDayCell = 'df-all-day-cell flex-1 border-r relative';
 /**
  * Base event style
  */
-export const baseEvent =
-  'df-event calendar-event select-none pointer-events-auto';
-
-/**
- * Event shadow
- */
-export const eventShadow = 'shadow-sm';
-
-/**
- * All-day event rounded corners (full)
- */
-export const allDayRounded = 'rounded-xl my-0.5';
-
-/**
- * All-day event rounded corners (left)
- */
-export const allDayRoundedLeft = 'rounded-l-xl rounded-r-none my-0.5';
-
-/**
- * All-day event rounded corners (right)
- */
-export const allDayRoundedRight = 'rounded-r-xl rounded-l-none my-0.5';
-
-/**
- * All-day event no rounded corners (middle segment)
- */
-export const allDayRoundedNone = 'rounded-none my-0.5';
-
-/**
- * Regular event rounded corners
- */
-export const regularEventRounded = 'rounded-sm';
+export const baseEvent = 'df-event calendar-event';
 
 /**
  * MonthView all-day event content
  */
-export const monthAllDayContent =
-  'text-xs px-1 rounded truncate cursor-pointer flex items-center';
+export const monthAllDayContent = 'df-event__month-all-day';
 
 /**
  * MonthView regular event content
  */
-export const monthRegularContent =
-  'text-xs cursor-pointer flex items-center justify-between px-0.5';
+export const monthRegularContent = 'df-event__month-regular';
 
 /**
  * Event title (small)
  */
-export const eventTitleSmall =
-  'df-event-title font-medium text-xs truncate pr-1';
+export const eventTitleSmall = 'df-event__title';
 
 /**
  * Event time text
  */
-export const eventTime = 'df-event-time text-xs opacity-80 truncate';
+export const eventTime = 'df-event__time';
 
 /**
  * Event color bar (Day/Week view timed events)
  */
-export const eventColorBar =
-  'df-event-color-bar absolute left-1 top-1 bottom-1 w-[3px] rounded-full';
+export const eventColorBar = 'df-event__color-bar';
 
 /**
  * Event color bar (Month view regular events)
  */
-export const monthEventColorBar =
-  'df-month-event-color-bar inline-block w-0.75 h-3 mr-1 shrink-0 rounded-full';
+export const monthEventColorBar = 'df-event__month-color-bar';
 
 /**
  * Event icon
  */
-export const eventIcon = 'h-3 w-3 mr-1';
+export const eventIcon = 'df-event__icon-svg';
 
 // ==================== Resize Handles ====================
 
@@ -296,25 +235,25 @@ export const eventIcon = 'h-3 w-3 mr-1';
  * Resize handle (top)
  */
 export const resizeHandleTop =
-  'absolute top-0 left-0 w-full h-1.5 cursor-ns-resize z-10 rounded-t-sm';
+  'df-event__resize-handle df-event__resize-handle--top';
 
 /**
  * Resize handle (bottom)
  */
 export const resizeHandleBottom =
-  'absolute bottom-0 left-0 w-full h-1.5 cursor-ns-resize z-10 rounded-b-sm';
+  'df-event__resize-handle df-event__resize-handle--bottom';
 
 /**
  * Resize handle (left)
  */
 export const resizeHandleLeft =
-  'resize-handle absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity z-20';
+  'df-event__resize-handle df-event__resize-handle--left resize-handle';
 
 /**
  * Resize handle (right)
  */
 export const resizeHandleRight =
-  'resize-handle absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize opacity-0 group-hover:opacity-100 transition-opacity z-20';
+  'df-event__resize-handle df-event__resize-handle--right resize-handle';
 
 // ==================== Mini Calendar Styles (DayView) ====================
 
@@ -369,15 +308,13 @@ export const miniCalendarSelected =
  * Calendar navigation button (prev/next arrows)
  * Used in TodayBox component for navigation
  */
-export const calendarNavButton =
-  'df-nav-button df-calendar-nav-button group relative inline-flex items-center justify-center w-7 h-7 rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 active:bg-gray-100 dark:active:bg-gray-600 transition-all duration-150 shadow-sm hover:shadow focus:outline-none';
+export const calendarNavButton = 'df-nav-button df-calendar-nav-button group';
 
 /**
  * Calendar today button
  * Used in TodayBox component for "Today" button
  */
-export const calendarTodayButton =
-  'df-today-button df-calendar-today-button inline-flex items-center justify-center px-4 h-7 text-sm font-medium rounded-md border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-500 active:bg-gray-100 dark:active:bg-gray-600 transition-all duration-150 shadow-sm hover:shadow focus:outline-none';
+export const calendarTodayButton = 'df-today-button df-calendar-today-button';
 
 /**
  * Navigation button icon size
@@ -395,23 +332,10 @@ export const eventDetailPanel =
   'df-event-detail-panel df-portal fixed shadow-lg border rounded-lg';
 
 /**
- * Event detail dialog overlay
- * Used in DefaultEventDetailDialog
- */
-export const dialogOverlay =
-  'df-dialog-overlay fixed inset-0 bg-black/50 flex items-center justify-center z-50';
-
-/**
  * Event detail dialog container
  */
 export const dialogContainer =
   'df-dialog-container relative shadow-2xl border rounded-lg p-6 max-w-md w-full mx-4';
-
-/**
- * Dropdown panel (ViewSwitcher, ColorPicker)
- */
-export const dropdownPanel =
-  'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-gray-900/50 overflow-hidden';
 
 /**
  * Calendar picker dropdown (for selecting calendar for an event)
@@ -466,22 +390,12 @@ export const mobileFullscreen =
 // ==================== Form Input Styles ====================
 
 /**
- * Search input
- */
-export const searchInput = 'df-search-group__input';
-
-/**
  * Icon button (square, no text)
  */
 export const iconButton = 'df-icon-btn';
 
 // ==================== Utility Styles ====================
 
-/**
- * Border styles
- * @deprecated prefer df-* semantic classes; kept for gradual migration
- */
-export const borderGray = 'border-gray-200 dark:border-gray-700';
 export const borderBottom = 'border-b border-gray-200 dark:border-gray-700';
 export const borderTop = 'border-t border-gray-200 dark:border-gray-700';
 export const borderRight = 'border-r border-gray-200 dark:border-gray-700';
@@ -492,9 +406,6 @@ export const borderRight = 'border-r border-gray-200 dark:border-gray-700';
  */
 export const textGray500 = 'text-gray-500 dark:text-gray-400';
 export const textGray600 = 'text-gray-600 dark:text-gray-300';
-export const textGray700 = 'text-gray-700 dark:text-gray-200';
-export const textGray800 = 'text-gray-800 dark:text-gray-100';
-export const textGray900 = 'text-gray-900 dark:text-white';
 
 /**
  * Text sizes
@@ -502,33 +413,18 @@ export const textGray900 = 'text-gray-900 dark:text-white';
  */
 export const textXs = 'text-xs';
 export const textSm = 'text-sm';
-export const textBase = 'text-base';
 export const textLg = 'text-lg';
-export const textXl = 'text-xl';
-export const text2xl = 'text-2xl';
-
-/**
- * Background colors
- * @deprecated prefer df-* semantic classes; kept for gradual migration
- */
-export const bgWhite = 'bg-white dark:bg-gray-900';
-export const bgGray50 = 'bg-gray-50 dark:bg-gray-800';
-export const bgGray100 = 'bg-gray-100 dark:bg-gray-800';
 
 /**
  * Flex layouts
  * @deprecated prefer semantic component classes
  */
-export const flexRow = 'flex';
 export const flexCol = 'flex flex-col';
-export const flexCenter = 'flex items-center justify-center';
-export const flexBetween = 'flex justify-between items-center';
 
 /**
  * Spacing
  * @deprecated prefer semantic component classes
  */
-export const m1 = 'm-1';
 export const mr1 = 'mr-1';
 export const mt3 = 'mt-3';
 export const mb2 = 'mb-2';

@@ -3,6 +3,7 @@ import { memo } from 'preact/compat';
 import { useState, useRef, useMemo } from 'preact/hooks';
 import { Temporal } from 'temporal-polyfill';
 
+import { getAllDaySegmentShape } from '@/components/calendarEvent/utils';
 import {
   MultiDayEventSegment,
   getEventIcon,
@@ -52,20 +53,15 @@ interface MultiDayEventProps {
 const ROW_HEIGHT = 16;
 const ROW_SPACING = 17;
 const POP_TRANSITION = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
-
-const getBorderRadius = (
-  segmentType: MultiDayEventSegment['segmentType']
-): string => {
-  const radiusMap = {
-    single: '0.25rem',
-    start: '0.25rem 0 0 0.25rem',
-    'start-week-end': '0.25rem 0 0 0.25rem',
-    end: '0 0.25rem 0.25rem 0',
-    'end-week-start': '0 0.25rem 0.25rem 0',
-    middle: '0',
-  };
-  return radiusMap[segmentType];
-};
+const mobileFadeStyle = {
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'clip',
+  WebkitMaskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
+  maskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
+  WebkitMaskRepeat: 'no-repeat',
+  maskRepeat: 'no-repeat',
+} as const;
 
 // Render multi-day event component
 export const MultiDayEvent = memo(
@@ -211,7 +207,7 @@ export const MultiDayEvent = memo(
 
       return (
         <div
-          className={`resize-handle absolute ${isLeft ? 'left-0' : 'right-0'} top-0 bottom-0 z-20 w-1 cursor-ew-resize opacity-0 transition-opacity group-hover:opacity-100`}
+          className={`df-event__resize-handle ${isLeft ? 'df-event__resize-handle--left' : 'df-event__resize-handle--right'} resize-handle`}
           onMouseDown={e => {
             e.preventDefault();
             e.stopPropagation();
@@ -252,15 +248,13 @@ export const MultiDayEvent = memo(
         };
 
         return (
-          <div className='pointer-events-auto flex w-full min-w-0 items-center'>
+          <div className='df-month-segment-event__all-day'>
             {segment.isFirstSegment && getEventIcon(visualEvent) && (
-              <div className='mr-1 shrink-0'>
+              <div className='df-event__icon-slot'>
                 <div
-                  className='flex items-center justify-center rounded-full p-0.5 text-white'
+                  className='df-event__year-icon-badge'
                   style={{
                     backgroundColor: getLineColor(visualCalendarId),
-                    width: '12px',
-                    height: '12px',
                   }}
                 >
                   {getEventIcon(visualEvent)}
@@ -268,13 +262,18 @@ export const MultiDayEvent = memo(
               </div>
             )}
 
-            <div className='min-w-0 flex-1'>
-              <div className='truncate text-xs'>{getDisplayText()}</div>
+            <div className='df-month-segment-event__all-day-main'>
+              <div
+                className={`df-month-segment-event__all-day-title ${isMobile ? 'df-mobile-mask-fade' : ''}`}
+                style={isMobile ? mobileFadeStyle : undefined}
+              >
+                {getDisplayText()}
+              </div>
             </div>
 
             {segment.isLastSegment && segment.segmentType !== 'single' && (
-              <div className='ml-1 shrink-0 text-white/80 dark:text-white/90'>
-                <div className='h-1.5 w-1.5 rounded-full bg-white/60 dark:bg-white/80'></div>
+              <div className='df-month-segment-event__tail'>
+                <div className='df-month-segment-event__tail-dot'></div>
               </div>
             )}
           </div>
@@ -289,7 +288,6 @@ export const MultiDayEvent = memo(
       const segmentDays = segment.endDayIndex - segment.startDayIndex + 1;
       const remainingPercent =
         segmentDays > 1 ? ((segmentDays - 1) / segmentDays) * 100 : 0;
-      const startTimeClass = 'text-xs font-medium whitespace-nowrap';
       const startTimeStyle =
         segmentDays > 1
           ? {
@@ -301,7 +299,7 @@ export const MultiDayEvent = memo(
           : undefined;
 
       return (
-        <div className='pointer-events-auto relative flex w-full min-w-0 items-center'>
+        <div className='df-event__month-main'>
           {!hideColorBar && (
             <div
               className={monthEventColorBar}
@@ -312,16 +310,17 @@ export const MultiDayEvent = memo(
               }
             />
           )}
-          <div className='flex min-w-0 flex-1 items-center'>
+          <div className='df-event__month-main'>
             <span
-              className={`block overflow-hidden whitespace-nowrap ${isMobile ? 'df-mobile-mask-fade' : 'truncate'} text-xs font-medium`}
+              className={`df-event__month-title ${isMobile ? 'df-mobile-mask-fade' : ''}`}
+              style={isMobile ? mobileFadeStyle : undefined}
             >
               {titleText}
             </span>
           </div>
           {segment.isFirstSegment && !isMobile && (
             <span
-              className={`${startTimeClass} ${segmentDays === 1 ? 'ml-2' : ''}`}
+              className={`df-month-segment-event__time ${segmentDays === 1 ? 'df-month-segment-event__time--spaced' : ''}`}
               style={startTimeStyle}
             >
               {startTimeText}
@@ -331,7 +330,7 @@ export const MultiDayEvent = memo(
             !visualEvent.allDay &&
             endHour !== 24 &&
             !isMobile && (
-              <span className='ml-auto text-xs font-medium whitespace-nowrap'>
+              <span className='df-month-segment-event__tail-time'>
                 {`ends ${endTimeText}`}
               </span>
             )}
@@ -344,13 +343,12 @@ export const MultiDayEvent = memo(
 
     return (
       <div
-        className='group absolute flex items-center px-1 text-xs transition-all duration-200 select-none hover:shadow-sm dark:hover:shadow-lg dark:hover:shadow-black/20'
+        className='df-month-segment-event'
         style={{
           left: adjustedLeft,
           width: adjustedWidth,
           top: `${topOffset}px`,
           height: `${ROW_HEIGHT}px`,
-          borderRadius: getBorderRadius(segment.segmentType),
           pointerEvents: 'auto',
           zIndex: 10,
           transform: isPopping ? 'scale(1.02)' : 'scale(1)',
@@ -374,6 +372,12 @@ export const MultiDayEvent = memo(
                 }),
           cursor: isDraggable ? 'pointer' : viewable ? 'pointer' : 'default',
         }}
+        data-all-day={String(!!visualEvent.allDay)}
+        data-selected={String(isSelected)}
+        data-dragging={String(isDragging)}
+        data-resizing={String(isResizing)}
+        data-popping={String(!!isPopping)}
+        data-segment-shape={getAllDaySegmentShape(segment)}
         data-segment-days={segmentDays}
         onMouseDown={handleMouseDown}
         onMouseUp={handleMouseUp}
@@ -387,7 +391,9 @@ export const MultiDayEvent = memo(
           <>
             {segment.isFirstSegment && (
               <div
-                className='pointer-events-auto absolute top-1/2 left-5 z-50 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 bg-white'
+                className='df-event__touch-resize-indicator'
+                data-axis='horizontal'
+                data-position='left'
                 style={{ borderColor: getLineColor(calendarId) }}
                 onTouchStart={e => {
                   e.stopPropagation();
@@ -397,7 +403,9 @@ export const MultiDayEvent = memo(
             )}
             {segment.isLastSegment && (
               <div
-                className='pointer-events-auto absolute top-1/2 right-5 z-50 h-2.5 w-2.5 -translate-y-1/2 rounded-full border-2 bg-white'
+                className='df-event__touch-resize-indicator'
+                data-axis='horizontal'
+                data-position='right'
                 style={{ borderColor: getLineColor(calendarId) }}
                 onTouchStart={e => {
                   e.stopPropagation();
@@ -409,7 +417,7 @@ export const MultiDayEvent = memo(
         )}
         {renderResizeHandle('left')}
         <div
-          className='min-w-0 flex-1'
+          className='df-month-segment-event__body'
           style={{
             cursor: isResizing ? 'ew-resize' : 'pointer',
           }}

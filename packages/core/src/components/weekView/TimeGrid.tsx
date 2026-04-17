@@ -70,6 +70,8 @@ interface TimeGridProps {
   ) => void;
   handleEventUpdate: (event: CalendarEvent) => void;
   handleEventDelete: (id: string) => void;
+  setDraftEvent: (event: CalendarEvent | null) => void;
+  setIsDrawerOpen: (isOpen: boolean) => void;
 
   onDateChange?: (date: Date) => void;
   newlyCreatedEventId: string | null;
@@ -119,6 +121,8 @@ export const TimeGrid = ({
   handleResizeStart,
   handleEventUpdate,
   handleEventDelete,
+  setDraftEvent,
+  setIsDrawerOpen,
   onDateChange,
   newlyCreatedEventId,
   setNewlyCreatedEventId,
@@ -543,6 +547,19 @@ export const TimeGrid = ({
                           selectedEventId={selectedEventId}
                           detailPanelEventId={detailPanelEventId}
                           onEventSelect={(eventId: string | null) => {
+                            const isViewable =
+                              app.getReadOnlyConfig(eventId ?? undefined)
+                                .viewable !== false;
+                            const evt = currentWeekEvents.find(
+                              currentEvent => currentEvent.id === eventId
+                            );
+
+                            if ((isMobile || isTouch) && evt && isViewable) {
+                              setDraftEvent(evt);
+                              setIsDrawerOpen(true);
+                              return;
+                            }
+
                             setSelectedEventId(eventId);
                             if (app.state.highlightedEventId) {
                               app.highlightEvent(null);

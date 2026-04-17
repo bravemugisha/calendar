@@ -1,15 +1,27 @@
 import { CalendarDays } from '@/components/common/Icons';
-import { monthAllDayContent, mr1, eventIcon } from '@/styles/classNames';
+import { monthAllDayContent, eventIcon } from '@/styles/classNames';
 import { Event } from '@/types';
+
+const mobileFadeStyle = {
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'clip',
+  WebkitMaskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
+  maskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
+  WebkitMaskRepeat: 'no-repeat',
+  maskRepeat: 'no-repeat',
+} as const;
 
 interface MonthAllDayContentProps {
   event: Event;
   isEventSelected: boolean;
+  isMobile: boolean;
 }
 
 const MonthAllDayContent = ({
   event,
-  isEventSelected,
+  isEventSelected: _isEventSelected,
+  isMobile,
 }: MonthAllDayContentProps) => {
   const showIcon = event.icon !== false;
   const customIcon = typeof event.icon === 'boolean' ? null : event.icon;
@@ -18,20 +30,19 @@ const MonthAllDayContent = ({
     <div className={monthAllDayContent}>
       {showIcon &&
         (customIcon ? (
-          <div className={`${mr1} shrink-0`}>{customIcon}</div>
+          <div className='df-event__icon-slot'>{customIcon}</div>
         ) : event.title.toLowerCase().includes('easter') ||
           event.title.toLowerCase().includes('holiday') ? (
-          <span
-            className={`inline-block ${mr1} shrink-0 ${isEventSelected ? 'text-yellow-200' : 'text-yellow-600'}`}
-          >
-            ⭐
-          </span>
+          <span className='df-event__holiday-icon'>⭐</span>
         ) : (
-          <CalendarDays
-            className={`${eventIcon} ${isEventSelected ? 'text-white' : ''}`}
-          />
+          <span className='df-event__icon-slot'>
+            <CalendarDays className={eventIcon} />
+          </span>
         ))}
-      <span className={`truncate ${isEventSelected ? 'text-white' : ''}`}>
+      <span
+        className={`df-event__month-title ${isMobile ? 'df-mobile-mask-fade' : ''}`}
+        style={isMobile ? mobileFadeStyle : undefined}
+      >
         {event.title}
       </span>
     </div>

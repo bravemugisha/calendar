@@ -5,7 +5,6 @@ import { MultiDayEventSegment } from '@/components/monthView/util';
 import {
   eventIcon,
   eventTitleSmall,
-  px1,
   resizeHandleLeft,
   resizeHandleRight,
 } from '@/styles/classNames';
@@ -61,24 +60,23 @@ const AllDayContent = ({
   })();
 
   const innerContent = (
-    <div className='flex h-full flex-1 items-center overflow-hidden'>
+    <div className='df-event__content-row'>
       {showIcon &&
         (customIcon ? (
-          <div className='mr-1 shrink-0'>{customIcon}</div>
+          <div className='df-event__icon-slot'>{customIcon}</div>
         ) : (
-          <CalendarDays className={eventIcon} />
+          <span className='df-event__icon-slot'>
+            <CalendarDays className={eventIcon} />
+          </span>
         ))}
-      <div className={`${eventTitleSmall} pr-1`} style={{ lineHeight: '1.2' }}>
+      <div className={`${eventTitleSmall} df-event__title--tight`}>
         {event.title}
       </div>
     </div>
   );
 
   return (
-    <div
-      className={`absolute inset-0 flex items-center overflow-hidden pl-3 ${px1} group py-0`}
-      style={titleOffsetStyle}
-    >
+    <div className='df-event__all-day-shell' style={titleOffsetStyle}>
       {renderSlot ? renderSlot(innerContent) : innerContent}
 
       {/* Left/Right resize handles — absolute positioned, always rendered outside the slot */}

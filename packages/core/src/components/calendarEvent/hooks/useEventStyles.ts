@@ -246,6 +246,7 @@ export const useEventStyles = ({
           width: '6px',
           zIndex: 1000,
           overflow: 'hidden',
+          borderRadius: '0.25rem',
         };
 
         if (eventVisibility === 'sticky-left') {
@@ -353,6 +354,7 @@ export const useEventStyles = ({
             height: '6px',
             zIndex: 1000,
             overflow: 'hidden',
+            borderRadius: '0.25rem',
           };
         }
 
@@ -372,6 +374,7 @@ export const useEventStyles = ({
           height: '6px',
           zIndex: 1000,
           overflow: 'hidden',
+          borderRadius: '0.25rem',
         };
       }
     }

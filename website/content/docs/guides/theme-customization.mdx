@@ -193,29 +193,9 @@ DayFlow ships two CSS bundles:
 @import 'tailwindcss';
 ```
 
+DayFlow's distributed CSS is now self-contained. You do **not** need to add `@source` entries, safelists, or extra UnoCSS/Tailwind scanning rules for DayFlow itself.
+
 If your project does **not** use Tailwind, import the full bundle instead:
-
-### Utility class scanning (`@source`)
-
-DayFlow's components still use Tailwind utility classes (`flex`, `bg-white`, `text-gray-600`, etc.) internally for layout and neutral styling. Your project's Tailwind instance must generate those classes by scanning DayFlow's files. The old semantic Tailwind names (`bg-primary`, `text-primary`, etc.) are no longer required by DayFlow internals.
-
-When you import `@dayflow/core/dist/styles.components.css`, Tailwind still needs to scan DayFlow's published JavaScript files to discover the utility classes used inside the library. Tailwind's automatic source detection does not scan `node_modules`, so this `@source` step is required even with Vite + `@tailwindcss/vite`.
-
-Add `@source` directives in your CSS entry file:
-
-```css
-@import '@dayflow/core/dist/styles.components.css';
-@import 'tailwindcss';
-
-/* Required when consuming the published npm package */
-@source '../node_modules/@dayflow/core/dist/**/*.js';
-@source '../node_modules/@dayflow/plugin-drag/dist/**/*.js'; /* if using drag plugin */
-@source '../node_modules/@dayflow/plugin-sidebar/dist/**/*.js'; /* if using sidebar plugin */
-```
-
-Without this, Tailwind will not generate many of the utility classes used inside DayFlow's components and the UI will appear partially or completely unstyled.
-
-If you are working against a local DayFlow workspace checkout instead of the published npm package, point `@source` at the relevant workspace source directories instead.
 
 ```css
 /* app.css — for non-Tailwind projects */
@@ -242,11 +222,11 @@ Add this to your CSS entry file to switch Tailwind to class-based dark mode:
 @import '@dayflow/core/dist/styles.components.css';
 @import 'tailwindcss';
 
-/* Required for theme.mode to work: make dark: utilities respond to .dark class */
+/* Optional: only needed if you plan to use theme.mode */
 @variant dark (.dark &);
 ```
 
-Without this, `theme.mode: 'dark'` will still update the CSS custom properties (`--df-color-*`) correctly, but Tailwind's `dark:` utility classes inside DayFlow's components will only activate when the system preference is dark.
+Without this, `theme.mode: 'dark'` will still update the CSS custom properties (`--df-color-*`) correctly, but DayFlow's internal `dark:` utility rules will only activate when the system preference is dark.
 
 ### Practical recommendation
 

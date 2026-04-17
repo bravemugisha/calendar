@@ -42,6 +42,7 @@ import {
   getActiveDayIndex,
   getClickedDayIndex,
   getEventClasses,
+  getEventSegmentShape,
 } from './utils';
 
 const HIGHLIGHT_POP_DURATION_MS = 650;
@@ -143,6 +144,7 @@ const CalendarEvent = ({
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
+    shouldSuppressClick,
   } = useEventInteraction({
     event,
     isTouchEnabled,
@@ -256,6 +258,7 @@ const CalendarEvent = ({
     hasPendingSelection ||
     (!isTouchEnabled && isPressed) ||
     isBeingDragged;
+  const hasTouchResizeHandles = isTouchEnabled && isEventSelected && isEditable;
 
   // Styles Hook
   const { calculateEventStyle } = useEventStyles({
@@ -417,18 +420,35 @@ const CalendarEvent = ({
     event.calendarIds && event.calendarIds.length > 1
       ? getCalendarEventBgColors(event, calendarRegistry)
       : null;
+  const eventSegmentShape = getEventSegmentShape(
+    viewType,
+    isAllDay,
+    segment,
+    yearSegment
+  );
 
   return (
     <>
       <div
         ref={eventRef}
         data-event-id={event.id}
+        data-view={viewType}
+        data-all-day={String(isAllDay)}
+        data-selected={String(isEventSelected)}
+        data-dragging={String(isBeingDragged)}
+        data-resizing={String(isBeingResized)}
+        data-popping={String(isPopping)}
+        data-multi-day={String(isMultiDay)}
+        data-editable={String(isEditable)}
+        data-draggable={String(isDraggable)}
+        data-viewable={String(canOpenDetail)}
+        data-segment-shape={eventSegmentShape}
+        data-month-stack={String(viewType === ViewType.MONTH && !isMultiDay)}
+        data-touch-handles={String(hasTouchResizeHandles)}
         className={`${getEventClasses(
           viewType,
           isAllDay,
-          isMultiDay,
-          segment,
-          yearSegment
+          isMultiDay
         )} ${isAllDay && newlyCreatedEventId === event.id ? 'df-all-day-event-animate' : ''} ${className ?? ''}`}
         style={{
           ...(disableDefaultStyle ? {} : calculateEventStyle()),
@@ -453,7 +473,14 @@ const CalendarEvent = ({
                 }),
           ...styleOverride,
         }}
-        onClick={handleClick}
+        onClick={e => {
+          if (isTouchEnabled && shouldSuppressClick()) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+          handleClick(e as MouseEvent);
+        }}
         onContextMenu={handleContextMenu}
         onDblClick={handleDoubleClick}
         onMouseDown={e => {

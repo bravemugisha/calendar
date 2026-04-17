@@ -1,0 +1,187 @@
+@layer components {
+  /* ===================================================================
+   * View layout overrides
+   * =================================================================== */
+
+  .df-day-view {
+    display: flex;
+    height: 100%;
+    background-color: var(--df-color-muted);
+  }
+
+  .df-calendar {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    overflow: hidden;
+    height: 100%;
+    user-select: none;
+  }
+
+  .df-calendar-shell {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    height: 100%;
+    flex: 1 1 0%;
+    flex-direction: column;
+    overflow: hidden;
+    border-left: 1px solid transparent;
+    background-color: var(--df-color-background);
+    transition:
+      margin-left 200ms ease-in-out,
+      border-color 200ms ease-in-out,
+      box-shadow 200ms ease-in-out,
+      background-color 200ms ease-in-out;
+  }
+
+  .df-calendar-shell[data-sidebar-collapsed='true'] {
+    border-left-color: var(--df-color-border);
+    box-shadow:
+      0 20px 25px -5px rgb(0 0 0 / 0.1),
+      0 8px 10px -6px rgb(0 0 0 / 0.1);
+  }
+
+  .df-view-header-container {
+    padding: 0.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+  }
+
+  .df-view-header-title {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    color: var(--df-color-foreground);
+  }
+
+  .df-view-header-subtitle {
+    margin-top: 0.75rem;
+    line-height: 1.5rem;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-navigation {
+    display: flex;
+    align-items: center;
+  }
+
+  .df-icon-btn {
+    display: flex;
+    height: 1.75rem;
+    width: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.25rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 150ms;
+  }
+
+  .df-icon-btn:hover {
+    background-color: var(--df-color-hover);
+  }
+
+  .df-week-header {
+    display: flex;
+    border-bottom: 1px solid var(--df-color-border);
+  }
+
+  .df-week-day-cell {
+    display: flex;
+    flex: 1;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    color: var(--df-color-muted-foreground);
+    font-size: 0.875rem;
+    padding: 0.25rem;
+    user-select: none;
+  }
+
+  .df-date-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    width: 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    user-select: none;
+  }
+
+  .df-month-date-number-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    text-align: right;
+    padding-inline: 0.5rem;
+    height: 33px;
+    position: relative;
+    z-index: 20;
+  }
+
+  .df-month-date-number {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.5rem;
+    min-width: 1.5rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    padding-inline: 0.25rem;
+  }
+
+  .df-month-day-cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--df-color-border);
+  }
+
+  .df-month-grid {
+    display: grid;
+    grid-template-rows: repeat(6, minmax(0, 1fr));
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .df-scroll-container {
+    flex: 1;
+    overflow: auto;
+    will-change: scroll-position;
+    overscroll-behavior: contain;
+  }
+
+  .df-week-header-row {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid var(--df-color-border);
+    background-color: var(--df-color-background);
+  }
+
+  .df-week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .df-week-header-row .df-week-grid {
+    padding-inline: 0.5rem;
+  }
+
+  .df-day-label {
+    text-align: right;
+    color: var(--df-color-muted-foreground);
+    font-size: 0.875rem;
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    user-select: none;
+  }
+}

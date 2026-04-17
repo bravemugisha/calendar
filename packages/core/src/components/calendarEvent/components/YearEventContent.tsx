@@ -40,7 +40,6 @@ const YearEventContent = ({
     lineColors.length > 1
       ? { background: indicatorColorBarValue }
       : { backgroundColor: indicatorColorBarValue };
-  const icon = isAllDay ? getEventIcon(event) : null;
   const { isFirstSegment, isLastSegment } = segment;
 
   const renderResizeHandle = (position: 'left' | 'right') => {
@@ -53,7 +52,7 @@ const YearEventContent = ({
 
     return (
       <div
-        className={`resize-handle absolute ${isLeft ? 'left-0' : 'right-0'} top-0 bottom-0 z-20 w-1 cursor-ew-resize opacity-0 transition-opacity group-hover:opacity-100`}
+        className={`df-event__resize-handle ${isLeft ? 'df-event__resize-handle--left' : 'df-event__resize-handle--right'} resize-handle`}
         onMouseDown={e => {
           e.preventDefault();
           e.stopPropagation();
@@ -80,7 +79,7 @@ const YearEventContent = ({
 
       return (
         <div
-          className='df-year-event-content pointer-events-auto flex h-full w-full min-w-0 items-center'
+          className='df-event__year-content'
           onMouseDown={e => {
             if (onMoveStart) {
               e.stopPropagation();
@@ -89,13 +88,11 @@ const YearEventContent = ({
           }}
         >
           {segment.isFirstSegment && getEventIcon(event) && (
-            <div className='df-year-event-icon mr-1 shrink-0'>
+            <div className='df-event__icon-slot'>
               <div
-                className='flex items-center justify-center rounded-full p-0.5 text-white'
+                className='df-event__year-icon-badge'
                 style={{
                   backgroundColor: getLineColor(calendarId),
-                  width: '12px',
-                  height: '12px',
                 }}
               >
                 {getEventIcon(event)}
@@ -103,24 +100,14 @@ const YearEventContent = ({
             </div>
           )}
 
-          <div className='min-w-0 flex-1'>
-            <div
-              className='df-year-event-title overflow-hidden text-[12px] leading-[16px] whitespace-nowrap'
-              style={{
-                maskImage:
-                  'linear-gradient(to right, black 70%, transparent 100%)',
-                WebkitMaskImage:
-                  'linear-gradient(to right, black 70%, transparent 100%)',
-              }}
-            >
-              {getDisplayText()}
-            </div>
+          <div className='df-event__year-main'>
+            <div className='df-event__year-title'>{getDisplayText()}</div>
           </div>
 
           {/* Add small indicator for continuation if needed, similar to MultiDayEvent */}
           {segment.isLastSegment && !segment.isFirstSegment && (
-            <div className='ml-1 shrink-0 text-white/80 dark:text-white/90'>
-              <div className='h-1.5 w-1.5 rounded-full bg-white/60 dark:bg-white/80'></div>
+            <div className='df-event__year-tail'>
+              <div className='df-event__year-tail-dot'></div>
             </div>
           )}
         </div>
@@ -132,7 +119,7 @@ const YearEventContent = ({
 
     return (
       <div
-        className='df-year-event-content pointer-events-auto flex h-full w-full items-center gap-1 overflow-hidden'
+        className='df-event__year-content df-event__year-content--timed'
         onMouseDown={e => {
           if (onMoveStart) {
             e.stopPropagation();
@@ -143,22 +130,10 @@ const YearEventContent = ({
         {!isAllDay && (
           <span
             style={indicatorColorBarStyle}
-            className='df-year-event-indicator inline-block h-3 w-0.75 shrink-0 rounded-full'
+            className='df-event__year-indicator'
           ></span>
         )}
-        {isAllDay && icon && (
-          <div className='df-year-event-icon flex shrink-0 scale-75 items-center justify-center opacity-80'>
-            {icon}
-          </div>
-        )}
-        <span
-          className='df-year-event-title block w-full overflow-hidden text-[12px] leading-[16px] font-medium whitespace-nowrap'
-          style={{
-            maskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
-            WebkitMaskImage:
-              'linear-gradient(to right, black 70%, transparent 100%)',
-          }}
-        >
+        <span className='df-event__year-title df-event__year-title--strong'>
           {titleText}
         </span>
       </div>

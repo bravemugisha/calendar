@@ -59,9 +59,10 @@ export const QuickCreateEventPopup = ({
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
+      const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 50);
       setInputValue('');
       setSelectedIndex(0);
+      return () => window.clearTimeout(focusTimer);
     }
   }, [isOpen]);
 
@@ -216,6 +217,10 @@ export const QuickCreateEventPopup = ({
     if (!isOpen) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (suggestions.length === 0) {
+        return;
+      }
+
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex(prev => (prev + 1) % suggestions.length);
@@ -241,7 +246,8 @@ export const QuickCreateEventPopup = ({
   return createPortal(
     <div
       ref={popupRef}
-      className={`df-portal df-quick-create ${isReady ? 'df-animate-in df-fade-in df-zoom-in-95' : ''}`}
+      className='df-portal df-quick-create'
+      data-ready={isReady ? 'true' : 'false'}
       style={{
         top: position.top,
         left: position.left,
@@ -252,7 +258,7 @@ export const QuickCreateEventPopup = ({
         <div className='df-quick-create__title'>
           {t('quickCreateEvent') || 'Quick Create Event'}
         </div>
-        <div style={{ position: 'relative' }}>
+        <div className='df-quick-create__input-wrap'>
           <input
             ref={inputRef}
             type='text'
@@ -302,11 +308,8 @@ export const QuickCreateEventPopup = ({
 
       {/* Triangle Arrow */}
       <div
-        className={`df-quick-create__arrow ${
-          placement === 'top'
-            ? 'df-quick-create__arrow--bottom'
-            : 'df-quick-create__arrow--top'
-        }`}
+        className='df-quick-create__arrow'
+        data-placement={placement === 'top' ? 'bottom' : 'top'}
         style={{ left: arrowLeft }}
       />
     </div>,

@@ -653,6 +653,8 @@ const WeekView = ({
         }
         handleEventUpdate={handleEventUpdate}
         handleEventDelete={handleEventDelete}
+        setDraftEvent={setDraftEvent}
+        setIsDrawerOpen={setIsDrawerOpen}
         onDateChange={onDateChange}
         newlyCreatedEventId={newlyCreatedEventId}
         setNewlyCreatedEventId={setNewlyCreatedEventId}
@@ -704,6 +706,8 @@ const WeekView = ({
         }
         handleEventUpdate={handleEventUpdate}
         handleEventDelete={handleEventDelete}
+        setDraftEvent={setDraftEvent}
+        setIsDrawerOpen={setIsDrawerOpen}
         onDateChange={onDateChange}
         newlyCreatedEventId={newlyCreatedEventId}
         setNewlyCreatedEventId={setNewlyCreatedEventId}

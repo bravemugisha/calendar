@@ -2,6 +2,24 @@
 
 DayFlow は、カレンダーコンポーネントの外観をカスタマイズできる `df-` プレフィックス付きの CSS クラスセットを提供しています。これらのクラスは、コアライブラリを変更せずに簡単にスタイルをカスタマイズできるように設計されています。
 
+## 適切な CSS エントリの選び方
+
+Tailwind CSS をすでに使っているかどうかで、読み込むスタイルシートを選んでください。
+
+| エントリ                | 含まれる内容                                  | 使う場面                         |
+| ----------------------- | --------------------------------------------- | -------------------------------- |
+| `styles.css`            | Tailwind preflight / reset を含む完全バンドル | Tailwind を使っていない場合      |
+| `styles.components.css` | コンポーネントスタイルのみ、CSS reset なし    | すでに Tailwind を使っている場合 |
+
+```css
+@import '@dayflow/core/dist/styles.components.css';
+@import 'tailwindcss';
+```
+
+DayFlow が配布する CSS は self-contained です。DayFlow のために `@source`、safelist、UnoCSS/Tailwind の追加スキャン設定を入れる必要はありません。
+
+テーマ上書きでは、`--df-color-*` 変数または以下に記載した安定した `df-*` セマンティッククラスを優先してください。
+
 ## 目次
 
 - [共通クラス](#共通)

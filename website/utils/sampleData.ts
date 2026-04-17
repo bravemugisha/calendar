@@ -206,6 +206,74 @@ const baseAllDayDefinitions: Array<{
   { offset: 20, span: 1, calendarId: 'support', title: 'Support Rotation' },
 ];
 
+/** Multi-calendar sample events that demonstrate calendarIds support. */
+export const generateMultiCalendarEvents = (): Event[] => {
+  const today = Temporal.Now.plainDateISO();
+  const tz = Temporal.Now.timeZoneId();
+
+  const makeZoned = (
+    date: Temporal.PlainDate,
+    hour: number,
+    minute = 0
+  ): Temporal.ZonedDateTime =>
+    Temporal.ZonedDateTime.from({
+      timeZone: tz,
+      year: date.year,
+      month: date.month,
+      day: date.day,
+      hour,
+      minute,
+    });
+
+  return [
+    // Two-calendar timed event — today
+    {
+      id: 'multi-cal-1',
+      title: 'Family Dance Workshop',
+      description: 'Shared across the whole family calendar.',
+      start: makeZoned(today, 10),
+      end: makeZoned(today, 11, 30),
+      calendarId: 'personal',
+      calendarIds: ['personal', 'wellness'],
+      meta: { location: 'Community Center' },
+    },
+    // Three-calendar timed event — tomorrow
+    {
+      id: 'multi-cal-2',
+      title: 'All-Hands Sprint Planning',
+      description: 'Cross-team planning session.',
+      start: makeZoned(today.add({ days: 1 }), 14),
+      end: makeZoned(today.add({ days: 1 }), 16),
+      calendarId: 'team',
+      calendarIds: ['team', 'marketing', 'support'],
+      meta: { location: 'Main Hall' },
+    },
+    // Four-calendar all-day event — spans today + 2 days
+    {
+      id: 'multi-cal-3',
+      title: 'Company Off-site',
+      description: 'Belongs to every team calendar.',
+      start: today.add({ days: 3 }),
+      end: today.add({ days: 5 }),
+      allDay: true,
+      icon: true,
+      calendarId: 'team',
+      calendarIds: ['team', 'personal', 'travel', 'learning'],
+    },
+    // Two-calendar timed event — yesterday (tests backward visibility)
+    {
+      id: 'multi-cal-4',
+      title: 'Retrospective + Wellness Check',
+      description: 'Weekly retro combined with wellness review.',
+      start: makeZoned(today.subtract({ days: 1 }), 15),
+      end: makeZoned(today.subtract({ days: 1 }), 16),
+      calendarId: 'team',
+      calendarIds: ['team', 'wellness'],
+      meta: { location: 'Zoom' },
+    },
+  ];
+};
+
 export const generateSampleEvents = (): Event[] => {
   const today = Temporal.Now.plainDateISO();
   const windowStart = today.subtract({ days: 24 });
@@ -235,6 +303,9 @@ export const generateSampleEvents = (): Event[] => {
       )
     );
   });
+
+  // Append multi-calendar demo events
+  events.push(...generateMultiCalendarEvents());
 
   // Annual events for Year View demonstration
   const currentYear = today.year;

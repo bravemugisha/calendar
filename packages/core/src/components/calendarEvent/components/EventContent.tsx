@@ -170,8 +170,12 @@ export const EventContent = ({
   }
 
   if (isMonthView) {
-    const defaultContent = event.allDay ? (
-      <MonthAllDayContent event={event} isEventSelected={isEventSelected} />
+    const defaultContent = isAllDay ? (
+      <MonthAllDayContent
+        event={event}
+        isEventSelected={isEventSelected}
+        isMobile={isMobile}
+      />
     ) : (
       <MonthRegularContent
         event={event}

@@ -7,6 +7,7 @@ import {
   MapPin,
   Star,
 } from '@/components/common/Icons';
+import { eventIcon } from '@/styles/classNames';
 import { Event } from '@/types';
 import { daysDifference, temporalToVisualDate } from '@/utils';
 import { createAllDayDisplayComparator } from '@/utils/allDaySort';
@@ -59,14 +60,14 @@ export const getEventIcon = (event: Event) => {
     title.includes('vacation') ||
     title.includes('假期')
   ) {
-    return <Gift className='h-3 w-3' />;
+    return <Gift className={eventIcon} />;
   }
   if (
     title.includes('birthday') ||
     title.includes('anniversary') ||
     title.includes('生日')
   ) {
-    return <Heart className='h-3 w-3' />;
+    return <Heart className={eventIcon} />;
   }
   if (
     title.includes('conference') ||
@@ -74,17 +75,17 @@ export const getEventIcon = (event: Event) => {
     title.includes('会议') ||
     title.includes('研讨')
   ) {
-    return <Star className='h-3 w-3' />;
+    return <Star className={eventIcon} />;
   }
   if (
     title.includes('trip') ||
     title.includes('travel') ||
     title.includes('旅行')
   ) {
-    return <MapPin className='h-3 w-3' />;
+    return <MapPin className={eventIcon} />;
   }
 
-  return <CalendarDays className='h-3 w-3' />;
+  return <CalendarDays className={eventIcon} />;
 };
 
 // Analyze multi-day events and generate segments for the current week (supports all-day events and multi-day regular events)

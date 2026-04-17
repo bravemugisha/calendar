@@ -164,7 +164,7 @@ export const CalendarPicker = ({
               <div className='mr-2 h-3 w-3 text-sm'>&nbsp;</div>
             )}
             <span
-              className='df-calendar-picker__color-swatch mr-2'
+              className='df-calendar-picker__color-swatch--sm mr-2'
               style={{ backgroundColor: getColorForCalendarId(opt.value) }}
             />
             <span className='df-calendar-picker__option-label'>

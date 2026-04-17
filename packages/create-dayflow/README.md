@@ -24,7 +24,7 @@ bun x create-dayflow
 
 - **Framework Detection**: Detects your framework and suggests the correct `@dayflow` adapter.
 - **Plugin Selection**: Choose from Drag & Drop, Sidebar, Keyboard Shortcuts, and Localization.
-- **Tailwind Integration**: Automatically configures Tailwind v4 scanning for DayFlow components.
+- **Tailwind Integration**: Automatically adds `styles.components.css` and the optional class-based dark-mode variant for `theme.mode`.
 - **Package Manager Detection**: Identifies your lockfile and uses the appropriate package manager.
 
 ## Documentation

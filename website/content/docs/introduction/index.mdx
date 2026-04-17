@@ -45,16 +45,11 @@ Alternatively, you can import it in your CSS file:
 ```css
 @import '@dayflow/core/dist/styles.components.css';
 @import 'tailwindcss';
-
-/* DayFlow: scan compiled JS so Tailwind generates utility classes used inside DayFlow components */
-@source '../node_modules/@dayflow/core/dist/**/*.js';
-@source '../node_modules/@dayflow/plugin-drag/dist/**/*.js'; /* if using drag plugin */
-@source '../node_modules/@dayflow/plugin-sidebar/dist/**/*.js'; /* if using sidebar plugin */
 ```
 
 See [Tailwind V4 integration](https://calendar.dayflow.studio/docs/guides/theme-customization#tailwind-v4-integration) for more details.
 
-> **Tip:** If you use the `create-dayflow` setup wizard and choose "Yes" for Tailwind CSS, these configurations will be added to your root CSS file automatically.
+> **Tip:** If you use the `create-dayflow` setup wizard and choose "Yes" for Tailwind CSS, it will add this import for you automatically.
 
 </Callout>
 

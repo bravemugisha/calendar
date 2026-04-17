@@ -84,6 +84,13 @@ export default defineConfig({
         ),
       },
       {
+        find: '@dayflow/resource-grid/dist/styles.components.css',
+        replacement: resolve(
+          __dirname,
+          '../resource-grid/src/styles/tailwind-components.css'
+        ),
+      },
+      {
         find: '@grid/styles.css',
         replacement: resolve(
           __dirname,

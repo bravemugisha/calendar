@@ -10,10 +10,21 @@ A date/time range picker built on the Temporal API. Supports date-only and date+
 
 <PackageTabs pkg='@dayflow/ui-range-picker' />
 
+For projects that already use Tailwind CSS, import the component-only bundle:
+
+```css
+@import '@dayflow/ui-range-picker/dist/styles.components.css';
+@import 'tailwindcss';
+```
+
+For projects that do not use Tailwind CSS, import the full stylesheet instead:
+
 ```tsx
 import { RangePicker } from '@dayflow/ui-range-picker';
 import '@dayflow/ui-range-picker/dist/styles.css';
 ```
+
+The distributed CSS is self-contained. You do not need to add `@source`, safelists, or extra UnoCSS/Tailwind scanning rules for this package.
 
 ## Basic Usage
 

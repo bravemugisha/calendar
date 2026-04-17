@@ -1,14 +1,20 @@
-import {
-  monthRegularContent,
-  monthEventColorBar,
-  textXs,
-} from '@/styles/classNames';
+import { monthRegularContent, monthEventColorBar } from '@/styles/classNames';
 import { Event, ICalendarApp } from '@/types';
 import {
   getCalendarLineColors,
   buildColorBarGradient,
   extractHourFromDate,
 } from '@/utils';
+
+const mobileFadeStyle = {
+  overflow: 'hidden',
+  whiteSpace: 'nowrap',
+  textOverflow: 'clip',
+  WebkitMaskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
+  maskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
+  WebkitMaskRepeat: 'no-repeat',
+  maskRepeat: 'no-repeat',
+} as const;
 
 interface MonthRegularContentProps {
   event: Event;
@@ -21,7 +27,7 @@ interface MonthRegularContentProps {
 const MonthRegularContent = ({
   event,
   app,
-  isEventSelected,
+  isEventSelected: _isEventSelected,
   hideTime,
   isMobile,
 }: MonthRegularContentProps) => {
@@ -37,25 +43,23 @@ const MonthRegularContent = ({
     lineColors.length > 1
       ? { background: colorBarValue }
       : { backgroundColor: colorBarValue };
-  const hideColorBar = isEventSelected && lineColors.length > 1;
+  const hideColorBar = _isEventSelected && lineColors.length > 1;
 
   return (
-    <div className={monthRegularContent}>
-      <div className='flex min-w-0 flex-1 items-center'>
+    <div className={monthRegularContent} data-mobile={String(!!isMobile)}>
+      <div className='df-event__month-main'>
         {!hideColorBar && (
           <div style={colorBarStyle} className={monthEventColorBar} />
         )}
         <span
-          className={`block overflow-hidden whitespace-nowrap ${isMobile ? 'df-mobile-mask-fade' : 'truncate'} ${isEventSelected ? 'text-white' : ''}`}
+          className={`df-event__month-title ${isMobile ? 'df-mobile-mask-fade' : ''}`}
+          style={isMobile ? mobileFadeStyle : undefined}
         >
           {event.title}
         </span>
       </div>
       {!hideTime && !isMobile && (
-        <span
-          className={`${textXs} ml-1 shrink-0 ${isEventSelected ? 'text-white' : ''}`}
-          style={isEventSelected ? undefined : { opacity: 0.8 }}
-        >
+        <span className='df-event__month-time' style={{ opacity: 0.8 }}>
           {startTime}
         </span>
       )}

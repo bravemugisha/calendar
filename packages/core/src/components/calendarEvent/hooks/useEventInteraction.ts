@@ -29,21 +29,23 @@ export const useEventInteraction = ({
   isTouchEnabled,
   onMoveStart,
   onEventLongPress,
+  onEventSelect,
   onDetailPanelToggle,
   canOpenDetail,
   app,
   multiDaySegmentInfo,
   isMultiDay,
   segment,
-  detailPanelKey,
 }: UseEventInteractionProps) => {
   const [isSelected, setIsSelected] = useState(false);
   const [isPressed, setIsPressed] = useState(false);
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const touchStartPosRef = useRef<{ x: number; y: number } | null>(null);
+  const suppressClickUntilRef = useRef(0);
 
   const handleTouchStart = (e: TouchEvent) => {
     if (!onMoveStart || !isTouchEnabled) return;
+    e.stopPropagation();
     setIsPressed(true);
 
     const touch = e.touches[0];
@@ -99,10 +101,15 @@ export const useEventInteraction = ({
       if (navigator.vibrate) {
         navigator.vibrate(50);
       }
+
+      suppressClickUntilRef.current = Date.now() + 400;
     }, 500);
   };
 
   const handleTouchMove = (e: TouchEvent) => {
+    if (isTouchEnabled) {
+      e.stopPropagation();
+    }
     if (longPressTimerRef.current && touchStartPosRef.current) {
       const dx = Math.abs(e.touches[0].clientX - touchStartPosRef.current.x);
       const dy = Math.abs(e.touches[0].clientY - touchStartPosRef.current.y);
@@ -125,14 +132,21 @@ export const useEventInteraction = ({
     if (isTouchEnabled && touchStartPosRef.current) {
       e.preventDefault();
       e.stopPropagation();
+      suppressClickUntilRef.current = Date.now() + 400;
 
       if (app) {
         app.onEventClick(event);
       }
 
       if (canOpenDetail) {
-        onDetailPanelToggle?.(detailPanelKey);
+        if (onEventSelect) {
+          onEventSelect(event.id);
+        } else {
+          setIsSelected(true);
+        }
+        onDetailPanelToggle?.(null);
       } else {
+        onEventSelect?.(null);
         onDetailPanelToggle?.(null);
       }
     }
@@ -148,5 +162,6 @@ export const useEventInteraction = ({
     handleTouchStart,
     handleTouchMove,
     handleTouchEnd,
+    shouldSuppressClick: () => Date.now() < suppressClickUntilRef.current,
   };
 };

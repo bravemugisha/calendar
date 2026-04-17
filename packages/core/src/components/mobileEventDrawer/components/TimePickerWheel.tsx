@@ -124,22 +124,20 @@ export const TimePickerWheel = ({ date, onChange }: TimePickerWheelProps) => {
   };
 
   return (
-    <div className='relative mt-2 flex h-56 overflow-hidden rounded-lg'>
-      <style>{`
-            .no-scrollbar::-webkit-scrollbar { display: none; }
-            .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        `}</style>
+    <div className='df-time-wheel'>
       <div
         ref={hourRef}
-        className='no-scrollbar flex-1 snap-y snap-mandatory overflow-y-auto'
-        style={{ touchAction: 'pan-y' }}
+        className='df-time-wheel__column'
         onScroll={e => onScroll(e, 'hour')}
       >
-        <div style={{ height: spacerHeight }}></div>
+        <div
+          className='df-time-wheel__spacer'
+          style={{ height: spacerHeight }}
+        ></div>
         {hours.map((h, i) => (
           <div
             key={`h-${i}-${h}`}
-            className='flex h-8 cursor-pointer snap-center items-center justify-end pr-5'
+            className='df-time-wheel__option df-time-wheel__option--hour'
             onClick={() => {
               const newDate = new Date(date);
               newDate.setHours(h);
@@ -151,26 +149,32 @@ export const TimePickerWheel = ({ date, onChange }: TimePickerWheelProps) => {
             }}
           >
             <div
-              className={`w-10 text-center text-xl transition-colors duration-200 ${h === currentHour ? 'font-bold text-black dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
+              className='df-time-wheel__value'
+              data-selected={String(h === currentHour)}
               style={getItemStyle(i, scrollTopHour)}
             >
               {h.toString().padStart(2, '0')}
             </div>
           </div>
         ))}
-        <div style={{ height: spacerHeight }}></div>
+        <div
+          className='df-time-wheel__spacer'
+          style={{ height: spacerHeight }}
+        ></div>
       </div>
       <div
         ref={minRef}
-        className='no-scrollbar flex-1 snap-y snap-mandatory overflow-y-auto'
-        style={{ touchAction: 'pan-y' }}
+        className='df-time-wheel__column'
         onScroll={e => onScroll(e, 'minute')}
       >
-        <div style={{ height: spacerHeight }}></div>
+        <div
+          className='df-time-wheel__spacer'
+          style={{ height: spacerHeight }}
+        ></div>
         {minutes.map((m, i) => (
           <div
             key={`m-${i}-${m}`}
-            className='flex h-8 cursor-pointer snap-center items-center justify-start pl-5'
+            className='df-time-wheel__option df-time-wheel__option--minute'
             onClick={() => {
               const newDate = new Date(date);
               newDate.setMinutes(m);
@@ -182,17 +186,20 @@ export const TimePickerWheel = ({ date, onChange }: TimePickerWheelProps) => {
             }}
           >
             <div
-              className={`w-10 text-center text-xl transition-colors duration-200 ${m === currentMinute ? 'font-bold text-black dark:text-white' : 'text-gray-400 dark:text-gray-500'}`}
+              className='df-time-wheel__value'
+              data-selected={String(m === currentMinute)}
               style={getItemStyle(i, scrollTopMin)}
             >
               {m.toString().padStart(2, '0')}
             </div>
           </div>
         ))}
-        <div style={{ height: spacerHeight }}></div>
+        <div
+          className='df-time-wheel__spacer'
+          style={{ height: spacerHeight }}
+        ></div>
       </div>
-      {/* Selection Highlight */}
-      <div className='pointer-events-none absolute top-24 right-2 left-2 h-8 rounded-lg border border-gray-300 bg-gray-300/20 dark:border-gray-600 dark:bg-gray-500/20'></div>
+      <div className='df-time-wheel__selection'></div>
     </div>
   );
 };

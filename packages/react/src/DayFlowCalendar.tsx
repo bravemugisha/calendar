@@ -63,6 +63,8 @@ export interface DayFlowCalendarProps {
   eventContextMenu?: (args: EventContextMenuSlotArgs) => ReactNode;
   /** Custom grid/cell right-click context menu renderer (React) */
   gridContextMenu?: (args: GridContextMenuSlotArgs) => ReactNode;
+  /** Search configuration */
+  search?: CalendarSearchProps;
 }
 
 /** Compute active override names from props and installed plugins. */

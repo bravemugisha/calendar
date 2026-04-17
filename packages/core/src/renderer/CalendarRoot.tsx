@@ -298,7 +298,8 @@ export const CalendarRoot = ({
           )}
 
           <div
-            className={`relative z-10 flex h-full flex-1 flex-col overflow-hidden border-l bg-white transition-all duration-200 ease-in-out dark:bg-gray-900 ${sidebar.isCollapsed ? 'border-gray-200 shadow-xl dark:border-gray-700' : 'border-transparent'}`}
+            className='df-calendar-shell'
+            data-sidebar-collapsed={sidebar.isCollapsed}
             style={{
               marginLeft: sidebar.enabled
                 ? sidebar.isCollapsed

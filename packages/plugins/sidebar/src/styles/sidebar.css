@@ -525,8 +525,9 @@
 
   .df-sidebar__subscribe-input:focus {
     border-color: var(--df-color-primary);
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--df-color-primary) 15%, transparent);
+    box-shadow:
+      0 0 0 0px var(--df-color-background),
+      0 0 0 2px var(--df-color-primary);
   }
 
   .df-sidebar__subscribe-input:disabled {

@@ -72,6 +72,8 @@ interface AllDayRowProps {
   ) => void;
   handleEventUpdate: (event: Event) => void;
   handleEventDelete: (id: string) => void;
+  setDraftEvent: (event: Event | null) => void;
+  setIsDrawerOpen: (isOpen: boolean) => void;
   onDateChange?: (date: Date) => void;
   newlyCreatedEventId: string | null;
   setNewlyCreatedEventId: (id: string | null) => void;
@@ -125,6 +127,8 @@ export const AllDayRow = ({
   handleResizeStart,
   handleEventUpdate,
   handleEventDelete,
+  setDraftEvent,
+  setIsDrawerOpen,
   onDateChange,
   newlyCreatedEventId,
   setNewlyCreatedEventId,
@@ -343,6 +347,20 @@ export const AllDayRow = ({
                         selectedEventId={selectedEventId}
                         detailPanelEventId={detailPanelEventId}
                         onEventSelect={(eventId: string | null) => {
+                          const isViewable =
+                            app.getReadOnlyConfig(eventId ?? undefined)
+                              .viewable !== false;
+                          const evt = organizedAllDaySegments.find(
+                            currentSegment =>
+                              currentSegment.event.id === eventId
+                          )?.event;
+
+                          if ((isMobile || isTouch) && evt && isViewable) {
+                            setDraftEvent(evt);
+                            setIsDrawerOpen(true);
+                            return;
+                          }
+
                           setSelectedEventId(eventId);
                         }}
                         onEventLongPress={(eventId: string) => {

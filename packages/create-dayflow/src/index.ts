@@ -6,7 +6,7 @@ import {
   statSync,
   existsSync,
 } from 'node:fs';
-import { resolve, relative, dirname, join } from 'node:path';
+import { resolve, relative } from 'node:path';
 
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
@@ -119,8 +119,10 @@ function buildNextSteps(
   const imports: string[] = [];
 
   if (isTailwind) {
+    imports.push(`@import '@dayflow/core/dist/styles.components.css'`);
+    imports.push(`@import 'tailwindcss'`);
     imports.push(
-      `/* DayFlow styles are handled via your CSS file (Tailwind V4 integration) */`
+      `@variant dark (.dark &); /* if you plan to use theme.mode */`
     );
   } else {
     imports.push(`import '@dayflow/core/dist/styles.css'`);
@@ -335,60 +337,56 @@ async function main() {
     if (rootCss) {
       try {
         const content = readFileSync(rootCss, 'utf-8');
-        if (!content.includes('@dayflow/core/dist/styles.components.css')) {
-          const relativeToRoot = relative(dirname(rootCss), process.cwd());
-          const nmPath = join(relativeToRoot, 'node_modules').replaceAll(
-            '\\',
-            '/'
+        const lines = content.split('\n');
+        const hasDayFlowImport = content.includes(
+          '@dayflow/core/dist/styles.components.css'
+        );
+        const hasTailwindImport = content.includes("@import 'tailwindcss'");
+        const hasDarkVariant = content.includes('@variant dark (.dark &);');
+        let finalLines = [...lines];
+
+        if (!hasDayFlowImport) {
+          const tailwindImportIndex = finalLines.findIndex(line =>
+            line.trim().includes("@import 'tailwindcss'")
           );
+          const dayFlowImport =
+            "/* DayFlow Tailwind Setup */\n@import '@dayflow/core/dist/styles.components.css';";
 
-          // Build source block
-          let sourceBlock =
-            '\n/* DayFlow: scan compiled JS so Tailwind generates utility classes used inside DayFlow components */';
-          sourceBlock += `\n@source '${nmPath}/@dayflow/core/dist/**/*.js';`;
-          if (selectedPlugins.includes('drag')) {
-            sourceBlock += `\n@source '${nmPath}/@dayflow/plugin-drag/dist/**/*.js';`;
+          if (tailwindImportIndex === -1) {
+            finalLines.unshift(dayFlowImport);
+            if (!hasTailwindImport) {
+              finalLines.splice(1, 0, "@import 'tailwindcss';");
+            }
+          } else {
+            finalLines.splice(tailwindImportIndex, 0, dayFlowImport);
           }
-          if (selectedPlugins.includes('sidebar')) {
-            sourceBlock += `\n@source '${nmPath}/@dayflow/plugin-sidebar/dist/**/*.js';`;
-          }
-          sourceBlock +=
-            '\n\n/* DayFlow: class-based dark mode so theme.mode works correctly */\n@variant dark (.dark &);';
-          sourceBlock +=
-            '\n/* Tailwind V4 integration: https://calendar.dayflow.studio/docs/guides/theme-customization#tailwind-v4-integration */';
+        } else if (!hasTailwindImport) {
+          const dayFlowImportIndex = finalLines.findIndex(line =>
+            line.includes('@dayflow/core/dist/styles.components.css')
+          );
+          finalLines.splice(
+            dayFlowImportIndex + 1,
+            0,
+            "@import 'tailwindcss';"
+          );
+        }
 
-          const lines = content.split('\n');
+        if (!hasDarkVariant) {
           let lastImportIndex = -1;
-          let tailwindImportIndex = -1;
-
-          for (let i = 0; i < lines.length; i++) {
-            const trimmed = lines[i].trim();
-            if (trimmed.startsWith('@import')) {
+          for (let i = 0; i < finalLines.length; i++) {
+            if (finalLines[i].trim().startsWith('@import')) {
               lastImportIndex = i;
-              if (trimmed.includes('tailwindcss')) {
-                tailwindImportIndex = i;
-              }
             }
           }
 
-          const header =
-            "/* DayFlow Tailwind Setup */\n@import '@dayflow/core/dist/styles.components.css';";
+          finalLines.splice(
+            lastImportIndex + 1,
+            0,
+            '/* DayFlow: class-based dark mode so theme.mode works correctly */\n@variant dark (.dark &);'
+          );
+        }
 
-          let finalLines = [...lines];
-
-          if (tailwindImportIndex === -1) {
-            // No tailwind import, put both at the top
-            finalLines.unshift(header, "@import 'tailwindcss';");
-            lastImportIndex += 2;
-          } else {
-            // Insert DayFlow import before Tailwind import
-            finalLines.splice(tailwindImportIndex, 0, header);
-            lastImportIndex++; // Adjust for the new line
-          }
-
-          // Insert source block after the LAST consecutive import to keep CSS valid
-          finalLines.splice(lastImportIndex + 1, 0, sourceBlock);
-
+        if (finalLines.join('\n') !== content) {
           writeFileSync(rootCss, finalLines.join('\n'));
           p.log.success(
             `${pc.green('✓')} Added DayFlow configuration to ${pc.cyan(relative(process.cwd(), rootCss))}`

@@ -224,11 +224,19 @@ You can override default colors by defining CSS variables in a `:root` block in 
 
 **Important:**
 
-- Use `--color-primary` format (with `--color-` prefix)
+- Prefer the `--df-color-*` variables exposed by DayFlow
 - Colors must use `rgb()` format with space-separated values
 - Import DayFlow CSS first, then your custom CSS
 
-**Example (in your layout file):**
+**Example (Tailwind project):**
+
+```css
+@import '@dayflow/core/dist/styles.components.css';
+@import 'tailwindcss';
+@import './globals.css';
+```
+
+**Example (non-Tailwind project):**
 
 ```tsx
 import '@dayflow/core/dist/styles.css';
@@ -240,30 +248,30 @@ import './globals.css'; // Your custom styles after DayFlow
 ```css
 :root {
   /* Theme Colors - use rgb() format */
-  --color-primary: rgb(26 115 232); /* blue */
-  --color-primary-foreground: rgb(255 255 255);
-  --color-secondary: rgb(255 152 0); /* orange */
-  --color-secondary-foreground: rgb(23 23 23);
-  --color-destructive: rgb(229 57 53); /* red */
-  --color-destructive-foreground: rgb(255 255 255);
+  --df-color-primary: rgb(26 115 232); /* blue */
+  --df-color-primary-foreground: rgb(255 255 255);
+  --df-color-secondary: rgb(255 152 0); /* orange */
+  --df-color-secondary-foreground: rgb(23 23 23);
+  --df-color-destructive: rgb(229 57 53); /* red */
+  --df-color-destructive-foreground: rgb(255 255 255);
 
   /* Other colors */
-  --color-background: rgb(255 255 255);
-  --color-foreground: rgb(33 33 33);
-  --color-border: rgb(229 229 229);
-  --color-card: rgb(255 255 255);
-  --color-card-foreground: rgb(33 33 33);
-  --color-muted: rgb(243 244 246);
-  --color-muted-foreground: rgb(107 114 128);
-  --color-hover: rgb(245 245 245);
+  --df-color-background: rgb(255 255 255);
+  --df-color-foreground: rgb(33 33 33);
+  --df-color-border: rgb(229 229 229);
+  --df-color-card: rgb(255 255 255);
+  --df-color-card-foreground: rgb(33 33 33);
+  --df-color-muted: rgb(243 244 246);
+  --df-color-muted-foreground: rgb(107 114 128);
+  --df-color-hover: rgb(245 245 245);
 }
 
 /* For dark mode: */
 .dark {
-  --color-primary: rgb(96 165 250); /* lighter blue */
-  --color-primary-foreground: rgb(23 23 23);
-  --color-background: rgb(18 18 18);
-  --color-foreground: rgb(229 229 229);
+  --df-color-primary: rgb(96 165 250); /* lighter blue */
+  --df-color-primary-foreground: rgb(23 23 23);
+  --df-color-background: rgb(18 18 18);
+  --df-color-foreground: rgb(229 229 229);
   /* ... other dark mode colors */
 }
 ```

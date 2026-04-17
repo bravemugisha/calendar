@@ -216,6 +216,7 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
             indicator.style.margin = '0';
             indicator.style.opacity = '0.8';
             indicator.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+            indicator.style.borderRadius = drag.allDay ? '0.75rem' : '0.25rem';
           }
         } else if (drag.allDay) {
           // Calculate position logic
@@ -223,6 +224,8 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
           indicator.style.height = `${ALL_DAY_HEIGHT - 4}px`;
           indicator.style.marginBottom = '3px';
           indicator.className = 'rounded-xl shadow-sm';
+          indicator.style.borderRadius = '0.75rem';
+          indicator.style.boxShadow = '0 1px 2px rgb(0 0 0 / 0.12)';
 
           if (isDayView) {
             indicator.style.left = `${TIME_COLUMN_WIDTH}px`;
@@ -246,6 +249,8 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
           indicator.style.height = `${height - 4}px`;
           indicator.style.color = '#fff';
           indicator.className = 'rounded-sm shadow-sm';
+          indicator.style.borderRadius = '0.25rem';
+          indicator.style.boxShadow = '0 1px 2px rgb(0 0 0 / 0.12)';
 
           const daysToShow = options.displayDays || 7;
           const totalWidth = isInsideTimeGrid
@@ -476,6 +481,7 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
             'rounded-sm',
             'rounded-xl'
           );
+          indicator.style.borderRadius = '0.75rem';
         } else {
           const gridOffset = isInsideTimeGrid ? 0 : getGridOffset();
           const top = (startHour - FIRST_HOUR) * HOUR_HEIGHT;
@@ -489,6 +495,7 @@ export const useDragManager = (options: useDragProps): UseDragManagerReturn => {
             'rounded-xl',
             'rounded-sm'
           );
+          indicator.style.borderRadius = '0.25rem';
 
           const daysToShow = options.displayDays || 7;
           const totalWidth = isInsideTimeGrid

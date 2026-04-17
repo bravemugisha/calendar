@@ -14,6 +14,11 @@
     --df-color-secondary-foreground: rgb(255 255 255);
     --df-color-destructive: rgb(212 36 34);
     --df-color-destructive-foreground: rgb(255 255 255);
+    --df-heat-1: #ebf5ff;
+    --df-heat-2: #cfe8ff;
+    --df-heat-3: #91d5ff;
+    --df-heat-4: #60a5fa;
+    --df-heat-5: #3b82f6;
   }
 
   :where(.dark) {
@@ -31,6 +36,11 @@
     --df-color-secondary-foreground: rgb(15 23 42);
     --df-color-destructive: rgb(147 70 69);
     --df-color-destructive-foreground: rgb(254 242 242);
+    --df-heat-1: #1e3a5f;
+    --df-heat-2: #2563eb;
+    --df-heat-3: #1e40af;
+    --df-heat-4: #3b82f6;
+    --df-heat-5: #93c5fd;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -49,6 +59,11 @@
       --df-color-secondary-foreground: rgb(23 23 23);
       --df-color-destructive: rgb(147 70 69);
       --df-color-destructive-foreground: rgb(254 242 242);
+      --df-heat-1: #1e3a5f;
+      --df-heat-2: #2563eb;
+      --df-heat-3: #1e40af;
+      --df-heat-4: #3b82f6;
+      --df-heat-5: #93c5fd;
     }
   }
 }
@@ -122,19 +137,11 @@
   }
 
   .df-calendar-container .df-year-grid-month {
-    --heat-1: #ebf5ff;
-    --heat-2: #cfe8ff;
-    --heat-3: #91d5ff;
-    --heat-4: #60a5fa;
-    --heat-5: #3b82f6;
-  }
-
-  .dark .df-calendar-container .df-year-grid-month {
-    --heat-1: #1e3a5f;
-    --heat-2: #2563eb;
-    --heat-3: #1e40af;
-    --heat-4: #3b82f6;
-    --heat-5: #93c5fd;
+    --heat-1: var(--df-heat-1);
+    --heat-2: var(--df-heat-2);
+    --heat-3: var(--df-heat-3);
+    --heat-4: var(--df-heat-4);
+    --heat-5: var(--df-heat-5);
   }
 
   .df-calendar-time-column {
@@ -144,49 +151,60 @@
   }
 
   .df-calendar-nav-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
     padding: 0.25rem;
-    color: rgb(75 85 99);
+    border: 1px solid var(--df-color-border);
+    background-color: var(--df-color-background);
+    color: color-mix(in srgb, var(--df-color-foreground) 78%, transparent);
     border-radius: 0.25rem;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
     transition-property:
-      color, background-color, border-color, text-decoration-color, fill, stroke;
+      color, background-color, border-color, box-shadow, text-decoration-color,
+      fill, stroke;
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  }
-
-  .dark .df-calendar-nav-button {
-    color: rgb(209 213 219);
   }
 
   .df-calendar-nav-button:hover {
-    background-color: rgb(243 244 246);
-  }
-
-  .dark .df-calendar-nav-button:hover {
-    background-color: rgb(31 41 55);
+    background-color: var(--df-color-hover);
+    border-color: color-mix(in srgb, var(--df-color-border), white 10%);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.05),
+      0 1px 3px rgb(0 0 0 / 0.08);
   }
 
   .df-calendar-today-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 1.75rem;
     padding: 0.25rem 1rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    color: rgb(55 65 81);
+    font-weight: 500;
+    border: 1px solid var(--df-color-border);
+    background-color: var(--df-color-background);
+    color: var(--df-color-foreground);
     border-radius: 0.25rem;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
     transition-property:
-      color, background-color, border-color, text-decoration-color, fill, stroke;
+      color, background-color, border-color, box-shadow, text-decoration-color,
+      fill, stroke;
     transition-duration: 150ms;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  .dark .df-calendar-today-button {
-    color: rgb(229 231 235);
-  }
-
   .df-calendar-today-button:hover {
-    background-color: rgb(243 244 246);
-  }
-
-  .dark .df-calendar-today-button:hover {
-    background-color: rgb(31 41 55);
+    background-color: var(--df-color-hover);
+    border-color: color-mix(in srgb, var(--df-color-border), white 10%);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.05),
+      0 1px 3px rgb(0 0 0 / 0.08);
   }
 
   .df-calendar-checkbox {
@@ -205,13 +223,13 @@
   }
 
   .df-calendar-checkbox:focus-visible {
-    outline: 2px solid var(--checkbox-color, #3b82f6);
+    outline: 2px solid var(--checkbox-color, var(--df-color-primary));
     outline-offset: 2px;
   }
 
   .df-calendar-checkbox:checked {
-    background-color: var(--checkbox-color, #3b82f6);
-    border-color: var(--checkbox-color, #3b82f6);
+    background-color: var(--checkbox-color, var(--df-color-primary));
+    border-color: var(--checkbox-color, var(--df-color-primary));
   }
 
   .df-calendar-checkbox:checked::after {
@@ -219,7 +237,7 @@
     display: block;
     width: 0.25rem;
     height: 0.5rem;
-    border: solid #fff;
+    border: solid var(--df-color-primary-foreground);
     border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
@@ -422,11 +440,15 @@
 
   .df-focus-ring:focus {
     border-color: var(--df-color-primary);
-    --tw-ring-color: var(--df-color-primary);
+    box-shadow:
+      0 0 0 0px var(--df-color-background),
+      0 0 0 2px var(--df-color-primary);
   }
 
   .df-focus-ring-only:focus {
-    --tw-ring-color: var(--df-color-primary);
+    box-shadow:
+      0 0 0 0px var(--df-color-background),
+      0 0 0 2px var(--df-color-primary);
   }
 
   .df-focus-border-primary:focus {
@@ -491,25 +513,27 @@
 }
 
 .df-calendar-container *::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: color-mix(in srgb, var(--df-color-border), transparent 18%);
   border-radius: 1px;
 }
 
 .dark .df-calendar-container *::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: color-mix(in srgb, var(--df-color-border), white 12%);
 }
 
 .df-calendar-container *::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: color-mix(in srgb, var(--df-color-muted-foreground), white 8%);
 }
 
 .df-calendar-container * {
   scrollbar-width: thin;
-  scrollbar-color: #d1d5db transparent;
+  scrollbar-color: color-mix(in srgb, var(--df-color-border), transparent 18%)
+    transparent;
 }
 
 .dark .df-calendar-container * {
-  scrollbar-color: #4b5563 transparent;
+  scrollbar-color: color-mix(in srgb, var(--df-color-border), white 12%)
+    transparent;
 }
 
 .df-calendar-container.df-drag-active,
@@ -519,6 +543,8 @@
 }
 
 .df-calendar-container.df-drag-active .calendar-event,
+.df-calendar-container.df-drag-active .df-event,
+.df-calendar-container.df-drag-active .df-month-segment-event,
 .df-calendar-container.df-drag-active .df-month-more-events,
 .df-calendar-container.df-drag-active .df-month-title,
 .df-calendar-container.df-drag-active .df-year-event-content {

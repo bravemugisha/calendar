@@ -1,12 +1,8 @@
 import { RefObject } from 'preact';
 
-import {
-  baseEvent,
-  eventShadow,
-  allDayRounded,
-  regularEventRounded,
-} from '@/styles/classNames';
 import { Event, ViewType } from '@/types';
+
+export type EventSegmentShape = 'full' | 'start' | 'end' | 'middle';
 /**
  * Gets the actual width of the time column from the DOM
  */
@@ -147,69 +143,71 @@ export const getClickedDayIndex = (
 export const getEventClasses = (
   viewType: ViewType,
   isAllDay: boolean,
-  isMultiDay: boolean,
+  isMultiDay: boolean
+): string => {
+  const classes = ['df-event', 'calendar-event'];
+
+  if (viewType === ViewType.DAY) {
+    classes.push('df-day-event');
+  } else if (viewType === ViewType.WEEK) {
+    classes.push('df-week-event');
+  } else if (viewType === ViewType.MONTH) {
+    classes.push('df-month-event');
+    if (!isMultiDay) {
+      classes.push('df-month-event--stacked');
+    }
+  } else if (viewType === ViewType.YEAR) {
+    classes.push('df-year-event');
+  }
+
+  classes.push(isAllDay ? 'df-event--all-day' : 'df-event--timed');
+
+  return classes.join(' ');
+};
+
+export const getAllDaySegmentShape = (segment?: {
+  segmentType: string;
+}): EventSegmentShape => {
+  if (!segment) return 'full';
+
+  switch (segment.segmentType) {
+    case 'start':
+    case 'start-week-end':
+      return 'start';
+    case 'end':
+    case 'end-week-start':
+      return 'end';
+    case 'middle':
+      return 'middle';
+    default:
+      return 'full';
+  }
+};
+
+export const getYearSegmentShape = (yearSegment?: {
+  isFirstSegment: boolean;
+  isLastSegment: boolean;
+}): EventSegmentShape => {
+  if (!yearSegment) return 'full';
+  if (yearSegment.isFirstSegment && yearSegment.isLastSegment) return 'full';
+  if (yearSegment.isFirstSegment) return 'start';
+  if (yearSegment.isLastSegment) return 'end';
+  return 'middle';
+};
+
+export const getEventSegmentShape = (
+  viewType: ViewType,
+  isAllDay: boolean,
   segment?: { segmentType: string },
   yearSegment?: { isFirstSegment: boolean; isLastSegment: boolean }
-): string => {
-  let classes = baseEvent;
-  const isDayView = viewType === ViewType.DAY;
-  const isMonthView = viewType === ViewType.MONTH;
-  const isYearView = viewType === ViewType.YEAR;
-
-  if (isDayView) {
-    classes += ' df-day-event flex flex-col';
-  } else if (!isMonthView && !isYearView) {
-    classes += ' df-week-event flex flex-col';
-  } else if (isYearView) {
-    classes +=
-      ' df-year-event transition-colors group px-1 overflow-hidden whitespace-nowrap cursor-pointer';
+): EventSegmentShape => {
+  if (viewType === ViewType.YEAR) {
+    return getYearSegmentShape(yearSegment);
   }
 
-  const getAllDayClass = () => {
-    if (isMultiDay && segment) {
-      const { segmentType } = segment;
-      if (segmentType === 'single' || segmentType === 'start') {
-        return allDayRounded;
-      } else if (segmentType === 'start-week-end') {
-        return 'rounded-l-xl rounded-r-none my-0.5';
-      } else if (segmentType === 'end' || segmentType === 'end-week-start') {
-        return 'rounded-r-xl rounded-l-none my-0.5';
-      } else if (segmentType === 'middle') {
-        return 'rounded-none my-0.5';
-      }
-    }
-    return allDayRounded;
-  };
-
-  const getYearViewClass = () => {
-    if (yearSegment) {
-      const { isFirstSegment, isLastSegment } = yearSegment;
-      if (isFirstSegment && isLastSegment) return 'rounded';
-      if (isFirstSegment) return 'rounded-l rounded-r-none';
-      if (isLastSegment) return 'rounded-r rounded-l-none';
-      return 'rounded-none';
-    }
-    return 'rounded';
-  };
-
-  if (isYearView) {
-    return `${classes} ${getYearViewClass()}`;
+  if (isAllDay) {
+    return getAllDaySegmentShape(segment);
   }
 
-  if (isMonthView) {
-    let monthClasses = `
-      ${classes}
-      ${isAllDay ? getAllDayClass() : regularEventRounded}
-      `;
-    if (!isMultiDay) {
-      monthClasses += ' mb-[2px] last:mb-0';
-    }
-    return monthClasses;
-  }
-
-  return `
-    ${classes}
-    ${eventShadow}
-    ${isAllDay ? getAllDayClass() : regularEventRounded}
-  `;
+  return 'full';
 };

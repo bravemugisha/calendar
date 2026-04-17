@@ -1,43 +1,47 @@
 /* ── DayFlow UI – Range Picker ──────────────────────────────────────────── */
 
-@layer df-theme {
-  :where(:root) {
-    --df-color-background: rgb(255 255 255);
-    --df-color-border: rgb(226 232 240);
-    --df-color-foreground: rgb(46 46 46);
-    --df-color-muted-foreground: rgb(148 163 184);
-    --df-color-primary: rgb(46 46 46);
-    --df-color-primary-foreground: rgb(255 255 255);
-  }
-
-  :where(.dark) {
-    --df-color-background: rgb(31 41 55);
-    --df-color-border: rgb(75 85 99);
-    --df-color-foreground: rgb(229 229 229);
-    --df-color-muted-foreground: rgb(107 114 128);
-    --df-color-primary: rgb(229 229 229);
-    --df-color-primary-foreground: rgb(15 23 42);
-  }
-
-  @media (prefers-color-scheme: dark) {
-    :root:not(.light):not(.dark) {
-      --df-color-background: rgb(31 41 55);
-      --df-color-border: rgb(75 85 99);
-      --df-color-foreground: rgb(229 229 229);
-      --df-color-muted-foreground: rgb(107 114 128);
-      --df-color-primary: rgb(229 229 229);
-      --df-color-primary-foreground: rgb(23 23 23);
-    }
-  }
-}
-
 @layer components {
   .df-range-picker {
+    --df-range-picker-background: rgb(255 255 255);
+    --df-range-picker-border: rgb(226 232 240);
+    --df-range-picker-foreground: rgb(46 46 46);
+    --df-range-picker-muted: rgb(148 163 184);
+    --df-range-picker-primary: rgb(46 46 46);
+    --df-range-picker-primary-foreground: rgb(255 255 255);
+    --df-range-picker-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.08);
+    --df-range-picker-shadow-lg: 0 6px 18px rgb(15 23 42 / 0.12);
+    --df-range-picker-button-shadow: 0 1px 2px rgb(15 23 42 / 0.12);
+    --df-color-background: var(--df-range-picker-background);
+    --df-color-border: var(--df-range-picker-border);
+    --df-color-foreground: var(--df-range-picker-foreground);
+    --df-color-muted-foreground: var(--df-range-picker-muted);
+    --df-color-primary: var(--df-range-picker-primary);
+    --df-color-primary-foreground: var(--df-range-picker-primary-foreground);
     --color-background: var(--df-color-background);
     --color-border: var(--df-color-border);
     --color-foreground: var(--df-color-foreground);
     --color-primary: var(--df-color-primary);
     --color-primary-foreground: var(--df-color-primary-foreground);
+  }
+
+  .dark .df-range-picker {
+    --df-range-picker-background: rgb(31 41 55);
+    --df-range-picker-border: rgb(75 85 99);
+    --df-range-picker-foreground: rgb(229 229 229);
+    --df-range-picker-muted: rgb(107 114 128);
+    --df-range-picker-primary: rgb(229 229 229);
+    --df-range-picker-primary-foreground: rgb(15 23 42);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not(.light):not(.dark) .df-range-picker {
+      --df-range-picker-background: rgb(31 41 55);
+      --df-range-picker-border: rgb(75 85 99);
+      --df-range-picker-foreground: rgb(229 229 229);
+      --df-range-picker-muted: rgb(107 114 128);
+      --df-range-picker-primary: rgb(229 229 229);
+      --df-range-picker-primary-foreground: rgb(23 23 23);
+    }
   }
 
   .df-range-picker__root {
@@ -54,7 +58,7 @@
     border-radius: 0.5rem;
     background-color: var(--df-color-background);
     color: var(--df-color-foreground);
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+    box-shadow: var(--df-range-picker-shadow-sm);
     transition:
       border-color 120ms ease,
       box-shadow 120ms ease,
@@ -64,7 +68,7 @@
 
   .df-range-picker__trigger[data-open='true'] {
     border-color: var(--df-color-primary);
-    box-shadow: 0 6px 18px rgb(15 23 42 / 0.12);
+    box-shadow: var(--df-range-picker-shadow-lg);
   }
 
   .df-range-picker__trigger[data-disabled='true'] {
@@ -108,8 +112,9 @@
   }
 
   .df-range-picker__input:focus-visible {
-    box-shadow: 0 0 0 2px
-      color-mix(in srgb, var(--df-color-primary) 20%, transparent);
+    box-shadow:
+      0 0 0 0px var(--df-color-background),
+      0 0 0 2px var(--df-color-primary);
   }
 
   .df-range-picker__separator-icon {
@@ -142,7 +147,7 @@
     border: 1px solid var(--df-color-border);
     border-radius: 0.75rem;
     background-color: var(--df-color-background);
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+    box-shadow: var(--df-range-picker-shadow-sm);
   }
 
   .df-range-picker__time-pane {
@@ -173,7 +178,7 @@
     font-size: 0.875rem;
     line-height: 1.25rem;
     font-weight: 600;
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.12);
+    box-shadow: var(--df-range-picker-button-shadow);
     transition:
       opacity 120ms ease,
       transform 120ms ease,
@@ -320,7 +325,7 @@
     border: 1px solid var(--df-color-border);
     border-radius: 0.75rem;
     background-color: var(--df-color-background);
-    box-shadow: 0 1px 2px rgb(15 23 42 / 0.08);
+    box-shadow: var(--df-range-picker-shadow-sm);
   }
 
   @media (min-width: 640px) {

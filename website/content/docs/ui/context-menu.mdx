@@ -10,6 +10,15 @@ A composable, portal-based context menu for DayFlow UI. Supports nested submenus
 
 <PackageTabs pkg='@dayflow/ui-context-menu' />
 
+For projects that already use Tailwind CSS, import the component-only bundle:
+
+```css
+@import '@dayflow/ui-context-menu/dist/styles.components.css';
+@import 'tailwindcss';
+```
+
+For projects that do not use Tailwind CSS, import the full stylesheet instead:
+
 ```tsx
 import {
   ContextMenu,
@@ -23,6 +32,8 @@ import {
 } from '@dayflow/ui-context-menu';
 import '@dayflow/ui-context-menu/dist/styles.css';
 ```
+
+The distributed CSS is self-contained. You do not need to add `@source`, safelists, or extra UnoCSS/Tailwind scanning rules for this package.
 
 ## Basic Usage
 

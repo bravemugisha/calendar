@@ -73,14 +73,14 @@ const RegularEventContent = ({
   const isLastSegment = multiDaySegmentInfo ? multiDaySegmentInfo.isLast : true;
   const calendarId = getPrimaryCalendarId(event);
   const contentPaddingClass =
-    !multiDaySegmentInfo && duration <= 0.25 ? 'px-1 py-0' : 'p-1';
+    !multiDaySegmentInfo && duration <= 0.25 ? 'compact' : 'default';
 
   const lineColors = getCalendarLineColors(event, app?.getCalendarRegistry());
   const colorBarValue = buildDiagonalColorBarGradient(lineColors);
   const hideColorBar = isEventSelected && lineColors.length > 1;
   const colorBarContent = hideColorBar ? null : lineColors.length > 1 ? (
     <div
-      className='df-event-color-bar pointer-events-none absolute inset-0'
+      className='df-event__color-bar-overlay'
       style={{
         background: colorBarValue,
         clipPath: colorBarClipPath,
@@ -94,13 +94,11 @@ const RegularEventContent = ({
     <>
       {colorBarContent}
       <div
-        className={`flex h-full flex-col overflow-hidden pl-3 ${contentPaddingClass}`}
+        className='df-event__timed-content'
+        data-density={contentPaddingClass}
       >
         <div
-          className={`${eventTitleSmall} pr-1`}
-          style={{
-            lineHeight: duration <= 0.25 ? '1.2' : 'normal',
-          }}
+          className={`${eventTitleSmall} ${duration <= 0.25 ? 'df-event__title--tight' : ''}`}
         >
           {event.title}
         </div>
@@ -163,7 +161,9 @@ const RegularEventContent = ({
           <>
             {/* Top-Right Indicator (Start Time) */}
             <div
-              className='absolute -top-1.5 right-5 z-50 h-2.5 w-2.5 rounded-full border-2 bg-white'
+              className='df-event__touch-resize-indicator'
+              data-axis='vertical'
+              data-position='top'
               style={{
                 borderColor: getLineColor(
                   calendarId,
@@ -177,7 +177,9 @@ const RegularEventContent = ({
             />
             {/* Bottom-Left Indicator (End Time) */}
             <div
-              className='absolute -bottom-1.5 left-5 z-50 h-2.5 w-2.5 rounded-full border-2 bg-white'
+              className='df-event__touch-resize-indicator'
+              data-axis='vertical'
+              data-position='bottom'
               style={{
                 borderColor: getLineColor(
                   calendarId,
