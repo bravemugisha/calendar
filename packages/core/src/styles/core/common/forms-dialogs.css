@@ -294,6 +294,10 @@
     justify-content: center;
   }
 
+  .df-create-calendar-dialog__blossom-picker {
+    z-index: 50;
+  }
+
   .df-create-calendar-dialog__actions {
     display: flex;
     justify-content: flex-end;
@@ -308,6 +312,20 @@
     position: fixed;
     inset: 0;
     background-color: rgb(0 0 0 / 0.6);
+  }
+
+  .df-event-dialog__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .df-event-dialog__overlay > * {
+    pointer-events: auto;
   }
 
   .dark .df-event-dialog__backdrop {
@@ -343,5 +361,96 @@
 
   .df-event-panel__content {
     padding: 1rem;
+  }
+
+  /* ===================================================================
+   * Event detail panel (fixed floating panel)
+   * =================================================================== */
+
+  .df-event-detail-panel {
+    position: fixed;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0.5rem;
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* ===================================================================
+   * Dialog container (centered modal content box)
+   * =================================================================== */
+
+  .df-dialog-container {
+    position: relative;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    max-width: 28rem;
+    width: 100%;
+    margin-inline: 1rem;
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  }
+
+  /* Close button icon sizing */
+  .df-event-dialog__close svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  /* ===================================================================
+   * LoadingButton  (.df-loading-btn)
+   * =================================================================== */
+
+  .df-loading-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 150ms;
+  }
+
+  .df-loading-btn[data-loading='true'] {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  @keyframes df-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .df-loading-btn__spinner {
+    margin-right: 0.5rem;
+    width: 1rem;
+    height: 1rem;
+    animation: df-spin 1s linear infinite;
+  }
+
+  .df-loading-btn__track {
+    opacity: 0.25;
+  }
+
+  .df-loading-btn__fill {
+    opacity: 0.75;
+  }
+
+  .df-loading-btn__label {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  /* ===================================================================
+   * DefaultColorPicker wrapper
+   * =================================================================== */
+
+  .df-default-color-picker {
+    display: flex;
+    justify-content: center;
   }
 }

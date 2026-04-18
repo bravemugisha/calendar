@@ -58,7 +58,7 @@ describe('DefaultYearView', () => {
     );
 
     await waitFor(() => {
-      const rows = container.querySelectorAll('.relative.w-full');
+      const rows = container.querySelectorAll('.df-year-row');
       expect(rows.length).toBeGreaterThan(0);
       expect(rows[0]?.querySelectorAll('[data-date]').length).toBe(15);
     });

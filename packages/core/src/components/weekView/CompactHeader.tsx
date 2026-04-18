@@ -33,13 +33,14 @@ export const CompactHeader = ({
   mobilePageStart,
   onDateChange,
 }: CompactHeaderProps) => (
-  <div className='flex w-full flex-col border-b border-gray-200 bg-white py-3 dark:border-gray-700 dark:bg-gray-900'>
+  <div className='df-compact-header'>
     {/* Weekday labels row */}
-    <div className='mb-1 grid grid-cols-7'>
+    <div className='df-compact-header__labels'>
       {fullWeekDates.map((day, index) => (
-        <div key={`label-${index}`} className='flex justify-center'>
+        <div key={`label-${index}`} className='df-compact-header__label-cell'>
           <span
-            className={`text-[10px] font-medium ${day.isToday ? 'df-text-primary' : 'text-gray-500'}`}
+            className='df-compact-header__label'
+            data-today={day.isToday ? 'true' : 'false'}
           >
             {formatLabel(day.dayName)}
           </span>
@@ -48,7 +49,7 @@ export const CompactHeader = ({
     </div>
 
     {/* Dates row with capsule */}
-    <div className='relative grid grid-cols-7 overflow-hidden'>
+    <div className='df-compact-header__dates'>
       {(() => {
         if (!mobilePageStart) return null;
 
@@ -68,7 +69,7 @@ export const CompactHeader = ({
         return (
           <>
             <div
-              className='absolute rounded-full bg-gray-100 transition-all duration-300 dark:bg-gray-800'
+              className='df-compact-header__capsule'
               style={{
                 left: capsuleLeft,
                 top: 0,
@@ -85,7 +86,7 @@ export const CompactHeader = ({
               return (
                 <div
                   key={`date-${index}`}
-                  className='relative z-10 flex cursor-pointer items-center justify-center'
+                  className='df-compact-header__date-button'
                   style={{ height: '32px' }}
                   onClick={() => {
                     app.setCurrentDate(day.fullDate);
@@ -93,11 +94,14 @@ export const CompactHeader = ({
                   }}
                 >
                   <div
-                    className={`relative flex h-8 w-8 items-center justify-center rounded-full text-sm font-medium transition-all duration-300 ${isSelected ? 'bg-gray-900 text-white shadow-sm dark:bg-gray-100 dark:text-gray-900' : day.isToday ? 'df-text-primary font-bold' : isInsidePill ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'} `}
+                    className='df-compact-header__date-pill'
+                    data-selected={isSelected ? 'true' : 'false'}
+                    data-today={day.isToday ? 'true' : 'false'}
+                    data-inside-pill={isInsidePill ? 'true' : 'false'}
                   >
                     {day.date}
                     {day.isToday && !isSelected && (
-                      <div className='df-fill-primary absolute bottom-1 h-1 w-1 rounded-full'></div>
+                      <div className='df-compact-header__today-dot' />
                     )}
                   </div>
                 </div>

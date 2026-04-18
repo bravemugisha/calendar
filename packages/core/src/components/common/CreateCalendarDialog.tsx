@@ -296,7 +296,7 @@ export const CreateCalendarDialog = ({
                     openOnHover={false}
                     onChange={color => setBlossomSelectedColor(color)}
                     onCollapse={color => setBlossomSelectedColor(color)}
-                    className='z-50'
+                    className='df-create-calendar-dialog__blossom-picker'
                   />
                 </div>
               </div>

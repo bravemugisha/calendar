@@ -23,7 +23,7 @@ const YearViewAdapter = (props: YearViewProps) =>
     ...(props as ViewAdapterProps),
     viewType: ViewType.YEAR,
     originalComponent: YearView,
-    className: 'year-view-factory',
+    className: 'df-year-view-factory',
   });
 
 YearViewAdapter.displayName = 'YearViewAdapter';

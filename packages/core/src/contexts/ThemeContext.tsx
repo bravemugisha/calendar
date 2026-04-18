@@ -134,11 +134,10 @@ export const ThemeProvider = ({
     const appliedTheme = resolveAppliedTheme(effectiveTheme);
     const targetTheme = theme === 'auto' ? appliedTheme : effectiveTheme;
 
-    // Only update if needed to prevent flash/unnecessary DOM mutations
-    if (!root.classList.contains(targetTheme)) {
-      root.classList.remove('light', 'dark');
-      root.classList.add(targetTheme);
-    }
+    // Always normalize the root theme classes so the document never ends up
+    // with both `light` and `dark` attached at the same time.
+    root.classList.remove('light', 'dark');
+    root.classList.add(targetTheme);
 
     // Track which theme DayFlow applied for other consumers if needed
     // Use a unique dataset key to avoid clashing with next-themes or other libraries

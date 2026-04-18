@@ -93,7 +93,7 @@ export const useEventStyles = ({
       const EVENT_HEIGHT = 16;
 
       return {
-        position: 'absolute' as const,
+        position: 'absolute',
         left: `calc(${startPercent}% + ${HORIZONTAL_MARGIN}px)`,
         top: `${TOP_OFFSET}px`,
         width: `calc(${widthPercent}% - ${HORIZONTAL_MARGIN * 2}px)`,
@@ -201,7 +201,7 @@ export const useEventStyles = ({
     const baseStyle = {
       top: `${top + 3}px`,
       height: `${height - 4}px`,
-      position: 'absolute' as const,
+      position: 'absolute',
       opacity: 1,
       zIndex: isEventSelected || showDetailPanel ? 1000 : (layout?.zIndex ?? 1),
       transform: isPopping ? 'scale(1.05)' : 'scale(1)',
@@ -240,7 +240,7 @@ export const useEventStyles = ({
         }
 
         const stickyStyle = {
-          position: 'fixed' as const,
+          position: 'fixed',
           top: `${clampedTop}px`,
           height: `${clampedBottom - clampedTop}px`,
           width: '6px',
@@ -288,7 +288,7 @@ export const useEventStyles = ({
         if (!scrollContainer) {
           scrollContainer =
             (calendarRef.current?.querySelector(
-              '.calendar-renderer'
+              '.df-calendar-renderer'
             ) as HTMLElement | null) ?? null;
         }
         const contentRect = scrollContainer?.getBoundingClientRect();
@@ -347,7 +347,7 @@ export const useEventStyles = ({
           topPosition = Math.min(topPosition, window.innerHeight - 6);
 
           return {
-            position: 'fixed' as const,
+            position: 'fixed',
             top: `${topPosition}px`,
             left: `${stickyLeft}px`,
             width: `${stickyWidth}px`,
@@ -367,7 +367,7 @@ export const useEventStyles = ({
         bottomPosition = Math.max(bottomPosition, 6);
 
         return {
-          position: 'fixed' as const,
+          position: 'fixed',
           top: `${bottomPosition - 6}px`,
           left: `${stickyLeft}px`,
           width: `${stickyWidth}px`,

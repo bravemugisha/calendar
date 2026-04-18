@@ -1,6 +1,9 @@
 import { CalendarType, CalendarColors } from '@dayflow/core';
 
-interface PaletteCalendar extends Pick<CalendarType, 'id' | 'name' | 'icon'> {
+interface PaletteCalendar extends Pick<
+  CalendarType,
+  'id' | 'name' | 'icon' | 'readOnly'
+> {
   color: string;
   colors: CalendarColors;
   darkColors: CalendarColors;
@@ -12,6 +15,7 @@ export const CALENDAR_SIDE_PANEL: PaletteCalendar[] = [
     id: 'team',
     name: 'Product Team',
     source: 'Google',
+    readOnly: true,
     color: '#2563eb',
     colors: {
       eventColor: 'rgba(37, 99, 235, 0.12)',
@@ -142,6 +146,7 @@ export const getWebsiteCalendars = (): CalendarType[] =>
     name: item.name,
     icon: item.icon,
     source: item.source,
+    readOnly: item.readOnly,
     colors: {
       eventColor: `${item.color}30`,
       eventSelectedColor: `${item.color}`,

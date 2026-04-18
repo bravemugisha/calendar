@@ -5,24 +5,24 @@
  */
 
 /**
- * Combine class names with theme-specific variants
+ * Combine class names with theme-specific variants.
+ * @deprecated Use semantic df-* classes instead, which handle theme via CSS variables.
  *
  * @param base - Base class names (applied in both themes)
  * @param light - Light mode specific class names
  * @param dark - Dark mode specific class names (will be prefixed with 'dark:')
  * @returns Combined class name string
- *
- * @example
- * ```ts
- * themeCn('p-4 rounded', 'bg-white text-black', 'bg-gray-900 text-white')
- * // Returns: 'p-4 rounded bg-white text-black dark:bg-gray-900 dark:text-white'
- * ```
  */
 export const themeCn = (base: string, light: string, dark: string): string => {
+  if (dark.includes('df-')) {
+    // If using semantic classes, just merge them
+    return `${base} ${light} ${dark}`.trim();
+  }
+
   const darkClasses = dark
     .split(' ')
     .filter(Boolean)
-    .map(cls => `dark:${cls}`)
+    .map(cls => (cls.startsWith('df-') ? cls : 'dark:' + cls))
     .join(' ');
 
   return `${base} ${light} ${darkClasses}`.trim();
@@ -31,58 +31,55 @@ export const themeCn = (base: string, light: string, dark: string): string => {
 /**
  * Common theme class combinations
  *
- * Pre-defined class combinations for common UI elements.
- * Use these for consistency across the application.
+ * Pre-defined semantic class combinations for common UI elements.
+ * All values now use df-* semantic classes that are theme-aware.
  */
 export const themeClasses = {
   // Container styles
-  container: 'bg-white dark:bg-gray-900',
-  card: 'bg-white dark:bg-gray-800',
-  sidebar: 'bg-gray-50 dark:bg-gray-900',
+  container: 'df-bg-base',
+  card: 'df-bg-card',
+  sidebar: 'df-bg-sidebar',
 
   // Text colors
-  text: 'text-gray-900 dark:text-gray-100',
-  textMuted: 'text-gray-500 dark:text-gray-400',
-  textSubtle: 'text-gray-600 dark:text-gray-300',
-  textEmphasis: 'text-gray-900 dark:text-white',
+  text: 'df-text-primary',
+  textMuted: 'df-text-muted',
+  textSubtle: 'df-text-muted',
+  textEmphasis: 'df-text-primary',
 
   // Border colors
-  border: 'border-gray-200 dark:border-gray-700',
-  borderLight: 'border-gray-100 dark:border-gray-800',
-  borderStrong: 'border-gray-300 dark:border-gray-600',
+  border: 'df-border-base',
+  borderLight: 'df-border-light',
+  borderStrong: 'df-border-strong',
 
   // Background colors
-  bgPrimary: 'bg-white dark:bg-gray-900',
-  bgSecondary: 'bg-gray-50 dark:bg-gray-800',
-  bgTertiary: 'bg-gray-100 dark:bg-gray-700',
-  bgMuted: 'bg-gray-100 dark:bg-gray-800',
+  bgPrimary: 'df-bg-base',
+  bgSecondary: 'df-bg-secondary',
+  bgTertiary: 'df-bg-tertiary',
+  bgMuted: 'df-bg-secondary',
 
   // Interactive states
-  hover: 'hover:bg-gray-100 dark:hover:bg-gray-800',
-  hoverSubtle: 'hover:bg-gray-50 dark:hover:bg-gray-900',
-  active: 'bg-gray-200 dark:bg-gray-700',
+  hover: 'df-hover-base',
+  hoverSubtle: 'df-hover-muted',
+  active: 'df-bg-secondary',
   focus: 'df-focus-ring-only',
 
   // Input styles
-  input:
-    'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100',
+  input: 'df-bg-base df-border-base df-text-primary',
   inputFocus: 'df-focus-ring',
 
   // Button styles
   buttonPrimary: 'df-fill-primary df-hover-primary-solid',
-  buttonSecondary:
-    'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 hover:bg-gray-300 dark:hover:bg-gray-600',
+  buttonSecondary: 'df-bg-secondary df-text-primary df-hover-base',
   buttonDanger: 'df-fill-destructive df-hover-destructive',
-  buttonSuccess:
-    'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-200 hover:bg-blue-200 dark:hover:bg-blue-800',
+  buttonSuccess: 'df-fill-secondary df-hover-base', // Success is mapped to secondary for now
 
   // Shadow
-  shadow: 'shadow-sm dark:shadow-gray-900/50',
-  shadowMd: 'shadow-md dark:shadow-gray-900/50',
-  shadowLg: 'shadow-lg dark:shadow-gray-900/50',
+  shadow: 'df-shadow-sm',
+  shadowMd: 'df-shadow-md',
+  shadowLg: 'df-shadow-md', // Mapped to md for now
 
   // Divider
-  divider: 'border-gray-200 dark:border-gray-700',
+  divider: 'df-border-base',
 };
 
 /**
@@ -94,11 +91,6 @@ export const themeClasses = {
  * @param whenTrue - Class names when condition is true
  * @param whenFalse - Class names when condition is false
  * @returns Class name string based on condition
- *
- * @example
- * ```ts
- * conditionalTheme(isActive, 'bg-blue-500 dark:bg-blue-600', 'bg-gray-200 dark:bg-gray-700')
- * ```
  */
 export const conditionalTheme = (
   condition: boolean,
@@ -111,12 +103,6 @@ export const conditionalTheme = (
  *
  * @param classes - Array of class names or falsy values
  * @returns Merged class name string
- *
- * @example
- * ```ts
- * mergeClasses('p-4', isActive && 'bg-blue-500', 'rounded')
- * // Returns: 'p-4 bg-blue-500 rounded' (if isActive is true)
- * ```
  */
 export const mergeClasses = (
   ...classes: (string | undefined | null | false)[]
@@ -124,10 +110,6 @@ export const mergeClasses = (
 
 /**
  * Resolve the currently applied theme on the document.
- *
- * This inspects common override hooks (like `data-dayflow-theme-override` or
- * manual `dark`/`light` classes) so host applications can force a theme even
- * when DayFlow is configured in `auto` mode.
  */
 export const resolveAppliedTheme = (
   effectiveTheme: 'light' | 'dark'

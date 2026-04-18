@@ -34,8 +34,11 @@ describe('RegularEventContent', () => {
       />
     );
 
-    const content = container.querySelector('.df-event__timed-content');
+    const content = container.querySelector(
+      '.df-event__timed-content'
+    ) as HTMLElement | null;
 
-    expect(content.dataset.density).toBe('default');
+    expect(content).not.toBeNull();
+    expect(content!.dataset.density).toBe('default');
   });
 });

@@ -204,6 +204,46 @@
     color: inherit;
   }
 
+  .df-context-menu__calendar-item {
+    display: flex;
+    width: 100%;
+    align-items: center;
+  }
+
+  .df-context-menu__calendar-check-wrap {
+    width: 1rem;
+    flex-shrink: 0;
+  }
+
+  .df-context-menu__calendar-check {
+    height: 0.75rem;
+    width: 0.75rem;
+  }
+
+  .df-context-menu__calendar-info {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  .df-context-menu__calendar-dot {
+    height: 0.75rem;
+    width: 0.75rem;
+    flex-shrink: 0;
+    border-radius: 0.125rem;
+  }
+
+  .df-context-menu__calendar-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-context-menu__calendar-label[data-selected='true'] {
+    font-weight: 600;
+  }
+
   .df-context-menu__color-picker {
     width: 100%;
   }

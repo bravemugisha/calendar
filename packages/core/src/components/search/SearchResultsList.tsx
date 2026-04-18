@@ -21,7 +21,6 @@ interface SearchResultsListProps {
 const SearchIconPlaceholder = () => (
   <svg
     className='df-search-results__state-icon'
-    style={{ width: '3rem', height: '3rem' }}
     fill='none'
     viewBox='0 0 24 24'
     stroke='currentColor'
@@ -64,7 +63,7 @@ const SearchResultsList = ({
   if (loading) {
     return (
       <div className='df-search-results__state'>
-        <Loader2 className='mb-2 h-8 w-8 animate-spin' />
+        <Loader2 className='df-search-results__loader' />
         <span>Loading...</span>
       </div>
     );
@@ -84,7 +83,7 @@ const SearchResultsList = ({
   return (
     <div className='df-search-results'>
       {groupedEvents.map(group => {
-        const { title, colorClass } = getSearchHeaderInfo(
+        const { title, tone } = getSearchHeaderInfo(
           group.date,
           today,
           locale,
@@ -93,7 +92,7 @@ const SearchResultsList = ({
 
         return (
           <div key={group.date.getTime()} className='df-search-results__group'>
-            <h3 className={`df-search-results__date-header ${colorClass}`}>
+            <h3 className='df-search-results__date-header' data-tone={tone}>
               {title}
             </h3>
             <div className='df-search-results__events'>

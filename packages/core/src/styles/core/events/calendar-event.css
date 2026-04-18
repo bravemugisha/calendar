@@ -434,8 +434,6 @@
     line-height: 16px;
     white-space: nowrap;
     text-overflow: ellipsis;
-    mask-image: linear-gradient(to right, black 70%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, black 70%, transparent 100%);
   }
 
   .df-event__year-title--strong {
@@ -524,6 +522,10 @@
 
   .df-month-segment-event__time--spaced {
     margin-left: 0.5rem;
+  }
+
+  .df-month-segment-event__time--overlay {
+    position: absolute;
   }
 
   .df-month-segment-event__tail-time {

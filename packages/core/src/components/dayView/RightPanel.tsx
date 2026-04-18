@@ -1,20 +1,7 @@
 import { MiniCalendar } from '@/components/common/MiniCalendar';
 import TodayBox from '@/components/common/TodayBox';
 import { useLocale } from '@/locale';
-import {
-  miniCalendarContainer,
-  headerContainer,
-  headerTitle,
-  flexCol,
-  p2,
-  p4,
-  mb3,
-  textXs,
-  textLg,
-  textSm,
-  textGray500,
-  textGray600,
-} from '@/styles/classNames';
+import { miniCalendarContainer } from '@/styles/classNames';
 import { ICalendarApp, Event } from '@/types';
 import {
   formatTime,
@@ -64,18 +51,17 @@ export const RightPanel = ({
 
   return (
     <div
-      className={`df-right-panel hidden flex-none md:block ${switcherMode === 'buttons' ? '' : ''} w-[30%] bg-white dark:bg-gray-900`}
+      className='df-right-panel'
+      data-switcher-mode={switcherMode}
       onContextMenu={e => e.preventDefault()}
     >
-      <div className={`${flexCol} h-full`}>
+      <div className='df-right-panel__layout'>
         {/* Mini calendar */}
         <div className={miniCalendarContainer}>
-          <div>
-            <div className='flex items-center justify-end gap-2'>
-              <div className={headerContainer} style={{ position: 'relative' }}>
-                <div>
-                  <h1 className={headerTitle}>&nbsp;</h1>
-                </div>
+          <div className='df-right-panel__calendar-shell'>
+            <div className='df-right-panel__calendar-header'>
+              <div className='df-right-panel__header-spacer' aria-hidden='true'>
+                &nbsp;
               </div>
               <TodayBox
                 handlePreviousMonth={() => app.goToPrevious()}
@@ -98,11 +84,9 @@ export const RightPanel = ({
         </div>
 
         {/* Event details area */}
-        <div className={`flex-1 overflow-y-auto`}>
-          <div className={`${p4}`}>
-            <h3
-              className={`${textLg} font-semibold ${mb3} sticky top-0 z-10 bg-white py-2 dark:bg-gray-900`}
-            >
+        <div className='df-right-panel__events'>
+          <div className='df-right-panel__events-inner'>
+            <h3 className='df-right-panel__date-heading'>
               {currentDate.toLocaleDateString(locale, {
                 weekday: 'long',
                 month: 'long',
@@ -111,13 +95,16 @@ export const RightPanel = ({
             </h3>
 
             {sortedEvents.length === 0 ? (
-              <p className={`${textGray500} ${textSm}`}>{t('noEvents')}</p>
+              <p className='df-right-panel__empty'>{t('noEvents')}</p>
             ) : (
-              <div className='space-y-2'>
+              <div className='df-right-panel__list'>
                 {sortedEvents.map((event: Event) => (
                   <div
                     key={event.id}
-                    className={` ${p2} cursor-pointer rounded border-l-4 transition-colors ${selectedEvent?.id === event.id ? 'df-border-primary df-tint-primary' : 'border-gray-300 bg-gray-50 dark:border-gray-600 dark:bg-gray-800'} hover:bg-gray-100 dark:hover:bg-gray-700`}
+                    className='df-right-panel__event-card'
+                    data-selected={
+                      selectedEvent?.id === event.id ? 'true' : 'false'
+                    }
                     style={(() => {
                       const lc = getCalendarLineColors(event);
                       return {
@@ -133,9 +120,11 @@ export const RightPanel = ({
                       app.onEventClick(event);
                     }}
                   >
-                    <div className={`font-medium ${textSm}`}>{event.title}</div>
+                    <div className='df-right-panel__event-title'>
+                      {event.title}
+                    </div>
                     {!event.allDay && (
-                      <div className={`${textXs} ${textGray600}`}>
+                      <div className='df-right-panel__event-time'>
                         {formatTime(
                           appTimeZone
                             ? extractHourFromDate(
@@ -161,7 +150,7 @@ export const RightPanel = ({
                       </div>
                     )}
                     {event.allDay && (
-                      <div className={`${textXs} ${textGray600}`}>
+                      <div className='df-right-panel__event-time'>
                         {t('allDay')}
                       </div>
                     )}

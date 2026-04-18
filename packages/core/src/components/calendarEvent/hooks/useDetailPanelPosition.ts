@@ -25,7 +25,7 @@ interface UseDetailPanelPositionProps {
   selectedEventElementRef: RefObject<HTMLElement>;
   isMobile: boolean;
   eventVisibility:
-    | 'visible'
+    | 'standard'
     | 'sticky-top'
     | 'sticky-bottom'
     | 'sticky-left'

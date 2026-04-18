@@ -439,30 +439,26 @@ const WeekComponent = memo(
     }, [firstDayOfMonth, locale]);
 
     return (
-      <div
-        className='relative border-b border-gray-200 select-none dark:border-gray-700'
-        style={{ height: weekHeightPx }}
-      >
+      <div className='df-month-week' style={{ height: weekHeightPx }}>
         {/* Month title: displayed when scrolling, hidden after scrolling stops */}
         {showMonthIndicator && firstDayOfMonth && (
           <div
-            className={` ${monthTitle} ${shouldShowMonthTitle ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'} `}
+            className={monthTitle}
+            data-visible={shouldShowMonthTitle ? 'true' : 'false'}
             style={{
               transition: 'opacity 0.5s ease',
               maxWidth: 'fit-content',
             }}
             onContextMenu={e => e.preventDefault()}
           >
-            <span className='text-2xl font-bold text-gray-900 dark:text-gray-100'>
-              {localizedMonthYear}
-            </span>
+            <span className='df-month-title__label'>{localizedMonthYear}</span>
           </div>
         )}
 
-        <div className='flex h-full flex-col'>
-          <div className='calendar-week relative h-full'>
+        <div className='df-month-week__inner'>
+          <div className='df-month-week__grid-shell'>
             {/* Date grid */}
-            <div className='grid h-full grid-cols-7'>
+            <div className='df-month-week__grid'>
               {weekData.days.map((day, index) => (
                 <WeekDayCell
                   key={`day-${day.date.getTime()}`}
@@ -513,7 +509,7 @@ const WeekComponent = memo(
             {/* Multi-day event overlay layer */}
             {organizedMultiDaySegments.length > 0 && (
               <div
-                className='pointer-events-none absolute right-0 left-0'
+                className='df-month-week__event-layer'
                 style={{
                   top: `${MULTI_DAY_TOP_OFFSET}px`,
                   height: `${multiDayAreaHeight}px`,
@@ -524,7 +520,7 @@ const WeekComponent = memo(
                   .map((layer, layerIndex) => (
                     <div
                       key={`layer-${layerIndex}`}
-                      className='absolute inset-0'
+                      className='df-month-week__event-layer-row'
                     >
                       {layer
                         .filter(

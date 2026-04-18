@@ -66,7 +66,7 @@ const CalendarHeader = ({
                 : t('createCalendar') || 'Add Calendar'
             }
           >
-            <Plus className='h-4 w-4' />
+            <Plus />
           </button>
         )}
       </div>
@@ -92,7 +92,7 @@ const CalendarHeader = ({
             className={iconButton}
             title={t('search') || 'Search'}
           >
-            <Search width={16} height={16} />
+            <Search />
           </button>
         ) : (
           /* Desktop: inline search bar */

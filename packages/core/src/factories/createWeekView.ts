@@ -24,7 +24,7 @@ const WeekViewAdapter = (props: WeekViewProps) =>
     ...(props as ViewAdapterProps),
     viewType: ViewType.WEEK,
     originalComponent: WeekView,
-    className: 'week-view-factory',
+    className: 'df-week-view-factory',
   });
 
 WeekViewAdapter.displayName = 'WeekViewAdapter';

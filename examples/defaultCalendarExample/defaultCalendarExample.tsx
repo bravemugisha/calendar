@@ -8,6 +8,7 @@ import {
 } from '@dayflow/core';
 import { createDragPlugin } from '@dayflow/plugin-drag';
 import { createLocalizationPlugin, zh } from '@dayflow/plugin-localization';
+import { createPrintPlugin } from '@dayflow/plugin-print';
 import {
   useCalendarApp,
   DayFlowCalendar,
@@ -17,20 +18,60 @@ import {
   createYearView,
   UseCalendarAppReturn,
 } from '@dayflow/react';
+import { createResourceGridView } from '@dayflow/resource-grid';
 import { getWebsiteCalendars } from '@examples/utils/palette';
-import { generateSampleEvents } from '@examples/utils/sampleData';
+
+import '@dayflow/resource-grid/dist/styles.components.css';
+import {
+  generateSampleEvents,
+  generateSampleResources,
+  Resource,
+} from '@examples/utils/sampleData';
 import { createKeyboardShortcutsPlugin } from '@keyboard-shortcuts/plugin';
 import { createSidebarPlugin } from '@sidebar/plugin';
 import { Sun, Moon, Globe, Clock } from 'lucide-react';
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useMemo,
+  useCallback,
+} from 'react';
 
 const TZ_OPTIONS = Object.entries(TimeZone).map(([key, value]) => ({
   label: `${key.replaceAll('_', ' ')} (${value})`,
   value,
 }));
 
-const DefaultCalendarExample: React.FC = () => {
+const hasRedo = (app: object): app is object & { redo: () => void } =>
+  'redo' in app && typeof app.redo === 'function';
+
+type ExampleThemeMode = 'light' | 'dark';
+
+const getInitialThemeMode = (): ExampleThemeMode => {
+  if (typeof window === 'undefined') {
+    return 'light';
+  }
+
+  if (document.documentElement.classList.contains('dark')) {
+    return 'dark';
+  }
+
+  const storedTheme = localStorage.getItem('theme');
+  if (storedTheme === 'dark' || storedTheme === 'light') {
+    return storedTheme;
+  }
+
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+};
+
+const DefaultCalendarExample: React.FC<{
+  themeMode: ExampleThemeMode;
+}> = ({ themeMode }) => {
   const [events] = useState<Event[]>(generateSampleEvents());
+  const [resources] = useState<Resource[]>(generateSampleResources());
   const calendarRef = useRef<UseCalendarAppReturn | null>(null);
   const [readOnly] = useState<boolean | ReadOnlyConfig>(false);
   // Global calendar timezone — affects all views' event bucketing and editing
@@ -47,25 +88,53 @@ const DefaultCalendarExample: React.FC = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const plugins = [
-    createDragPlugin({
-      onEventDrop: (updatedEvent, _) => {
-        console.log('onEventDrop:', updatedEvent);
-      },
-      onEventResize: (updatedEvent, _) => {
-        console.log('onEventResize:', updatedEvent);
-      },
-    }),
-    createSidebarPlugin({
-      createCalendarMode: 'modal',
-      // colorPickerMode: 'default',
-      showEventDots: true,
-    }),
-    createLocalizationPlugin({
-      locales: [zh],
-    }),
-    createKeyboardShortcutsPlugin({}),
-  ].filter(plugin => !(isMobile && plugin.name === 'sidebar'));
+  const getResourceId = useCallback((event: Event) => event.calendarId, []);
+
+  const plugins = useMemo(
+    () =>
+      [
+        createDragPlugin({
+          onEventDrop: (updatedEvent, _) => {
+            console.log('onEventDrop:', updatedEvent);
+          },
+          onEventResize: (updatedEvent, _) => {
+            console.log('onEventResize:', updatedEvent);
+          },
+        }),
+        createSidebarPlugin({
+          createCalendarMode: 'modal',
+          // colorPickerMode: 'default',
+          showEventDots: true,
+        }),
+        createLocalizationPlugin({
+          locales: [zh],
+        }),
+        createPrintPlugin(),
+        createKeyboardShortcutsPlugin({
+          callbacks: {
+            redo: app => {
+              console.log('Redo triggered via callback!', app);
+              // You can add custom redo logic here if app.redo() is not enough
+              if (hasRedo(app)) {
+                app.redo();
+              }
+            },
+            undo: app => {
+              console.log('Undo triggered via callback!');
+              app.undo();
+            },
+            delete: (app, event) => {
+              console.log('Delete triggered via callback!', event);
+              if (!event) return;
+              app.deleteEvent(event.id);
+              app.selectEvent(null);
+              console.log(`Deleted event without confirmation: ${event.title}`);
+            },
+          },
+        }),
+      ].filter(plugin => !(isMobile && plugin.name === 'sidebar')),
+    [isMobile]
+  );
 
   const searchConfig = useMemo(
     () => ({
@@ -83,9 +152,8 @@ const DefaultCalendarExample: React.FC = () => {
     []
   );
 
-  const calendar = useCalendarApp({
-    timeZone: appTz || undefined,
-    views: [
+  const views = useMemo(
+    () => [
       createDayView({
         // timeFormat: '12h',
         secondaryTimeZone: secondaryTz || undefined,
@@ -105,6 +173,18 @@ const DefaultCalendarExample: React.FC = () => {
         // showMonthIndicator: false,
         showEventDots: true,
       }),
+      createResourceGridView({
+        mode: 'resourcesByDate',
+        resources,
+        visibleDays: 5,
+        getResourceId,
+      }),
+      // createResourceGridView({
+      //   mode: 'resourceView',
+      //   resources,
+      //   visibleDays: 5,
+      //   getResourceId,
+      // }),
       createYearView({
         mode: 'fixed-week',
         showTimedEventsInYearView: true,
@@ -112,19 +192,13 @@ const DefaultCalendarExample: React.FC = () => {
         showEventDots: true,
       }),
     ],
-    theme: { mode: 'light' as const },
-    events: events,
-    calendars: getWebsiteCalendars(),
-    defaultCalendar: 'work',
-    // useEventDetailDialog: true,
-    // switcherMode: 'select',
-    plugins: plugins,
-    // locale: zh,
-    defaultView: ViewType.MONTH,
-    // useEventDetailDialog: true,
-    // switcherMode: 'select' as const,
-    readOnly,
-    callbacks: {
+    [getResourceId, resources, secondaryTz]
+  );
+
+  const calendars = useMemo(() => getWebsiteCalendars(), []);
+
+  const callbacks = useMemo(
+    () => ({
       onEventCreate: async (event: Event) => {
         await new Promise(resolve => {
           setTimeout(resolve, 500);
@@ -133,6 +207,11 @@ const DefaultCalendarExample: React.FC = () => {
       },
       onEventClick: (event: Event) => {
         console.log('click event:', event);
+      },
+      onEventDoubleClick: (event: Event) => {
+        console.log('double click event:', event);
+        // You could use the event element as an anchor for a custom popover here
+        // return false;
       },
       onEventUpdate: async (event: Event) => {
         await new Promise(resolve => {
@@ -178,7 +257,26 @@ const DefaultCalendarExample: React.FC = () => {
       onEventBatchChange: (event: EventChange[]) => {
         console.log('batch change events:', event);
       },
-    },
+    }),
+    []
+  );
+
+  const calendar = useCalendarApp({
+    timeZone: appTz || undefined,
+    views,
+    theme: { mode: themeMode },
+    events: events,
+    calendars,
+    defaultCalendar: 'work',
+    // useEventDetailDialog: true,
+    // switcherMode: 'select',
+    plugins,
+    // locale: zh,
+    defaultView: ViewType.MONTH,
+    // useEventDetailDialog: true,
+    // switcherMode: 'select' as const,
+    readOnly,
+    callbacks,
   });
 
   calendarRef.current = calendar;
@@ -336,50 +434,36 @@ const DefaultCalendarExample: React.FC = () => {
   );
 };
 
-const ThemeToggle = () => {
-  const [isDark, setIsDark] = useState(false);
-
-  useEffect(() => {
-    if (
-      document.documentElement.classList.contains('dark') ||
-      (!('theme' in localStorage) &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)
-    ) {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
-    } else {
-      setIsDark(false);
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  const toggleTheme = () => {
-    const next = !isDark;
-    setIsDark(next);
-    if (next) {
-      document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark';
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
-    }
-  };
-
-  return (
-    <div className='flex shrink-0 items-center gap-4'>
-      <button
-        type='button'
-        onClick={toggleTheme}
-        className='flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700'
-      >
-        {isDark ? <Sun size={18} /> : <Moon size={18} />}
-        <span className='text-sm font-medium'>{isDark ? 'Light' : 'Dark'}</span>
-      </button>
-    </div>
-  );
-};
+const ThemeToggle = ({
+  isDark,
+  onToggle,
+}: {
+  isDark: boolean;
+  onToggle: () => void;
+}) => (
+  <div className='flex shrink-0 items-center gap-4'>
+    <button
+      type='button'
+      onClick={onToggle}
+      className='flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-gray-700 shadow-sm transition-colors hover:bg-gray-50 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-200 dark:hover:bg-slate-700'
+    >
+      {isDark ? <Sun size={18} /> : <Moon size={18} />}
+      <span className='text-sm font-medium'>{isDark ? 'Light' : 'Dark'}</span>
+    </button>
+  </div>
+);
 
 export function CalendarTypesExample() {
+  const [themeMode, setThemeMode] =
+    useState<ExampleThemeMode>(getInitialThemeMode);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.toggle('dark', themeMode === 'dark');
+    root.classList.toggle('light', themeMode === 'light');
+    localStorage.theme = themeMode;
+  }, [themeMode]);
+
   return (
     <div className='min-h-screen bg-gray-50 p-2 text-gray-900 transition-colors duration-200 dark:bg-slate-950 dark:text-gray-100'>
       <div className=''>
@@ -390,12 +474,17 @@ export function CalendarTypesExample() {
               Calendar Example
             </h1>
           </div>
-          <ThemeToggle />
+          <ThemeToggle
+            isDark={themeMode === 'dark'}
+            onToggle={() =>
+              setThemeMode(current => (current === 'dark' ? 'light' : 'dark'))
+            }
+          />
         </div>
 
         {/* Calendar Instance */}
         <div>
-          <DefaultCalendarExample />
+          <DefaultCalendarExample themeMode={themeMode} />
         </div>
       </div>
     </div>

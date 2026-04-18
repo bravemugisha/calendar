@@ -161,8 +161,8 @@ const CalendarEvent = ({
   });
 
   const [eventVisibility, setEventVisibility] = useState<
-    'visible' | 'sticky-top' | 'sticky-bottom' | 'sticky-left' | 'sticky-right'
-  >('visible');
+    'standard' | 'sticky-top' | 'sticky-bottom' | 'sticky-left' | 'sticky-right'
+  >('standard');
 
   // Utility Wrappers
   const setActiveDayIndex = (dayIndex: number | null) => {

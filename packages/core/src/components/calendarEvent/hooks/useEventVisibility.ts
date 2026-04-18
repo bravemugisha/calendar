@@ -9,7 +9,7 @@ import { Event, ViewType } from '@/types';
 import { extractHourFromDate, getEventEndHour } from '@/utils';
 
 export type EventVisibility =
-  | 'visible'
+  | 'standard'
   | 'sticky-top'
   | 'sticky-bottom'
   | 'sticky-left'
@@ -107,33 +107,33 @@ export const useEventVisibility = ({
     } else if (isContentBelowViewport) {
       nextVisibility = 'sticky-bottom';
     } else {
-      // Determine vertical state, treating horizontal sticky as 'visible' for transition purposes
+      // Determine vertical state, treating horizontal sticky as 'standard' for transition purposes
       const isCurrentlyHorizontallySticky =
         eventVisibility === 'sticky-left' || eventVisibility === 'sticky-right';
       const currentVerticalState: EventVisibility =
-        isCurrentlyHorizontallySticky ? 'visible' : eventVisibility;
+        isCurrentlyHorizontallySticky ? 'standard' : eventVisibility;
 
       let newVerticalState: EventVisibility;
-      if (currentVerticalState === 'visible') {
+      if (currentVerticalState === 'standard') {
         if (originalBottom < scrollTop) newVerticalState = 'sticky-top';
         else if (originalTop > scrollBottom - STICKY_THRESHOLD)
           newVerticalState = 'sticky-bottom';
-        else newVerticalState = 'visible';
+        else newVerticalState = 'standard';
       } else if (currentVerticalState === 'sticky-top') {
         newVerticalState =
-          originalBottom >= scrollTop ? 'visible' : 'sticky-top';
+          originalBottom >= scrollTop ? 'standard' : 'sticky-top';
       } else {
         // sticky-bottom
         newVerticalState =
           originalTop <= scrollBottom - STICKY_THRESHOLD
-            ? 'visible'
+            ? 'standard'
             : 'sticky-bottom';
       }
 
-      if (newVerticalState !== 'visible') {
+      if (newVerticalState !== 'standard') {
         nextVisibility = newVerticalState;
       } else if (isResourceView) {
-        // Vertically visible — check horizontal visibility
+        // Vertically standard — check horizontal visibility
         const parentRect =
           eventRef.current?.parentElement?.getBoundingClientRect();
         if (parentRect) {
@@ -146,13 +146,13 @@ export const useEventVisibility = ({
           } else if (parentRect.left >= gridRight) {
             nextVisibility = 'sticky-right';
           } else {
-            nextVisibility = 'visible';
+            nextVisibility = 'standard';
           }
         } else {
-          nextVisibility = 'visible';
+          nextVisibility = 'standard';
         }
       } else {
-        nextVisibility = 'visible';
+        nextVisibility = 'standard';
       }
     }
 

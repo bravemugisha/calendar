@@ -1,0 +1,7 @@
+@import 'tailwindcss/preflight' layer(base);
+@import 'tailwindcss/theme' layer(theme);
+@import 'tailwindcss/utilities';
+
+@source "../**/*.{ts,tsx}";
+
+@variant dark (.dark &);

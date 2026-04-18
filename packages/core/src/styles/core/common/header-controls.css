@@ -77,6 +77,19 @@
     gap: 0.5rem;
   }
 
+  .df-view-header__year-stack {
+    position: relative;
+    overflow: hidden;
+    height: 1.5em;
+  }
+
+  .df-view-header__year-title {
+    position: absolute;
+    top: 0;
+    left: 0;
+    will-change: transform;
+  }
+
   /* ===================================================================
    * ViewSwitcher  (.df-view-switcher / .df-view-switcher-select)
    * =================================================================== */
@@ -397,5 +410,102 @@
     white-space: nowrap;
     font-size: 0.875rem;
     color: var(--df-color-foreground);
+  }
+
+  /* CalendarPicker dropdown container (used by both mobile and desktop variants) */
+  .df-calendar-picker__dropdown {
+    overflow: hidden;
+    border-radius: 0.375rem;
+    border: 1px solid var(--df-color-border);
+    background-color: var(--df-color-card);
+    box-shadow:
+      0 10px 15px -3px rgb(0 0 0 / 0.1),
+      0 4px 6px -4px rgb(0 0 0 / 0.1);
+    transition: all 200ms;
+    transform-origin: top right;
+  }
+
+  /* Icon sizing inside trigger and check-area */
+  .df-calendar-picker__trigger svg,
+  .df-calendar-picker__check-area svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  /* Color swatch spacing when inside an option row */
+  .df-calendar-picker__option .df-calendar-picker__color-swatch--sm {
+    margin-right: 0.5rem;
+  }
+
+  /* ===================================================================
+   * Navigation (TodayBox)  (.df-navigation)
+   * =================================================================== */
+
+  .df-navigation {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  /* Icon sizing + hover scale inside nav buttons */
+  .df-calendar-nav-button svg {
+    width: 1rem;
+    height: 1rem;
+    transition: transform 150ms;
+  }
+
+  .df-calendar-nav-button:hover svg {
+    transform: scale(1.1);
+  }
+
+  /* ===================================================================
+   * MiniCalendar grid and cells
+   * =================================================================== */
+
+  .df-mini-calendar__nav-btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .df-mini-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    justify-items: center;
+  }
+
+  .df-mini-calendar-header {
+    text-align: center;
+    color: var(--df-color-muted-foreground);
+    font-weight: 500;
+    padding-block: 0.25rem;
+    height: 1.5rem;
+    width: 1.5rem;
+  }
+
+  .df-mini-calendar-day {
+    font-size: 0.75rem;
+    height: 1.5rem;
+    width: 1.5rem;
+    color: var(--df-color-foreground);
+    border-radius: 0.25rem;
+  }
+
+  .df-mini-calendar-day[data-other-month='true'] {
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-mini-calendar-day[data-today='true'] {
+    background-color: var(--df-color-primary);
+    color: var(--df-color-primary-foreground);
+    border-radius: 9999px;
+  }
+
+  .df-mini-calendar-day[data-selected='true'] {
+    background-color: var(--df-color-secondary);
+    color: var(--df-color-secondary-foreground);
+    border-radius: 9999px;
+    font-weight: 500;
   }
 }

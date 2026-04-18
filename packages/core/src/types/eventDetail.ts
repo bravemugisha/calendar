@@ -23,7 +23,7 @@ export interface EventDetailPanelProps {
   isAllDay: boolean;
   /** Event visibility state */
   eventVisibility:
-    | 'visible'
+    | 'standard'
     | 'sticky-top'
     | 'sticky-bottom'
     | 'sticky-left'

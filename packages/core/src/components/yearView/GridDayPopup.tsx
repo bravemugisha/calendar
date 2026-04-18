@@ -66,16 +66,12 @@ export const GridDayPopup = ({
 
   const defaultContent = (
     <>
-      <div className='border-b border-gray-100 px-4 py-3 dark:border-gray-700'>
-        <div className='text-sm font-semibold text-gray-900 dark:text-gray-100'>
-          {dateLabel}
-        </div>
+      <div className='df-year-popup__header'>
+        <div className='df-year-popup__title'>{dateLabel}</div>
       </div>
-      <div className='max-h-60 overflow-y-auto py-1'>
+      <div className='df-year-popup__body'>
         {events.length === 0 ? (
-          <div className='px-4 py-3 text-center text-xs text-gray-400'>
-            No events
-          </div>
+          <div className='df-year-popup__empty'>No events</div>
         ) : (
           events.map(event => {
             const cal = event.calendarId
@@ -102,27 +98,22 @@ export const GridDayPopup = ({
             }
 
             return (
-              <div
-                key={event.id}
-                className='flex items-start gap-2.5 rounded px-3 py-1.5 hover:bg-gray-50 dark:hover:bg-gray-800'
-              >
+              <div key={event.id} className='df-year-popup__event'>
                 <div
-                  className='mt-1.5 h-2 w-2 shrink-0 rounded-full'
+                  className='df-year-popup__dot'
                   style={{ backgroundColor: color }}
                 />
-                <div className='min-w-0 flex-1'>
-                  <div className='truncate text-xs font-medium text-gray-900 dark:text-gray-100'>
+                <div className='df-year-popup__event-main'>
+                  <div className='df-year-popup__event-title'>
                     {event.title}
                   </div>
                   {event.allDay && (
-                    <div className='text-[10px] text-gray-500 dark:text-gray-400'>
+                    <div className='df-year-popup__event-meta'>
                       {t('allDay')}
                     </div>
                   )}
                   {timeStr && (
-                    <div className='text-[10px] text-gray-500 dark:text-gray-400'>
-                      {timeStr}
-                    </div>
+                    <div className='df-year-popup__event-meta'>{timeStr}</div>
                   )}
                 </div>
               </div>
@@ -137,7 +128,7 @@ export const GridDayPopup = ({
     <div
       ref={popupRef}
       data-grid-day-popup
-      className='animate-in fade-in zoom-in-95 fixed z-50 w-64 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl duration-100 dark:border-gray-700 dark:bg-gray-900'
+      className='df-year-popup df-animate-in df-fade-in df-zoom-in-95'
       style={{ top: position.top, left: position.left }}
     >
       {customContent ? customContent(date, events) : defaultContent}

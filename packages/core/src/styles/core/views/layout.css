@@ -82,6 +82,11 @@
     transition: background-color 150ms;
   }
 
+  .df-icon-btn svg {
+    width: 1rem;
+    height: 1rem;
+  }
+
   .df-icon-btn:hover {
     background-color: var(--df-color-hover);
   }
@@ -113,6 +118,16 @@
     font-size: 0.875rem;
     margin-top: 0.25rem;
     user-select: none;
+  }
+
+  .df-date-number[data-today='true'],
+  .df-month-date-number[data-today='true'] {
+    background-color: var(--df-color-primary);
+    color: var(--df-color-primary-foreground);
+  }
+
+  .df-month-date-number[data-other-month='true'] {
+    color: var(--df-color-muted-foreground);
   }
 
   .df-month-date-number-container {
@@ -183,5 +198,1441 @@
     font-size: 0.875rem;
     padding: 0.5rem 0.5rem 0.5rem 0;
     user-select: none;
+  }
+
+  .df-month-view {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    user-select: none;
+  }
+
+  .df-month-view__fade-scroller {
+    overflow: hidden;
+  }
+
+  .df-month-view__virtual-scroller {
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+  }
+
+  .df-month-view__fade-scroller[data-layout-ready='false'],
+  .df-month-view__virtual-scroller[data-layout-ready='false'] {
+    visibility: hidden;
+  }
+
+  .df-month-view__fade-scroller[data-layout-ready='true'],
+  .df-month-view__virtual-scroller[data-layout-ready='true'] {
+    visibility: visible;
+  }
+
+  .df-calendar-content {
+    position: relative;
+    overflow-y: auto;
+  }
+
+  .df-time-column {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .df-time-column[data-secondary-tz='false'] {
+    width: 3rem;
+  }
+
+  .df-time-column[data-secondary-tz='true'] {
+    width: 5rem;
+  }
+
+  .df-time-slot {
+    position: relative;
+    display: flex;
+    height: 4.5rem;
+  }
+
+  .df-time-label {
+    position: absolute;
+    top: 0;
+    right: 0.5rem;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: var(--df-color-muted-foreground);
+    user-select: none;
+  }
+
+  .df-time-grid-row {
+    display: flex;
+    height: 4.5rem;
+    border-top: 1px solid var(--df-color-border);
+  }
+
+  .df-time-grid-cell {
+    position: relative;
+    flex: 1;
+    border-right: 1px solid var(--df-color-border);
+    user-select: none;
+  }
+
+  .df-time-grid-row[data-scrollbar-space='false']
+    .df-time-grid-cell:last-child {
+    border-right-color: transparent;
+  }
+
+  .df-current-time-line {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    width: 100%;
+  }
+
+  .df-current-time-label {
+    margin-left: 0.5rem;
+    border-radius: 0.25rem;
+    background-color: var(--df-color-primary);
+    color: var(--df-color-primary-foreground);
+    padding: 0 0.375rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .df-current-time-bar {
+    position: relative;
+    height: 0.125rem;
+    width: 100%;
+    border-radius: 0.25rem;
+    background-color: var(--df-color-primary);
+  }
+
+  .df-all-day-row {
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--df-color-border);
+  }
+
+  .df-all-day-label {
+    display: flex;
+    width: 3rem;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 0.25rem;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--df-color-muted-foreground);
+    user-select: none;
+  }
+
+  .df-all-day-content {
+    position: relative;
+    display: flex;
+    flex: 1;
+  }
+
+  .df-all-day-cell {
+    position: relative;
+    flex: 1;
+    border-right: 1px solid var(--df-color-border);
+  }
+
+  .df-all-day-content[data-scrollbar-space='false']
+    .df-all-day-cell:last-child {
+    border-right-color: transparent;
+  }
+
+  .df-mini-calendar {
+    border-bottom: 1px solid var(--df-color-border);
+    padding-inline: 0.5rem;
+  }
+
+  .df-time-grid-boundary {
+    position: relative;
+    height: 0.75rem;
+    border-top: 1px solid var(--df-color-border);
+  }
+
+  .df-time-grid-boundary--top {
+    border-top-color: transparent;
+  }
+
+  .df-midnight-label {
+    position: absolute;
+    top: 0;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--df-color-muted-foreground);
+    user-select: none;
+  }
+
+  .df-midnight-label--offset {
+    left: -2.375rem;
+  }
+
+  .df-mobile-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--df-color-background);
+  }
+
+  .df-time-column__spacer {
+    position: relative;
+    height: 0.75rem;
+  }
+
+  .df-time-column__spacer[data-secondary-tz='true'] {
+    height: 2rem;
+  }
+
+  .df-time-column__tz-header,
+  .df-time-column__tz-row {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: space-evenly;
+    color: var(--df-color-muted-foreground);
+    user-select: none;
+  }
+
+  .df-time-column__tz-header {
+    gap: 0.25rem;
+    padding: 0.25rem 0.25rem 0.125rem 0;
+  }
+
+  .df-time-column__tz-header--compact {
+    gap: 0.125rem;
+    padding: 0.5rem 0 0.125rem;
+  }
+
+  .df-time-column__tz-label {
+    font-size: 9px;
+  }
+
+  .df-time-column__tz-row {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translateY(-50%);
+    gap: 0.25rem;
+  }
+
+  .df-time-column__tz-row--boundary {
+    top: auto;
+    bottom: -0.25rem;
+    transform: none;
+  }
+
+  .df-time-column__tz-value,
+  .df-time-column__boundary-label {
+    font-size: 10px;
+  }
+
+  .df-time-column__boundary-label {
+    position: absolute;
+    right: 0.5rem;
+    bottom: -0.25rem;
+    color: var(--df-color-muted-foreground);
+    user-select: none;
+  }
+
+  .df-day-content {
+    flex: none;
+    width: 100%;
+    border-right: 1px solid var(--df-color-border);
+    background-color: var(--df-color-background);
+  }
+
+  .df-day-content__layout {
+    position: relative;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+
+  .df-day-content__all-day-row {
+    position: relative;
+    align-items: stretch;
+    border-top: 1px solid var(--df-color-border);
+  }
+
+  .df-day-content__all-day-grid {
+    position: relative;
+    display: flex;
+    flex: 1;
+    align-self: stretch;
+  }
+
+  .df-day-content__all-day-grid[data-scrollbar-space='true'] {
+    border-right: 1px solid var(--df-color-border);
+  }
+
+  .df-day-content__all-day-lane {
+    position: relative;
+    width: 100%;
+  }
+
+  .df-day-content__all-day-spacer[data-scrollbar-space='true'] {
+    padding-right: 0.6875rem;
+  }
+
+  .df-day-content__grid-inner {
+    position: relative;
+    display: flex;
+  }
+
+  .df-day-content__current-time-side {
+    display: flex;
+    width: 3rem;
+    align-items: center;
+  }
+
+  .df-current-time-line[data-secondary-tz='true']
+    .df-day-content__current-time-side {
+    width: 5rem;
+  }
+
+  .df-day-content__current-time-side-inner {
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: center;
+  }
+
+  .df-day-content__current-time-rail {
+    display: flex;
+    flex: 1;
+    align-items: center;
+  }
+
+  .df-day-content__grid-column {
+    flex: 1;
+    user-select: none;
+  }
+
+  .df-day-content__grid-boundary[data-scrollbar-space='true'] {
+    border-right: 1px solid var(--df-color-border);
+  }
+
+  .df-day-content__grid-rows {
+    position: relative;
+  }
+
+  .df-day-content__bottom-tz-row {
+    top: -0.625rem;
+    transform: none;
+  }
+
+  .df-day-content__event-layer {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  .df-right-panel {
+    display: none;
+    flex: none;
+    width: 30%;
+    background-color: var(--df-color-background);
+  }
+
+  .df-right-panel__layout {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+
+  .df-right-panel__calendar-shell {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .df-right-panel__calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  .df-right-panel__header-spacer {
+    position: relative;
+    min-width: 0;
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 1.5rem;
+    line-height: 2rem;
+  }
+
+  .df-right-panel__events {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .df-right-panel__events-inner {
+    padding: 1rem;
+  }
+
+  .df-right-panel__date-heading {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    margin-bottom: 0.75rem;
+    background-color: var(--df-color-background);
+    padding-block: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--df-color-foreground);
+  }
+
+  .df-right-panel__empty {
+    font-size: 0.875rem;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-right-panel__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .df-right-panel__event-card {
+    cursor: pointer;
+    border-radius: 0.25rem;
+    border-left: 4px solid var(--df-color-border);
+    background-color: var(--df-color-muted);
+    padding: 0.5rem;
+    transition: background-color 150ms;
+  }
+
+  .df-right-panel__event-card:hover {
+    background-color: var(--df-color-hover);
+  }
+
+  .df-right-panel__event-card[data-selected='true'] {
+    border-left-color: var(--df-color-primary);
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-primary) 10%,
+      var(--df-color-background)
+    );
+  }
+
+  .df-right-panel__event-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--df-color-foreground);
+  }
+
+  .df-right-panel__event-time {
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--df-color-foreground) 72%, transparent);
+  }
+
+  .df-week-time-grid {
+    position: relative;
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .df-week-time-grid__scroller {
+    position: relative;
+    flex: 1;
+    overflow: auto;
+  }
+
+  .df-week-time-grid__scroller-shell {
+    display: grid;
+  }
+
+  .df-week-time-grid__scroller[data-sliding-view='true'] {
+    overflow-x: hidden;
+  }
+
+  .df-week-time-grid__scroller[data-sliding-view='false'] {
+    scroll-snap-type: x mandatory;
+  }
+
+  .df-week-time-grid__time-column {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    width: 3rem;
+    flex-shrink: 0;
+    background-color: var(--df-color-background);
+  }
+
+  .df-week-time-grid__time-column[data-secondary-tz='true'] {
+    width: 5rem;
+  }
+
+  .df-week-time-grid__boundary-tail {
+    position: relative;
+  }
+
+  .df-week-time-grid__current-time-label {
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    z-index: 20;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    justify-content: flex-end;
+    transform: translateY(-50%);
+  }
+
+  .df-week-time-grid__content {
+    display: flex;
+  }
+
+  .df-week-time-grid__grid {
+    flex: 1;
+  }
+
+  .df-week-time-grid__grid-inner {
+    position: relative;
+  }
+
+  .df-week-time-grid__boundary-row {
+    display: flex;
+  }
+
+  .df-week-time-grid__boundary-cell {
+    position: relative;
+    flex: 1;
+    border-right: 1px solid var(--df-color-border);
+  }
+
+  .df-week-time-grid__boundary-row[data-scrollbar-space='false']
+    .df-week-time-grid__boundary-cell:last-child {
+    border-right-color: transparent;
+  }
+
+  .df-week-time-grid__current-time-spacer {
+    display: flex;
+    width: 0;
+    align-items: center;
+  }
+
+  .df-week-time-grid__current-time-track {
+    display: flex;
+    flex: 1;
+  }
+
+  .df-week-time-grid__current-time-cell {
+    display: flex;
+    flex: 1;
+    align-items: center;
+  }
+
+  .df-week-time-grid__current-line-rail {
+    position: relative;
+    height: 0.125rem;
+    width: 100%;
+    border-radius: 0.25rem;
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-primary) 30%,
+      transparent
+    );
+  }
+
+  .df-week-time-grid__current-line-rail[data-today='true'] {
+    background-color: var(--df-color-primary);
+  }
+
+  .df-week-time-grid__current-line-dot {
+    position: absolute;
+    top: -0.1875rem;
+    left: -0.25rem;
+    height: 0.5rem;
+    width: 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--df-color-primary);
+  }
+
+  .df-week-time-grid__cell {
+    scroll-snap-align: start;
+  }
+
+  .df-week-time-grid__event-layer {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+  }
+
+  .df-week-all-day {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .df-week-all-day__shell {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex: none;
+  }
+
+  .df-week-all-day__shell[data-show-all-day='true'] {
+    border-bottom: 1px solid var(--df-color-border);
+  }
+
+  .df-week-all-day__side {
+    z-index: 20;
+    display: flex;
+    width: 3rem;
+    flex-shrink: 0;
+    flex-direction: column;
+    background-color: var(--df-color-background);
+  }
+
+  .df-week-all-day__side-spacer {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    border-bottom: 1px solid var(--df-color-border);
+    transition: all 300ms ease-in-out;
+  }
+
+  .df-week-all-day__side-spacer[data-sliding-view='true'] {
+    display: none;
+  }
+
+  .df-week-all-day__label,
+  .df-week-all-day__row,
+  .df-week-all-day__row-content,
+  .df-week-all-day__cell,
+  .df-week-all-day__content-wrap {
+    transition: min-height 300ms ease-in-out;
+  }
+
+  .df-week-all-day__content-wrap {
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .df-week-all-day__content {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .df-week-all-day__weekday-cell[data-mobile='true'] {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .df-week-all-day__weekday-label {
+    font-size: 12px;
+    line-height: 1.1;
+    font-weight: 500;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-week-all-day__weekday-name {
+    margin-top: 0.25rem;
+    margin-right: 0.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+  }
+
+  .df-week-all-day__date-number--mobile {
+    height: 1.75rem;
+    width: 1.75rem;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  .df-week-all-day__row {
+    position: relative;
+    border-bottom-color: transparent;
+  }
+
+  .df-week-all-day__row-content[data-scrollbar-space='false']
+    .df-week-all-day__cell:last-child {
+    border-right-color: transparent;
+  }
+
+  .df-week-all-day__event-layer {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+  }
+
+  .df-compact-header {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    border-bottom: 1px solid var(--df-color-border);
+    background-color: var(--df-color-background);
+    padding-block: 0.75rem;
+  }
+
+  .df-compact-header__labels,
+  .df-compact-header__dates {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .df-compact-header__labels {
+    margin-bottom: 0.25rem;
+  }
+
+  .df-compact-header__dates {
+    overflow: hidden;
+  }
+
+  .df-compact-header__label-cell,
+  .df-compact-header__date-button {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .df-compact-header__date-button {
+    cursor: pointer;
+  }
+
+  .df-compact-header__label {
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-compact-header__label[data-today='true'] {
+    color: var(--df-color-primary);
+  }
+
+  .df-compact-header__capsule {
+    position: absolute;
+    border-radius: 9999px;
+    background-color: var(--df-color-hover);
+    transition: all 300ms ease;
+  }
+
+  .df-compact-header__date-pill {
+    position: relative;
+    display: flex;
+    height: 2rem;
+    width: 2rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--df-color-muted-foreground);
+    transition: all 300ms ease;
+  }
+
+  .df-compact-header__date-pill[data-selected='true'] {
+    background-color: var(--df-color-foreground);
+    color: var(--df-color-background);
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  }
+
+  .df-compact-header__date-pill[data-selected='false'][data-today='true'] {
+    color: var(--df-color-primary);
+    font-weight: 700;
+  }
+
+  .df-compact-header__date-pill[data-selected='false'][data-inside-pill='true'] {
+    color: var(--df-color-foreground);
+  }
+
+  .df-compact-header__today-dot {
+    position: absolute;
+    bottom: 0.25rem;
+    height: 0.25rem;
+    width: 0.25rem;
+    border-radius: 9999px;
+    background-color: var(--df-color-primary);
+  }
+
+  .df-month-week {
+    position: relative;
+    border-bottom: 1px solid var(--df-color-border);
+    user-select: none;
+  }
+
+  .df-month-week__inner {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+  }
+
+  .df-month-week__grid-shell {
+    position: relative;
+    height: 100%;
+  }
+
+  .df-month-week__grid {
+    display: grid;
+    height: 100%;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+
+  .df-month-week__event-layer {
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+  }
+
+  .df-month-week__event-layer-row {
+    position: absolute;
+    inset: 0;
+  }
+
+  .df-month-day-cell__surface {
+    color: var(--df-color-foreground);
+  }
+
+  .df-month-day-cell__surface[data-other-month='true'] {
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-month-day-cell__surface[data-trailing-border='false'] {
+    border-right-color: transparent;
+  }
+
+  .df-month-day-cell__content {
+    pointer-events: none;
+    position: relative;
+    flex: 1;
+    overflow: hidden;
+    padding-inline: 0.25rem;
+  }
+
+  .df-month-day-cell__overlay-mask {
+    pointer-events: none;
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background-color: var(--df-color-background);
+  }
+
+  .df-month-week-number {
+    margin-left: 0.25rem;
+    margin-right: auto;
+    font-size: 10px;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--df-color-muted-foreground) 85%, white 15%);
+  }
+
+  .df-month-more-events {
+    position: relative;
+    z-index: 20;
+    cursor: pointer;
+    color: var(--df-color-muted-foreground);
+    font-size: 0.75rem;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 2px;
+    transition:
+      color 150ms,
+      text-decoration-color 150ms;
+  }
+
+  .df-month-more-events:hover {
+    color: var(--df-color-foreground);
+    text-decoration-color: currentColor;
+  }
+
+  .df-month-day-cell__more-events {
+    pointer-events: auto;
+    z-index: 100;
+  }
+
+  .df-month-day-cell__more-events[data-layout='desktop'] {
+    text-align: left;
+    font-weight: 400;
+  }
+
+  .df-month-day-cell__more-events[data-layout='mobile'] {
+    text-align: center;
+    font-weight: 500;
+  }
+
+  .df-month-title {
+    position: absolute;
+    top: 2.5rem;
+    left: 0;
+    z-index: 30;
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-background) 50%,
+      transparent
+    );
+    padding: 0.5rem;
+    transition:
+      opacity 300ms,
+      background-color 300ms;
+  }
+
+  .df-month-title[data-visible='false'] {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  .df-month-title[data-visible='true'] {
+    pointer-events: auto;
+    opacity: 1;
+  }
+
+  .df-month-title__label {
+    font-size: 1.5rem;
+    line-height: 2rem;
+    font-weight: 700;
+    color: var(--df-color-foreground);
+  }
+
+  .df-year-popup {
+    position: fixed;
+    z-index: 50;
+    width: 16rem;
+    overflow: hidden;
+    border: 1px solid var(--df-color-border);
+    border-radius: 0.75rem;
+    background-color: var(--df-color-background);
+    box-shadow:
+      0 20px 25px -5px rgb(0 0 0 / 0.1),
+      0 8px 10px -6px rgb(0 0 0 / 0.1);
+    animation-duration: 100ms;
+  }
+
+  .df-year-popup__header {
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--df-color-border) 70%, white 30%);
+    padding: 0.75rem 1rem;
+  }
+
+  .df-year-popup__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--df-color-foreground);
+  }
+
+  .df-year-popup__body {
+    max-height: 15rem;
+    overflow-y: auto;
+    padding-block: 0.25rem;
+  }
+
+  .df-year-popup__empty {
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--df-color-muted-foreground) 85%, white 15%);
+  }
+
+  .df-year-popup__event {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+    border-radius: 0.25rem;
+    padding: 0.375rem 0.75rem;
+    transition: background-color 150ms;
+  }
+
+  .df-year-popup__event:hover {
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-background),
+      var(--df-color-hover) 90%
+    );
+  }
+
+  .df-year-popup__dot {
+    margin-top: 0.375rem;
+    height: 0.5rem;
+    width: 0.5rem;
+    flex-shrink: 0;
+    border-radius: 9999px;
+  }
+
+  .df-year-popup__event-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .df-year-popup__event-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--df-color-foreground);
+  }
+
+  .df-year-popup__event-meta {
+    font-size: 10px;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-year-day-cell {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border-right: 1px solid
+      color-mix(in srgb, var(--df-color-border) 55%, white 45%);
+    border-bottom: 1px solid
+      color-mix(in srgb, var(--df-color-border) 55%, white 45%);
+    background-color: var(--df-color-background);
+    user-select: none;
+  }
+
+  .df-year-day-cell[data-first-day='true'] {
+    border-left: 2px solid var(--df-color-primary);
+  }
+
+  .df-year-day-cell__header {
+    display: flex;
+    height: 1.5rem;
+    flex-shrink: 0;
+    align-items: center;
+    padding: 0.25rem;
+  }
+
+  .df-year-day-cell__month-pill {
+    border-radius: 0.25rem;
+    background-color: var(--df-color-primary);
+    color: var(--df-color-primary-foreground);
+    padding: 0.125rem 0.25rem;
+    font-size: 9px;
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  .df-year-day-cell__date {
+    margin-left: auto;
+    font-size: 10px;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--df-color-foreground) 78%, transparent);
+  }
+
+  .df-year-day-cell__date[data-today='true'] {
+    display: flex;
+    height: 1.25rem;
+    width: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: var(--df-color-primary);
+    color: var(--df-color-primary-foreground);
+  }
+
+  .df-year-day-cell__more-wrap {
+    position: absolute;
+    bottom: 0.125rem;
+    left: 0.25rem;
+    z-index: 20;
+  }
+
+  .df-year-day-cell__more {
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--df-color-muted-foreground);
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 2px;
+    transition:
+      color 150ms,
+      text-decoration-color 150ms;
+  }
+
+  .df-year-day-cell__more:hover {
+    color: var(--df-color-foreground);
+    text-decoration-color: currentColor;
+  }
+
+  .df-year-grid {
+    display: grid;
+    min-height: 0;
+    flex: 1;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .df-year-grid__month {
+    display: flex;
+    height: 100%;
+    min-height: 0;
+    flex-direction: column;
+    border: 1px solid color-mix(in srgb, var(--df-color-border) 55%, white 45%);
+    border-radius: 0.5rem;
+    background-color: var(--df-color-background);
+    padding: 0.5rem;
+  }
+
+  .df-year-grid__month-title {
+    margin-bottom: 0.25rem;
+    flex-shrink: 0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--df-color-foreground);
+  }
+
+  .df-year-grid__month-body {
+    display: flex;
+    min-height: 0;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .df-year-grid__calendar {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    gap: 1px;
+  }
+
+  .df-year-grid__weekday {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--df-color-muted-foreground) 80%, white 20%);
+  }
+
+  .df-year-grid__day {
+    cursor: pointer;
+    border-radius: 0.25rem;
+    transition:
+      opacity 150ms,
+      background-color 150ms;
+  }
+
+  .df-year-grid__day:hover {
+    opacity: 0.8;
+  }
+
+  .df-year-grid__day-inner {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .df-year-grid__day-number {
+    display: flex;
+    height: 1rem;
+    width: 1rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-size: 9px;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--df-color-muted-foreground) 90%, white 10%);
+  }
+
+  .df-year-grid__day-number[data-current-month='false'] {
+    color: color-mix(in srgb, var(--df-color-muted-foreground) 50%, white 50%);
+  }
+
+  .df-year-grid__day-number[data-current-month='true'][data-has-events='true'] {
+    color: color-mix(in srgb, var(--df-color-foreground) 88%, transparent);
+  }
+
+  .df-year-grid__day-number[data-strong-contrast='true'] {
+    color: white;
+  }
+
+  .df-year-grid__day-number[data-today='true'] {
+    background-color: var(--df-color-primary);
+    color: #fff;
+    font-weight: 700;
+  }
+
+  [data-df-theme='light'] .df-year-grid__day-number[data-today='true'],
+  .light .df-year-grid__day-number[data-today='true'] {
+    color: #fff;
+  }
+
+  .dark .df-year-grid__day-number[data-today='true'] {
+    color: #000;
+  }
+
+  [data-df-theme='dark'] .df-year-grid__day-number[data-today='true'] {
+    color: #000;
+  }
+
+  .df-year-fixed {
+    height: 100%;
+    overflow: hidden;
+    background-color: var(--df-color-background);
+    user-select: none;
+    display: grid;
+    grid-template-columns: 3rem 1fr;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .df-year-fixed__header-span {
+    grid-column: span 2 / span 2;
+  }
+
+  .df-year-fixed__corner {
+    z-index: 30;
+    border-right: 1px solid var(--df-color-border);
+    border-bottom: 1px solid var(--df-color-border);
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-muted) 70%,
+      var(--df-color-background)
+    );
+  }
+
+  .df-year-fixed__week-header {
+    overflow: hidden;
+    border-bottom: 1px solid var(--df-color-border);
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-muted) 70%,
+      var(--df-color-background)
+    );
+  }
+
+  .df-year-fixed__week-header-inner {
+    display: flex;
+  }
+
+  .df-year-fixed__week-grid {
+    display: grid;
+    flex: 1;
+  }
+
+  .df-year-fixed__week-label {
+    border-right: 1px solid var(--df-color-border);
+    padding-block: 0.5rem;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-year-fixed__week-spacer {
+    flex-shrink: 0;
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-muted) 70%,
+      var(--df-color-background)
+    );
+  }
+
+  .df-year-fixed__month-sidebar {
+    overflow: hidden;
+    border-right: 1px solid var(--df-color-border);
+    background-color: var(--df-color-background);
+  }
+
+  .df-year-fixed__month-sidebar-inner,
+  .df-year-fixed__content-inner {
+    display: flex;
+    min-height: 100%;
+    flex-direction: column;
+  }
+
+  .df-year-fixed__month-label {
+    display: flex;
+    flex-shrink: 0;
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid var(--df-color-border);
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-year-fixed__month-spacer {
+    flex-shrink: 0;
+    background-color: var(--df-color-background);
+  }
+
+  .df-year-fixed__content {
+    overflow: auto;
+  }
+
+  .df-year-fixed__month-row {
+    position: relative;
+    flex-shrink: 0;
+    flex-grow: 1;
+  }
+
+  .df-year-fixed__background-grid {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: grid;
+  }
+
+  .df-year-fixed__empty-cell,
+  .df-year-fixed__day-cell {
+    border-right: 1px solid var(--df-color-border);
+    border-bottom: 1px solid var(--df-color-border);
+  }
+
+  .df-year-fixed__empty-cell {
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-muted) 80%,
+      transparent
+    );
+  }
+
+  .df-year-fixed__day-cell {
+    position: relative;
+    display: flex;
+    cursor: pointer;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding: 0.125rem;
+    transition: background-color 150ms;
+  }
+
+  .df-year-fixed__day-cell[data-dragging='false']:hover {
+    background-color: color-mix(in srgb, #dbeafe 70%, transparent);
+  }
+
+  .df-year-fixed__empty-cell[data-weekend='true'],
+  .df-year-fixed__day-cell[data-weekend='true'] {
+    background-color: color-mix(
+      in srgb,
+      #dbeafe 35%,
+      var(--df-color-background)
+    );
+  }
+
+  .dark .df-year-grid__month {
+    border-color: #1e2938;
+  }
+
+  .dark .df-year-fixed__corner,
+  .dark .df-year-fixed__week-header,
+  .dark .df-year-fixed__week-spacer,
+  .dark .df-year-fixed__week-label {
+    background-color: #101828;
+  }
+
+  .dark .df-year-fixed__week-label {
+    color: #d0d5dd;
+  }
+
+  .dark .df-year-fixed__empty-cell[data-weekend='true'],
+  .dark .df-year-fixed__day-cell[data-weekend='true'] {
+    background-color: #142246;
+  }
+
+  .df-year-fixed__day-number {
+    display: flex;
+    height: 1.25rem;
+    width: 1.25rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    font-size: 10px;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--df-color-foreground) 78%, transparent);
+  }
+
+  .df-year-fixed__day-number[data-today='true'] {
+    background-color: var(--df-color-primary);
+    color: var(--df-color-primary-foreground);
+    font-weight: 700;
+    box-shadow: 0 1px 2px rgb(0 0 0 / 0.08);
+  }
+
+  .df-year-fixed__event-layer,
+  .df-year-row__event-layer {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+  }
+
+  .df-year-fixed__event-layer-inner,
+  .df-year-row__event-layer-inner {
+    position: relative;
+    height: 100%;
+    width: 100%;
+  }
+
+  .df-year-fixed__event-hitbox,
+  .df-year-row__event-hitbox {
+    pointer-events: auto;
+  }
+
+  .df-year-row {
+    position: relative;
+    width: 100%;
+  }
+
+  .df-year-default__scroll {
+    overflow: hidden auto;
+  }
+
+  .df-year-default__rows {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    border-top: 1px solid var(--df-color-border);
+    border-left: 1px solid var(--df-color-border);
+  }
+
+  @media (min-width: 768px) {
+    .df-right-panel {
+      display: block;
+    }
+
+    .df-time-column[data-secondary-tz='false'],
+    .df-day-content__current-time-side,
+    .df-week-time-grid__time-column,
+    .df-week-all-day__side,
+    .df-all-day-label {
+      width: 5rem;
+    }
+
+    .df-current-time-line[data-secondary-tz='true']
+      .df-day-content__current-time-side,
+    .df-time-column[data-secondary-tz='true'],
+    .df-week-time-grid__time-column[data-secondary-tz='true'] {
+      width: 5.5rem;
+    }
+
+    .df-time-label,
+    .df-time-column__tz-value,
+    .df-time-column__boundary-label {
+      font-size: 12px;
+    }
+
+    .df-time-column__tz-label {
+      font-size: 10px;
+    }
+
+    .df-all-day-label {
+      font-size: 0.75rem;
+    }
+
+    .df-day-content[data-switcher-mode='buttons'] {
+      width: 70%;
+    }
+
+    .df-day-content[data-switcher-mode='select'] {
+      width: 60%;
+    }
   }
 }

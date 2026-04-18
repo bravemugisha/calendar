@@ -34,7 +34,8 @@ export const YearDayCell = memo(
 
     return (
       <div
-        className={`relative flex flex-col border-r border-b border-gray-100 dark:border-gray-800 ${isFirstDay ? 'border-l-2 border-l-(--df-color-primary)' : ''} overflow-hidden bg-white select-none dark:bg-gray-900`}
+        className='df-year-day-cell'
+        data-first-day={isFirstDay ? 'true' : 'false'}
         style={{ aspectRatio: '1/1' }}
         onClick={() => onSelectDate(date)}
         onDblClick={e => onCreateStart?.(e, date)}
@@ -45,27 +46,22 @@ export const YearDayCell = memo(
         }}
         data-date={dateString}
       >
-        <div className='flex h-6 shrink-0 items-center px-1 py-1'>
+        <div className='df-year-day-cell__header'>
           {isFirstDay && (
-            <span className='df-fill-primary rounded-sm px-1 py-0.5 text-[9px] leading-none font-bold'>
-              {monthLabel}
-            </span>
+            <span className='df-year-day-cell__month-pill'>{monthLabel}</span>
           )}
           <span
-            className={`ml-auto text-[10px] font-medium ${
-              isToday
-                ? 'df-fill-primary flex h-5 w-5 items-center justify-center rounded-full'
-                : 'text-gray-700 dark:text-gray-300'
-            }`}
+            className='df-year-day-cell__date'
+            data-today={isToday ? 'true' : 'false'}
           >
             {day}
           </span>
         </div>
 
         {moreCount > 0 && (
-          <div className='absolute bottom-0.5 left-1 z-20'>
+          <div className='df-year-day-cell__more-wrap'>
             <span
-              className='cursor-pointer text-xs font-medium text-gray-500 hover:text-gray-700 hover:underline dark:text-gray-400 dark:hover:text-gray-200'
+              className='df-year-day-cell__more'
               onClick={e => {
                 e.stopPropagation();
                 onMoreEventsClick?.(date);

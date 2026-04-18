@@ -40,8 +40,9 @@ describe('MonthDragIndicatorComponent', () => {
     expect(root?.className).toContain('w-full');
     expect(root?.className).toContain('min-w-0');
     expect(root?.className).toContain('overflow-hidden');
+    expect(root?.className).toContain('text-white');
     expect(title).toBeDefined();
-    expect(title?.className).toContain('truncate');
+    expect(title?.className).toContain('df-drag-indicator__title-mask');
     expect(title?.className).toContain('overflow-hidden');
     expect(title?.className).toContain('whitespace-nowrap');
 

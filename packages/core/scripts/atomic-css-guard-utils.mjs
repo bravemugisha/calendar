@@ -56,35 +56,19 @@ const STATE_PREFIXES = new Set([
 ]);
 
 const EXACT_FORBIDDEN_TOKENS = new Set([
-  'absolute',
   'aspect-square',
-  'block',
   'contents',
   'cursor-pointer',
   'cursor-default',
-  'fixed',
-  'flex',
-  'grid',
-  'hidden',
-  'inline-flex',
-  'invisible',
   'overflow-auto',
   'overflow-hidden',
   'overflow-visible',
-  'pointer-events-auto',
-  'pointer-events-none',
-  'relative',
   'select-none',
   'shrink-0',
   'snap-center',
   'snap-mandatory',
   'snap-y',
-  'static',
-  'sticky',
-  'table',
-  'truncate',
   'uppercase',
-  'visible',
   'w-full',
   'whitespace-nowrap',
 ]);
@@ -204,24 +188,55 @@ function normalizeToken(token) {
 }
 
 function isAllowedToken(token) {
-  return (
-    token.startsWith('df-') ||
-    token.startsWith('bcp-') ||
-    token === 'calendar-event'
-  );
+  return token.startsWith('df-') || token.startsWith('bcp-');
 }
 
 function hasForbiddenVariant(token) {
-  const prefix = token.split(':', 1)[0];
+  if (!token.includes(':')) {
+    return false;
+  }
+  const [prefix, suffix] = token.split(/:(.*)/s, 2);
+  if (!suffix) {
+    return false;
+  }
   return RESPONSIVE_PREFIXES.has(prefix) || STATE_PREFIXES.has(prefix);
 }
 
+const ALLOWED_CSS_VALUES = new Set([
+  'ease-in',
+  'ease-out',
+  'ease-in-out',
+  'select-all',
+  'pointer-events-auto',
+  'pointer-events-none',
+  'stroke-width',
+  'stroke-linecap',
+  'stroke-linejoin',
+]);
+
 function hasForbiddenPrefix(token) {
-  return FORBIDDEN_PREFIXES.some(prefix => token.startsWith(prefix));
+  if (ALLOWED_CSS_VALUES.has(token)) {
+    return false;
+  }
+  return FORBIDDEN_PREFIXES.some(
+    prefix => token.startsWith(prefix) && token.length > prefix.length
+  );
 }
 
 function isArbitraryUtility(token) {
-  return /[[(].*[\])]/.test(token);
+  // Only flag if it looks like a Tailwind arbitrary value/variant
+  // e.g., bg-[#fff], w-[100px], [&_p]:mt-4
+  if (!/[[()].*[\])]/.test(token)) {
+    return false;
+  }
+
+  // Must have a prefix followed by [ or (
+  // OR start with [&
+  return (
+    /^[a-z0-9-]+[[()]/.test(token) ||
+    token.startsWith('[&') ||
+    token.startsWith('@')
+  );
 }
 
 function looksLikeForbiddenClassToken(token) {
@@ -257,26 +272,73 @@ function lineForIndex(source, index) {
   return source.slice(0, index).split('\n').length;
 }
 
+function collectForbiddenTokens({
+  filePath,
+  source,
+  literalContent,
+  snippet,
+  index,
+}) {
+  const tokens = extractTokensFromText(literalContent);
+  if (tokens.length === 0) {
+    return [];
+  }
+
+  const line = lineForIndex(source, index);
+  return tokens.map(token => ({
+    file: path.relative(workspaceRoot, filePath),
+    line,
+    token,
+    snippet: snippet.slice(0, 120),
+  }));
+}
+
 function scanStringLiterals(filePath, content) {
   const stripped = stripComments(content);
   const matches = [];
   const stringLiteralPattern = /(["'`])((?:\\.|(?!\1)[\s\S])*?)\1/g;
 
   for (const match of stripped.matchAll(stringLiteralPattern)) {
-    const [fullMatch, , inner] = match;
+    const [fullMatch, quote, inner] = match;
     if (!inner) continue;
 
-    const tokens = extractTokensFromText(inner);
-    if (tokens.length === 0) continue;
+    matches.push(
+      ...collectForbiddenTokens({
+        filePath,
+        source: stripped,
+        literalContent: inner,
+        snippet: fullMatch,
+        index: match.index ?? 0,
+      })
+    );
 
-    const line = lineForIndex(stripped, match.index ?? 0);
-    for (const token of tokens) {
-      matches.push({
-        file: path.relative(workspaceRoot, filePath),
-        line,
-        token,
-        snippet: fullMatch.slice(0, 120),
-      });
+    if (quote === '`') {
+      const expressionPattern = /\$\{([\s\S]*?)\}/g;
+      for (const expressionMatch of inner.matchAll(expressionPattern)) {
+        const expression = expressionMatch[1];
+        if (!expression) continue;
+
+        for (const nestedMatch of expression.matchAll(stringLiteralPattern)) {
+          const [nestedFullMatch, , nestedInner] = nestedMatch;
+          if (!nestedInner) continue;
+
+          const nestedIndex =
+            (match.index ?? 0) +
+            (expressionMatch.index ?? 0) +
+            2 +
+            (nestedMatch.index ?? 0);
+
+          matches.push(
+            ...collectForbiddenTokens({
+              filePath,
+              source: stripped,
+              literalContent: nestedInner,
+              snippet: nestedFullMatch,
+              index: nestedIndex,
+            })
+          );
+        }
+      }
     }
   }
 

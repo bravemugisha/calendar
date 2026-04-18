@@ -293,7 +293,7 @@ export const GridYearView = ({ app, config }: GridYearViewProps) => {
 
       {/* 4-col × 3-row grid that fills all remaining space — no scroll */}
       <div
-        className='grid min-h-0 flex-1 gap-3 p-3'
+        className='df-year-grid'
         style={{
           gridTemplateColumns: 'repeat(4, 1fr)',
           gridTemplateRows: 'repeat(3, 1fr)',
@@ -302,17 +302,15 @@ export const GridYearView = ({ app, config }: GridYearViewProps) => {
         {monthsData.map(month => (
           <div
             key={month.monthIndex}
-            className='df-year-grid-month flex h-full min-h-0 flex-col rounded-lg border border-gray-100 bg-white p-2 dark:border-gray-800 dark:bg-gray-900'
+            className='df-year-grid-month df-year-grid__month'
           >
             {/* Month name */}
-            <div className='mb-1 shrink-0 text-xs font-semibold text-gray-900 dark:text-gray-100'>
-              {month.monthName}
-            </div>
+            <div className='df-year-grid__month-title'>{month.monthName}</div>
 
             {/* Container for labels and cells to ensure alignment and fit */}
-            <div className='flex min-h-0 flex-1 overflow-hidden'>
+            <div className='df-year-grid__month-body'>
               <div
-                className='grid h-full w-full gap-px'
+                className='df-year-grid__calendar'
                 style={{
                   gridTemplateColumns: 'repeat(7, 1fr)',
                   gridTemplateRows: 'repeat(7, 1fr)',
@@ -320,10 +318,7 @@ export const GridYearView = ({ app, config }: GridYearViewProps) => {
               >
                 {/* Day-of-week headers */}
                 {weekDayLabels.map((label, i) => (
-                  <div
-                    key={i}
-                    className='flex items-center justify-center text-[9px] font-medium text-gray-400 dark:text-gray-500'
-                  >
+                  <div key={i} className='df-year-grid__weekday'>
                     {label}
                   </div>
                 ))}
@@ -343,24 +338,21 @@ export const GridYearView = ({ app, config }: GridYearViewProps) => {
                     <div
                       key={`${month.monthIndex}-${i}`}
                       data-grid-day-cell
-                      className='cursor-pointer rounded-sm transition-colors hover:opacity-80'
+                      className='df-year-grid__day'
+                      data-current-month={isCurrentMonth ? 'true' : 'false'}
                       style={intensityStyle}
                       onClick={e => handleDateClick(e, date, month.monthIndex)}
                       onDblClick={() => handleDateDoubleClick(date)}
                     >
-                      <div className='flex h-full w-full items-center justify-center'>
+                      <div className='df-year-grid__day-inner'>
                         <span
-                          className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${
-                            isToday
-                              ? 'df-fill-primary font-bold'
-                              : isCurrentMonth
-                                ? eventCount > 0
-                                  ? eventCount >= 4
-                                    ? 'text-white'
-                                    : 'text-gray-800 dark:text-gray-100'
-                                  : 'text-gray-500 dark:text-gray-400'
-                                : 'text-gray-300 dark:text-gray-600'
-                          }`}
+                          className='df-year-grid__day-number'
+                          data-today={isToday ? 'true' : 'false'}
+                          data-current-month={isCurrentMonth ? 'true' : 'false'}
+                          data-has-events={eventCount > 0 ? 'true' : 'false'}
+                          data-strong-contrast={
+                            eventCount >= 4 ? 'true' : 'false'
+                          }
                         >
                           {date.getDate()}
                         </span>

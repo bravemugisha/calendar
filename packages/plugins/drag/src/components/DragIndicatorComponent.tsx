@@ -82,11 +82,7 @@ const DragIndicatorComponent = ({
     });
   };
 
-  return (
-    <div className='drag-indicator-content h-full w-full'>
-      {renderContent()}
-    </div>
-  );
+  return <div className='df-drag-indicator__content'>{renderContent()}</div>;
 };
 
 export default DragIndicatorComponent;

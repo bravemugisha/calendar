@@ -88,7 +88,7 @@ export const parseTemporalString = (
 };
 
 export const getZoneId = (value: Temporal.ZonedDateTime): string => {
-  const asAny = value as any;
+  const asAny = value;
   if (asAny.timeZoneId && typeof asAny.timeZoneId === 'string')
     return asAny.timeZoneId;
   if (asAny.timeZone && typeof asAny.timeZone.id === 'string')
@@ -117,7 +117,7 @@ export const normalizeToZoned = (
     return Temporal.ZonedDateTime.from(isoString);
   }
 
-  const asAny = input as any;
+  const asAny = input;
 
   if ('hour' in asAny && !('timeZoneId' in asAny)) {
     const zoneId = fallbackZone ?? Temporal.Now.timeZoneId();

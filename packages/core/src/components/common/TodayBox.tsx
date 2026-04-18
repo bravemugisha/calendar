@@ -1,9 +1,5 @@
 import { useLocale } from '@/locale';
-import {
-  calendarNavButton,
-  calendarTodayButton,
-  navButtonIcon,
-} from '@/styles/classNames';
+import { calendarNavButton, calendarTodayButton } from '@/styles/classNames';
 
 import { ChevronLeft, ChevronRight } from './Icons';
 
@@ -20,14 +16,14 @@ const TodayBox = ({
 }: Props) => {
   const { t } = useLocale();
   return (
-    <div className='df-navigation flex items-center gap-1'>
+    <div className='df-navigation'>
       <button
         type='button'
         className={calendarNavButton}
         onClick={handlePreviousMonth}
         aria-label='Previous month'
       >
-        <ChevronLeft className={navButtonIcon} />
+        <ChevronLeft />
       </button>
       <button
         type='button'
@@ -42,7 +38,7 @@ const TodayBox = ({
         onClick={handleNextMonth}
         aria-label='Next month'
       >
-        <ChevronRight className={navButtonIcon} />
+        <ChevronRight />
       </button>
     </div>
   );

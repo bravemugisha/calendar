@@ -8,7 +8,11 @@ import {
   MultiDayEventSegment,
   getEventIcon,
 } from '@/components/monthView/util';
-import { monthEventColorBar } from '@/styles/classNames';
+import {
+  monthEventColorBar,
+  resizeHandleLeft,
+  resizeHandleRight,
+} from '@/styles/classNames';
 import { Event } from '@/types';
 import {
   getLineColor,
@@ -54,7 +58,6 @@ const ROW_HEIGHT = 16;
 const ROW_SPACING = 17;
 const POP_TRANSITION = 'transform 0.5s cubic-bezier(0.22, 1, 0.36, 1)';
 const mobileFadeStyle = {
-  overflow: 'hidden',
   whiteSpace: 'nowrap',
   textOverflow: 'clip',
   WebkitMaskImage: 'linear-gradient(to right, black 70%, transparent 100%)',
@@ -116,7 +119,7 @@ export const MultiDayEvent = memo(
       setIsPressed(true);
 
       const target = e.target as HTMLElement;
-      const isResizeHandle = target.closest('.resize-handle');
+      const isResizeHandle = target.closest('.df-resize-handle');
 
       if (!isResizeHandle && isDraggable) {
         onMoveStart?.(e, segment.event);
@@ -207,7 +210,7 @@ export const MultiDayEvent = memo(
 
       return (
         <div
-          className={`df-event__resize-handle ${isLeft ? 'df-event__resize-handle--left' : 'df-event__resize-handle--right'} resize-handle`}
+          className={isLeft ? resizeHandleLeft : resizeHandleRight}
           onMouseDown={e => {
             e.preventDefault();
             e.stopPropagation();
@@ -291,7 +294,6 @@ export const MultiDayEvent = memo(
       const startTimeStyle =
         segmentDays > 1
           ? {
-              position: 'absolute' as const,
               right: `calc(${remainingPercent}% + ${HORIZONTAL_MARGIN}px)`,
               top: '50%',
               transform: 'translateY(-50%)',
@@ -320,7 +322,7 @@ export const MultiDayEvent = memo(
           </div>
           {segment.isFirstSegment && !isMobile && (
             <span
-              className={`df-month-segment-event__time ${segmentDays === 1 ? 'df-month-segment-event__time--spaced' : ''}`}
+              className={`df-month-segment-event__time ${segmentDays === 1 ? 'df-month-segment-event__time--spaced' : 'df-month-segment-event__time--overlay'}`}
               style={startTimeStyle}
             >
               {startTimeText}

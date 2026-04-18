@@ -14,7 +14,7 @@ export const defaultDragConfig = {
 
   getDynamicPadding: (drag: { endHour: number; startHour: number }) => {
     const duration = drag.endHour - drag.startHour;
-    return duration <= 0.25 ? 'px-1 py-0' : 'p-1';
+    return duration <= 0.25 ? 'df-p-compact' : 'df-p-standard';
   },
 };
 

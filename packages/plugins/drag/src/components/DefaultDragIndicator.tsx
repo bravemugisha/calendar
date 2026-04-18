@@ -3,8 +3,6 @@ import {
   buildDiagonalPatternBackground,
 } from '@dayflow/core';
 
-const eventColorBar =
-  'df-event-color-bar absolute left-1 top-1 bottom-1 w-[3px] rounded-full';
 const colorBarClipPath =
   'inset(0.25rem calc(100% - 0.25rem - 3px) 0.25rem 0.25rem round 9999px)';
 
@@ -40,32 +38,28 @@ export const DefaultDragIndicatorRenderer: DragIndicatorRenderer = {
     color: _color,
     isMobile,
     isLightBackground,
-  }) => {
-    const iconClass = isLightBackground
-      ? 'mr-1 h-3 w-3'
-      : 'mr-1 h-3 w-3 text-white';
-    const textClass = isLightBackground
-      ? 'pr-1 text-xs font-medium'
-      : 'pr-1 text-xs font-medium text-white';
-    return (
-      <div className='flex h-full items-center overflow-hidden pl-3'>
-        <CalendarDaysIcon className={iconClass} />
-        <div
-          className={`${textClass} ${isMobile ? 'df-mobile-mask-fade' : 'truncate'}`}
-          style={
-            isMobile
-              ? {
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                }
-              : undefined
-          }
-        >
-          {title}
-        </div>
+  }) => (
+    <div className='df-drag-indicator__all-day'>
+      <CalendarDaysIcon
+        className='df-drag-indicator__icon'
+        data-light={isLightBackground}
+      />
+      <div
+        className='df-drag-indicator__text'
+        data-light={isLightBackground}
+        data-mobile={isMobile}
+        style={
+          isMobile
+            ? {
+                lineHeight: 'normal',
+              }
+            : undefined
+        }
+      >
+        {title}
       </div>
-    );
-  },
+    </div>
+  ),
 
   renderRegularContent: ({
     drag,
@@ -79,19 +73,16 @@ export const DefaultDragIndicatorRenderer: DragIndicatorRenderer = {
     isLightBackground,
     calendarLineColors,
   }) => {
-    const textClass = isLightBackground ? '' : 'text-white';
-    const timeTextClass = isLightBackground
-      ? 'opacity-70'
-      : 'text-white opacity-90';
     const lineColors =
       calendarLineColors && calendarLineColors.length > 0
         ? calendarLineColors
         : [getLineColor(color || 'blue')];
     const colorBarValue = buildDiagonalPatternBackground(lineColors);
+
     const colorBarContent =
       lineColors.length > 1 ? (
         <div
-          className='df-event-color-bar pointer-events-none absolute inset-0'
+          className='df-event__color-bar-overlay'
           style={{
             background: colorBarValue,
             clipPath: colorBarClipPath,
@@ -99,33 +90,36 @@ export const DefaultDragIndicatorRenderer: DragIndicatorRenderer = {
         />
       ) : (
         <div
-          className={eventColorBar}
-          style={{ backgroundColor: colorBarValue }}
+          className='df-event__color-bar'
+          style={{
+            backgroundColor: colorBarValue,
+          }}
         />
       );
+
     return (
-      <>
+      <div className='df-drag-indicator__regular-wrapper'>
         {colorBarContent}
         <div
-          className={`flex h-full flex-col overflow-hidden pl-3 ${textClass} ${getDynamicPadding(drag)}`}
+          className={`df-event__timed-content ${getDynamicPadding(drag)}`}
+          data-light={isLightBackground}
         >
           <div
-            className={`pr-1 text-xs font-medium ${textClass} ${isMobile ? 'df-mobile-mask-fade' : 'truncate'}`}
+            className='df-drag-indicator__text'
+            data-light={isLightBackground}
+            data-mobile={isMobile}
             style={{
               lineHeight:
                 drag.endHour - drag.startHour <= 0.25 ? '1.2' : 'normal',
-              ...(isMobile
-                ? {
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                  }
-                : {}),
             }}
           >
             {title}
           </div>
           {!drag.allDay && drag.endHour - drag.startHour > 0.5 && (
-            <div className={`time-display truncate text-xs ${timeTextClass}`}>
+            <div
+              className='df-drag-indicator__time'
+              data-light={isLightBackground}
+            >
               {formatTime(drag.startHour)} - {formatTime(drag.endHour)}
             </div>
           )}
@@ -133,34 +127,33 @@ export const DefaultDragIndicatorRenderer: DragIndicatorRenderer = {
         {isMobile && (
           <>
             <div
-              className='absolute -top-1.5 right-5 z-50 h-2.5 w-2.5 rounded-full border-2 bg-white'
-              style={{ borderColor: lineColors[0] || getLineColor('blue') }}
+              className='df-event__touch-resize-indicator'
+              data-axis='vertical'
+              data-position='top'
+              style={{ color: lineColors[0] || getLineColor('blue') }}
             />
             <div
-              className='absolute -bottom-1.5 left-5 z-50 h-2.5 w-2.5 rounded-full border-2 bg-white'
-              style={{ borderColor: lineColors[0] || getLineColor('blue') }}
+              className='df-event__touch-resize-indicator'
+              data-axis='vertical'
+              data-position='bottom'
+              style={{ color: lineColors[0] || getLineColor('blue') }}
             />
           </>
         )}
-      </>
+      </div>
     );
   },
 
   renderDefaultContent: ({ drag: _drag, title, allDay, isMobile }) => {
     if (allDay) {
       return (
-        <div className='flex h-full items-center overflow-hidden px-1 py-0 pl-3'>
-          <CalendarDaysIcon className='mr-1 h-3 w-3' />
+        <div className='df-drag-indicator__all-day'>
+          <CalendarDaysIcon className='df-drag-indicator__icon' />
           <div
-            className={`pr-1 text-xs font-medium ${isMobile ? 'df-mobile-mask-fade' : 'truncate'}`}
+            className='df-drag-indicator__text'
+            data-mobile={isMobile}
             style={{
               lineHeight: 1.2,
-              ...(isMobile
-                ? {
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                  }
-                : {}),
             }}
           >
             {title}
@@ -170,24 +163,17 @@ export const DefaultDragIndicatorRenderer: DragIndicatorRenderer = {
     }
 
     return (
-      <>
-        <div className='df-fill-primary absolute top-1 bottom-1 left-0.5 w-0.5 rounded-full' />
-        <div className='flex h-full flex-col overflow-hidden p-1 pl-3'>
+      <div className='df-drag-indicator__regular-wrapper'>
+        <div className='df-fill-primary df-event__color-bar' />
+        <div className='df-event__timed-content df-p-standard'>
           <div
-            className={`df-text-primary pr-1 text-xs font-medium ${isMobile ? 'df-mobile-mask-fade' : 'truncate'}`}
-            style={
-              isMobile
-                ? {
-                    overflow: 'hidden',
-                    whiteSpace: 'nowrap',
-                  }
-                : undefined
-            }
+            className='df-text-primary df-drag-indicator__text'
+            data-mobile={isMobile}
           >
             {title}
           </div>
         </div>
-      </>
+      </div>
     );
   },
 };

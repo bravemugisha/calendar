@@ -26,7 +26,7 @@ const MonthViewAdapter = (props: MonthViewProps) =>
     ...(props as ViewAdapterProps),
     viewType: ViewType.MONTH,
     originalComponent: MonthView,
-    className: 'month-view-factory',
+    className: 'df-month-view-factory',
   });
 
 MonthViewAdapter.displayName = 'MonthViewAdapter';

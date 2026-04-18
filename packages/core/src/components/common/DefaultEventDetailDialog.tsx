@@ -167,14 +167,8 @@ const DefaultEventDetailDialog = ({
 
   const dialogContent = (
     <div
-      className='df-portal'
+      className='df-portal df-event-dialog__overlay'
       style={{
-        position: 'fixed',
-        inset: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        pointerEvents: 'auto',
         zIndex: 9998,
       }}
       data-event-detail-dialog='true'
@@ -195,12 +189,7 @@ const DefaultEventDetailDialog = ({
           className='df-event-dialog__close'
           aria-label='Close'
         >
-          <svg
-            className='h-5 w-5'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
+          <svg fill='none' stroke='currentColor' viewBox='0 0 24 24'>
             <path
               strokeLinecap='round'
               strokeLinejoin='round'
@@ -339,9 +328,7 @@ const DefaultEventDetailDialog = ({
               <LoadingButton
                 type='button'
                 className={`df-fill-primary df-btn-md ${
-                  hasChanges
-                    ? 'df-shadow-primary df-hover-primary-solid'
-                    : 'cursor-not-allowed opacity-50 grayscale-[0.5]'
+                  hasChanges ? 'df-shadow-primary df-hover-primary-solid' : ''
                 }`}
                 style={{ marginLeft: 'auto' }}
                 onClick={handleSave}

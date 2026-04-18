@@ -2,6 +2,7 @@ import { ComponentChildren } from 'preact';
 
 import { getEventIcon } from '@/components/monthView/util';
 import { YearMultiDaySegment } from '@/components/yearView/utils';
+import { resizeHandleLeft, resizeHandleRight } from '@/styles/classNames';
 import { Event } from '@/types';
 import {
   getLineColor,
@@ -52,7 +53,7 @@ const YearEventContent = ({
 
     return (
       <div
-        className={`df-event__resize-handle ${isLeft ? 'df-event__resize-handle--left' : 'df-event__resize-handle--right'} resize-handle`}
+        className={isLeft ? resizeHandleLeft : resizeHandleRight}
         onMouseDown={e => {
           e.preventDefault();
           e.stopPropagation();

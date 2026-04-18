@@ -145,7 +145,7 @@ export const getEventClasses = (
   isAllDay: boolean,
   isMultiDay: boolean
 ): string => {
-  const classes = ['df-event', 'calendar-event'];
+  const classes = ['df-event'];
 
   if (viewType === ViewType.DAY) {
     classes.push('df-day-event');

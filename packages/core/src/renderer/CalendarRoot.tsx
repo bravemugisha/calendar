@@ -275,7 +275,7 @@ export const CalendarRoot = ({
         locale={app.state.locale}
         messages={customMessages}
       >
-        <div className='df-calendar-container relative flex flex-row overflow-hidden select-none'>
+        <div className='df-calendar-container'>
           <ContentSlot
             store={customRenderingStore}
             generatorName='titleBarSlot'
@@ -290,7 +290,7 @@ export const CalendarRoot = ({
 
           {sidebar.enabled && (
             <aside
-              className='absolute top-0 bottom-0 left-0 z-0 h-full'
+              className='df-calendar-sidebar-aside'
               style={{ width: sidebar.width }}
             >
               {sidebar.content}
@@ -310,9 +310,9 @@ export const CalendarRoot = ({
           >
             {renderHeader()}
 
-            <div className='relative flex-1 overflow-hidden' ref={calendarRef}>
-              <div className='calendar-renderer relative flex h-full flex-row'>
-                <div className='h-full flex-1 overflow-hidden'>
+            <div className='df-calendar-content-wrap' ref={calendarRef}>
+              <div className='df-calendar-renderer'>
+                <div className='df-calendar-view-container'>
                   <ViewComponent {...viewProps} />
                 </div>
 

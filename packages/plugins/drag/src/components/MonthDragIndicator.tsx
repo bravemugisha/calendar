@@ -36,14 +36,14 @@ const MonthDragIndicatorComponent = ({
   isMultiDay = false,
   startDate,
   endDate,
-  isMobile,
+  isMobile: _isMobile,
 }: MonthDragIndicatorProps) => {
   const { t } = useLocale();
   const getDisplayContent = () => {
     if (isCreating) {
       return {
         title: t('newEvent'),
-        icon: <CalendarIcon className='h-3 w-3' />,
+        icon: <CalendarIcon className='df-drag-indicator__icon' />,
         showDateRange: false,
       };
     }
@@ -66,22 +66,12 @@ const MonthDragIndicatorComponent = ({
   const content = getDisplayContent();
 
   return (
-    <div className='flex h-full w-full min-w-0 items-center overflow-hidden rounded-sm pl-2 text-xs font-medium'>
+    <div className='df-drag-indicator__month'>
       {content.icon ? (
-        <div className='mr-1 shrink-0'>{content.icon}</div>
+        <div className='df-drag-indicator__month-icon-wrap'>{content.icon}</div>
       ) : null}
-      <div className='min-w-0 flex-1'>
-        <div
-          className={`block w-full overflow-hidden font-medium whitespace-nowrap ${isMobile ? 'df-mobile-mask-fade' : 'truncate'}`}
-          style={
-            isMobile
-              ? {
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                }
-              : undefined
-          }
-        >
+      <div className='df-drag-indicator__month-content'>
+        <div className='df-drag-indicator__title-mask df-drag-indicator__month-title'>
           {content.title}
         </div>
       </div>

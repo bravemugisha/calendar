@@ -58,7 +58,7 @@ const MobileSearchDialog = ({
           onClick={onClose}
           className='df-search-dialog__back-btn'
         >
-          <ArrowLeft className='h-6 w-6' />
+          <ArrowLeft className='df-search-dialog__back-icon' />
         </button>
         <div className='df-search-dialog__input-wrap'>
           <input
@@ -80,7 +80,7 @@ const MobileSearchDialog = ({
               }}
               className='df-search-dialog__input-clear'
             >
-              <X className='h-4 w-4' />
+              <X className='df-search-dialog__clear-icon' />
             </button>
           )}
         </div>

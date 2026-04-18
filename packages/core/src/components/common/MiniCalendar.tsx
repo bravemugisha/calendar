@@ -7,10 +7,6 @@ import {
   miniCalendarDay,
   miniCalendarDayHeader,
   miniCalendarGrid,
-  miniCalendarCurrentMonth,
-  miniCalendarOtherMonth,
-  miniCalendarToday,
-  miniCalendarSelected,
 } from '@/styles/classNames';
 import type { Event } from '@/types/event';
 import { getLineColor, temporalToVisualDate } from '@/utils';
@@ -164,7 +160,7 @@ export const MiniCalendar = ({
             onClick={() => onMonthChange(-1)}
             aria-label='Previous month'
           >
-            <ChevronLeft className='h-4 w-4' />
+            <ChevronLeft />
           </button>
           <span className='df-mini-calendar__month-label'>{monthLabel}</span>
           <button
@@ -173,7 +169,7 @@ export const MiniCalendar = ({
             onClick={() => onMonthChange(1)}
             aria-label='Next month'
           >
-            <ChevronRight className='h-4 w-4' />
+            <ChevronRight />
           </button>
         </div>
       ) : null}
@@ -189,15 +185,12 @@ export const MiniCalendar = ({
             <button
               type='button'
               key={day.fullDate.getTime()}
-              className={`${miniCalendarDay} df-mini-calendar__day-cell ${
-                day.isToday
-                  ? miniCalendarToday
-                  : day.isSelected
-                    ? miniCalendarSelected
-                    : day.isCurrentMonth
-                      ? miniCalendarCurrentMonth
-                      : miniCalendarOtherMonth
-              }`}
+              className={`${miniCalendarDay} df-mini-calendar__day-cell`}
+              data-today={day.isToday ? 'true' : undefined}
+              data-selected={
+                !day.isToday && day.isSelected ? 'true' : undefined
+              }
+              data-other-month={day.isCurrentMonth ? undefined : 'true'}
               onClick={() => onDateSelect(day.fullDate)}
             >
               <span className='df-mini-calendar__day-number'>{day.date}</span>

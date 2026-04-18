@@ -1,0 +1,160 @@
+/* ── DayFlow Plugin – Drag Indicator ────────────────────────────────────── */
+
+@layer components {
+  /* Common container for all types of drag indicators */
+  .df-drag-indicator__content {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .df-drag-indicator__icon {
+    margin-right: 0.25rem;
+    height: 0.75rem;
+    width: 0.75rem;
+  }
+
+  .df-drag-indicator__text {
+    padding-right: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  .df-drag-indicator__text:not([data-mobile='true']) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .df-drag-indicator__text[data-mobile='true'] {
+    overflow: hidden;
+    white-space: nowrap;
+    mask-image: linear-gradient(to right, black 70%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 70%, transparent 100%);
+  }
+
+  .df-drag-indicator__text[data-light='false'] {
+    color: white;
+  }
+
+  .df-drag-indicator__icon[data-light='false'] {
+    color: white;
+  }
+
+  /* Specific styles for regular timed indicators */
+  .df-drag-indicator__regular-wrapper {
+    position: relative;
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .df-drag-indicator__regular-wrapper[data-light='false'] {
+    color: white;
+  }
+
+  .df-drag-indicator__time {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+  }
+
+  .df-drag-indicator__time[data-light='true'] {
+    opacity: 0.7;
+  }
+
+  .df-drag-indicator__time[data-light='false'] {
+    color: white;
+    opacity: 0.9;
+  }
+
+  /* Mobile interaction handles */
+  .df-drag-indicator__mobile-handle {
+    position: absolute;
+    z-index: 50;
+    height: 0.625rem;
+    width: 0.625rem;
+    border-radius: 9999px;
+    border-width: 2px;
+    background-color: white;
+  }
+
+  .df-drag-indicator__mobile-handle--top {
+    top: -0.375rem;
+    right: 1.25rem;
+  }
+
+  .df-drag-indicator__mobile-handle--bottom {
+    bottom: -0.375rem;
+    left: 1.25rem;
+  }
+
+  /* Shared Pills / Shapes */
+  .df-drag-indicator__month-pill,
+  .df-drag-indicator__regular-pill,
+  .df-drag-indicator__all-day-pill {
+    border-radius: 0.25rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  }
+
+  .df-drag-indicator__manual-pill {
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+  }
+
+  .df-drag-indicator__ghost {
+    border-style: dashed;
+    border-width: 1px;
+  }
+
+  .df-drag-indicator__default-bar {
+    position: absolute;
+    top: 0.25rem;
+    bottom: 0.25rem;
+    left: 0.125rem;
+    width: 0.125rem;
+    border-radius: 9999px;
+  }
+
+  /* Month/Year View Specific */
+  .df-drag-indicator__month {
+    position: relative;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    min-width: 0;
+    align-items: center;
+    overflow: hidden;
+    border-radius: 0.25rem;
+    padding-left: 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white;
+  }
+
+  .df-drag-indicator__month-icon-wrap {
+    margin-right: 0.25rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 10;
+  }
+
+  .df-drag-indicator__month-content {
+    min-width: 0;
+    flex: 1;
+    position: relative;
+    z-index: 10;
+  }
+
+  .df-drag-indicator__month-title {
+    display: block;
+    width: 100%;
+    overflow: hidden;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+}

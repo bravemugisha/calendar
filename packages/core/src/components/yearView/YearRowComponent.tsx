@@ -354,7 +354,7 @@ export const YearRowComponent = memo(
 
     return (
       <div
-        className='relative w-full'
+        className='df-year-row'
         style={{
           display: 'grid',
           gridTemplateColumns: `repeat(${columnsPerRow}, 1fr)`,
@@ -379,7 +379,7 @@ export const YearRowComponent = memo(
           );
         })}
         <div
-          className='pointer-events-none absolute inset-0'
+          className='df-year-row__event-layer'
           style={{
             top: HEADER_HEIGHT,
             bottom: 0,
@@ -388,7 +388,7 @@ export const YearRowComponent = memo(
           }}
           onContextMenu={e => e.preventDefault()}
         >
-          <div className='relative h-full w-full'>
+          <div className='df-year-row__event-layer-inner'>
             {(isMovePreviewActive && dragState.eventId
               ? renderedSegments.filter(
                   segment =>
@@ -398,7 +398,7 @@ export const YearRowComponent = memo(
                 )
               : visibleSegments
             ).map(segment => (
-              <div key={segment.id} className='pointer-events-auto'>
+              <div key={segment.id} className='df-year-row__event-hitbox'>
                 <CalendarEvent
                   event={segment.event}
                   isAllDay={!!segment.event.allDay}

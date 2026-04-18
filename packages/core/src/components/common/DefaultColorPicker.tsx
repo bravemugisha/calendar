@@ -32,7 +32,7 @@ export const DefaultColorPicker = ({
   }, [color]);
 
   return (
-    <div className='flex justify-center'>
+    <div className='df-default-color-picker'>
       <BlossomColorPicker
         defaultValue={blossomValue}
         coreSize={36}

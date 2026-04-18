@@ -19,7 +19,7 @@ interface EventDetailPanelProps {
   detailPanelRef: RefObject<HTMLDivElement>;
   isAllDay: boolean;
   eventVisibility:
-    | 'visible'
+    | 'standard'
     | 'sticky-top'
     | 'sticky-bottom'
     | 'sticky-left'

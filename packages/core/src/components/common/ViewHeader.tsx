@@ -93,34 +93,20 @@ const ViewHeader = ({
     >
       <div className='df-view-header__title-area'>
         {viewType === 'year' && stickyYear ? (
-          <div
-            style={{
-              position: 'relative',
-              overflow: 'hidden',
-              height: '1.5em',
-            }}
-          >
+          <div className='df-view-header__year-stack'>
             <h1
-              className={headerTitle}
+              className={`${headerTitle} df-view-header__year-title`}
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
                 transform: `translateY(-${stickyYearOffset}px)`,
-                willChange: 'transform',
               }}
             >
               {stickyYear}
             </h1>
             {nextYear && (
               <h1
-                className={headerTitle}
+                className={`${headerTitle} df-view-header__year-title`}
                 style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
                   transform: `translateY(${nextYearOffset}px)`,
-                  willChange: 'transform',
                 }}
               >
                 {nextYear}

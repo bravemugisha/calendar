@@ -37,36 +37,36 @@ export const normalizeDate = (date: Date): Date => {
 };
 
 /**
- * Helper to get header text and color for a date group in search results
+ * Helper to get header text and semantic tone for a date group in search results
  * @param groupDate The date of the group
  * @param today Reference today date (normalized)
  * @param locale Locale string
  * @param t Translation function
- * @returns Object with title and colorClass
+ * @returns Object with title and tone
  */
 export const getSearchHeaderInfo = (
   groupDate: Date,
   today: Date,
   locale: string,
   t: (key: TranslationKey) => string
-): { title: string; colorClass: string } => {
+): { title: string; tone: 'default' | 'today' | 'upcoming' } => {
   const diffTime = groupDate.getTime() - today.getTime();
   const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
 
   let title = '';
-  let colorClass = 'text-gray-500 dark:text-gray-400'; // Default gray
+  let tone: 'default' | 'today' | 'upcoming' = 'default';
 
   if (diffDays === 0) {
     // Today
     title = t('today') || 'Today';
-    colorClass = 'df-text-primary'; // Primary color
+    tone = 'today';
   } else if (diffDays === 1 || diffDays === 2) {
     // Tomorrow or Day after tomorrow
     try {
       const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
       const relative = rtf.format(diffDays, 'day');
       title = relative.charAt(0).toUpperCase() + relative.slice(1);
-      colorClass = 'text-black dark:text-white'; // Black/White for tomorrow/day after
+      tone = 'upcoming';
     } catch {
       title = groupDate.toLocaleDateString(locale, { weekday: 'long' });
     }
@@ -80,7 +80,7 @@ export const getSearchHeaderInfo = (
     });
   }
 
-  return { title, colorClass };
+  return { title, tone };
 };
 
 /**

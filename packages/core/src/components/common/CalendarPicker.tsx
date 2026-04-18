@@ -124,9 +124,7 @@ export const CalendarPicker = ({
             >
               <div className='df-calendar-picker__option-inner'>
                 <div className='df-calendar-picker__check-area'>
-                  {opt.value === value && (
-                    <Check className='df-text-primary h-4 w-4' />
-                  )}
+                  {opt.value === value && <Check className='df-text-primary' />}
                 </div>
                 <span className='df-calendar-picker__option-label'>
                   {opt.label}
@@ -147,7 +145,7 @@ export const CalendarPicker = ({
       <ul
         data-calendar-picker-dropdown='true'
         style={dropdownStyle}
-        className='df-portal df-animate-in df-fade-in df-zoom-in-95 overflow-hidden rounded-md border border-gray-200 bg-white shadow-lg transition-all duration-200 dark:border-gray-600 dark:bg-gray-700 dark:shadow-gray-900/50'
+        className={calendarPickerDropdown}
       >
         {options.map(opt => (
           <li
@@ -156,15 +154,11 @@ export const CalendarPicker = ({
             data-selected={value === opt.value ? 'true' : 'false'}
             onClick={e => handleSelect(e, opt.value)}
           >
-            {value === opt.value ? (
-              <span className='df-text-primary mr-2 text-sm'>
-                <Check width={12} height={12} />
-              </span>
-            ) : (
-              <div className='mr-2 h-3 w-3 text-sm'>&nbsp;</div>
-            )}
+            <div className='df-calendar-picker__check-area'>
+              {opt.value === value && <Check className='df-text-primary' />}
+            </div>
             <span
-              className='df-calendar-picker__color-swatch--sm mr-2'
+              className='df-calendar-picker__color-swatch--sm'
               style={{ backgroundColor: getColorForCalendarId(opt.value) }}
             />
             <span className='df-calendar-picker__option-label'>
@@ -197,7 +191,7 @@ export const CalendarPicker = ({
           <span className='df-calendar-picker__label'>
             {currentOption?.label || value}
           </span>
-          <ChevronsUpDown className='df-text-muted h-4 w-4' />
+          <ChevronsUpDown className='df-text-muted' />
         </button>
         {renderDropdown()}
       </div>
@@ -219,7 +213,7 @@ export const CalendarPicker = ({
           className='df-calendar-picker__color-swatch'
           style={{ backgroundColor: getColorForCalendarId(value) }}
         />
-        <ChevronsUpDown className='df-text-muted h-4 w-4' />
+        <ChevronsUpDown className='df-text-muted' />
       </button>
       {renderDropdown()}
     </div>

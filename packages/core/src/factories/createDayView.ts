@@ -23,7 +23,7 @@ const DayViewAdapter = (props: DayViewProps) =>
     ...(props as ViewAdapterProps),
     viewType: ViewType.DAY,
     originalComponent: DayView,
-    className: 'day-view-factory',
+    className: 'df-day-view-factory',
   });
 
 DayViewAdapter.displayName = 'DayViewAdapter';

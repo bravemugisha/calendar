@@ -6,7 +6,6 @@ import {
   monthDayCell,
   monthDateNumberContainer,
   monthDateNumber,
-  miniCalendarToday,
   monthMoreEvents,
   cn,
 } from '@/styles/classNames';
@@ -240,7 +239,7 @@ const WeekDayCell = ({
       renderElements.push(
         <div
           key={`placeholder-layer-${slot}-${day.date.getTime()}`}
-          className='shrink-0'
+          className='df-shrink-0'
           style={{
             height: `${ROW_SPACING}px`,
             minHeight: `${ROW_SPACING}px`,
@@ -290,18 +289,12 @@ const WeekDayCell = ({
   return (
     <div
       key={`day-${day.date.getTime()}`}
-      className={cn(
-        monthDayCell,
-        belongsToCurrentMonth
-          ? 'text-gray-800 dark:text-gray-100'
-          : 'text-gray-400 dark:text-gray-600',
-        dayIndex === 6
-          ? hasScrollbarSpace
-            ? 'last:border-r'
-            : 'border-r-0'
-          : ''
-      )}
+      className={cn(monthDayCell, 'df-month-day-cell__surface')}
       style={{ height: weekHeightPx }}
+      data-other-month={belongsToCurrentMonth ? 'false' : 'true'}
+      data-trailing-border={
+        dayIndex === 6 && !hasScrollbarSpace ? 'false' : 'true'
+      }
       data-date={createDateString(day.date)}
       onClick={() => belongsToCurrentMonth && onSelectDate?.(day.date)}
       onDblClick={event => onCreateStart?.(event, day.date)}
@@ -343,12 +336,14 @@ const WeekDayCell = ({
     >
       <div className={monthDateNumberContainer}>
         {showWeekNumbers && dayIndex === 0 && screenSize !== 'mobile' && (
-          <span className='mr-auto ml-1 text-[10px] font-medium text-gray-400 dark:text-gray-500'>
+          <span className='df-month-week-number'>
             {getWeekNumber(day.date)}
           </span>
         )}
         <span
-          className={` ${monthDateNumber} ${day.isToday ? miniCalendarToday : belongsToCurrentMonth ? 'text-gray-900 dark:text-gray-100' : 'text-gray-400 dark:text-gray-600'} `}
+          className={monthDateNumber}
+          data-today={day.isToday ? 'true' : undefined}
+          data-other-month={belongsToCurrentMonth ? undefined : 'true'}
         >
           {day.day === 1 && screenSize === 'desktop'
             ? day.date.toLocaleDateString(locale, {
@@ -359,10 +354,10 @@ const WeekDayCell = ({
         </span>
       </div>
 
-      <div className='pointer-events-none relative flex-1 overflow-hidden px-1'>
+      <div className='df-month-day-cell__content'>
         {maskHiddenOverlayRows && (
           <div
-            className='pointer-events-none absolute right-0 left-0 z-100 bg-white dark:bg-gray-900'
+            className='df-month-day-cell__overlay-mask'
             style={{
               top: `${displaySlotLimit * ROW_SPACING}px`,
               height: `${hiddenOverlayHeight}px`,
@@ -373,14 +368,8 @@ const WeekDayCell = ({
 
         {hasMoreEvents && (
           <div
-            className={cn(
-              monthMoreEvents,
-              screenSize === 'desktop'
-                ? 'text-left font-normal'
-                : 'text-center font-medium',
-              'pointer-events-auto',
-              'z-100'
-            )}
+            className={cn(monthMoreEvents, 'df-month-day-cell__more-events')}
+            data-layout={screenSize === 'desktop' ? 'desktop' : 'mobile'}
             onClick={event => {
               event.stopPropagation();
               if (onMoreEventsClick) {

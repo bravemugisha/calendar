@@ -830,13 +830,10 @@ const MonthView = ({
       {isFadeMode ? (
         <div
           ref={scrollElementRef}
-          className={scrollContainer}
-          style={{
-            overflow: 'hidden',
-            visibility: isWeekHeightInitialized ? 'visible' : 'hidden',
-          }}
+          className={`${scrollContainer} df-month-view__fade-scroller`}
+          data-layout-ready={isWeekHeightInitialized ? 'true' : 'false'}
         >
-          <div style={fadeStyle}>
+          <div className='df-month-view__fade-body' style={fadeStyle}>
             {fadeWeeks.map((weekData, index) => {
               const weekEvents = getWeekEventsWithPreview(weekData.startDate);
               const item = {
@@ -896,12 +893,8 @@ const MonthView = ({
         // Virtual-scroll mode (default, or disabled without fade)
         <div
           ref={scrollElementRef}
-          className={scrollContainer}
-          style={{
-            overflow: 'hidden auto',
-            overscrollBehavior: 'contain',
-            visibility: isWeekHeightInitialized ? 'visible' : 'hidden',
-          }}
+          className={`${scrollContainer} df-month-view__virtual-scroller`}
+          data-layout-ready={isWeekHeightInitialized ? 'true' : 'false'}
           onScroll={handleScroll}
         >
           <div style={{ height: topSpacerHeight }} />

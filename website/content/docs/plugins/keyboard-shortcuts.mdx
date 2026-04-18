@@ -68,7 +68,7 @@ createKeyboardShortcutsPlugin({
     },
     redo: app => {
       console.log('Custom redo logic');
-      if ((app as any).redo) (app as any).redo();
+      if (app.redo) app.redo();
     },
     delete: app => {
       if (confirm('Are you sure?')) {
