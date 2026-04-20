@@ -1,6 +1,5 @@
 import path from 'node:path';
 
-import commonjs from '@rollup/plugin-commonjs';
 import resolve from '@rollup/plugin-node-resolve';
 import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
@@ -12,12 +11,6 @@ export default [
   {
     input: 'src/index.ts',
     output: [
-      {
-        file: 'dist/index.js',
-        format: 'cjs',
-        sourcemap: false,
-        exports: 'named',
-      },
       {
         file: 'dist/index.esm.js',
         format: 'esm',
@@ -34,7 +27,6 @@ export default [
           '@': path.resolve('./src'),
         },
       }),
-      commonjs(),
       typescript({
         tsconfig: './tsconfig.build.json',
         declaration: false,
@@ -46,7 +38,7 @@ export default [
           '**/*.spec.tsx',
         ],
       }),
-      terser(),
+      terser({ compress: { passes: 2, drop_console: true } }),
       visualizer({
         filename: 'bundle-analysis.html',
         open: false,

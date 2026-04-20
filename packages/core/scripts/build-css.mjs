@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 import tailwindcss from '@tailwindcss/postcss';
 import autoprefixer from 'autoprefixer';
+import cssnano from 'cssnano';
 import postcss, { parse } from 'postcss';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -13,6 +14,10 @@ function stripCascadeLayers(css) {
   const rootNode = parse(css);
 
   rootNode.walkAtRules('layer', atRule => {
+    // Keep preflight in @layer base so it remains low-priority (layered).
+    // Stripping it would promote the * reset above unlayered app CSS,
+    if (atRule.params === 'base') return;
+
     if (!atRule.nodes?.length) {
       atRule.remove();
       return;
@@ -30,7 +35,11 @@ async function buildCss(inputFile, outputFile) {
 
   const css = await fs.readFile(input, 'utf8');
 
-  const result = await postcss([tailwindcss, autoprefixer]).process(css, {
+  const result = await postcss([
+    tailwindcss,
+    autoprefixer,
+    cssnano({ preset: 'default' }),
+  ]).process(css, {
     from: input,
     to: output,
   });
