@@ -19,11 +19,7 @@ import {
   ViewType,
   createYearView,
   UseCalendarAppReturn,
-  Event,
 } from '@dayflow/react';
-import { createResourceGridView } from '@dayflow/resource-grid';
-
-import '@dayflow/resource-grid/dist/styles.components.css';
 import { useTheme } from 'next-themes';
 import React, {
   useMemo,
