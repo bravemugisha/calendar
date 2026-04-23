@@ -139,7 +139,7 @@ export const CustomDetailPanelShowcase = () => {
 
 > **前提条件**：ダイアログモードを有効にするには、`useCalendarApp` で `useEventDetailDialog: true` を設定してください。この設定がなければスロットは呼び出されません。
 
-> **代わりに無効化する場合**：独自のダイアログを提供せずに組み込みのフローティングパネルを非表示にしたい場合は、スロットを使用するのではなく、`DayFlowCalendar` に `useEventDetailPanel={false}` を渡してください。
+> **代わりに無効化する場合**：独自のダイアログを提供せずに組み込みのフローティングパネルを非表示にしたい場合は、スロットを使用するのではなく、`useCalendarApp` の設定で `useEventDetailPanel: false` を指定してください。
 
 <CustomDetailDialogShowcase />
 

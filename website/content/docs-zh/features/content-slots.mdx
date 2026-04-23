@@ -139,7 +139,7 @@ export const CustomDetailPanelShowcase = () => {
 
 > **前提条件**：在 `useCalendarApp` 中设置 `useEventDetailDialog: true` 以激活对话框模式。若未设置，插槽将不会被触发。
 
-> **仅关闭面板**：若您想在不提供自定义对话框的情况下隐藏内置浮动面板，请在 `DayFlowCalendar` 上传入 `useEventDetailPanel={false}`，而非使用插槽。
+> **仅关闭面板**：若您想在不提供自定义对话框的情况下隐藏内置浮动面板，请在 `useCalendarApp` 中设置 `useEventDetailPanel: false`，而非使用插槽。
 
 <CustomDetailDialogShowcase />
 

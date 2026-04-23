@@ -235,8 +235,6 @@ export function InteractiveCalendar() {
         ? calendarsWithGroups
         : calendarTypes,
       useCalendarHeader: features.showHeader,
-      useEventDetailPanel: false,
-      useEventDetailDialog: false,
       switcherMode: selections.switcherMode,
       theme: { mode: themeMode as 'light' | 'dark' | 'auto' },
       readOnly: features.readOnly
