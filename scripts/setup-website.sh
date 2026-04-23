@@ -100,21 +100,27 @@ case $choice in
     ;;
 esac
 
-echo "🚀 Stage 1: Building UI packages and core..."
-pnpm $BUILD_FILTER_STAGE1 build
+echo "🚀 Building packages with turbo (parallel & cached)..."
+pnpm turbo build $BUILD_FILTER_STAGE1 $BUILD_FILTER_STAGE2
 
-echo "🚀 Stage 2: Building framework adapters and plugins..."
-pnpm $BUILD_FILTER_STAGE2 build
+echo "📦 Packing selected packages in parallel..."
+PACKS_DIR="$ROOT_DIR/temp/packs"
+rm -rf "$PACKS_DIR"
+mkdir -p "$PACKS_DIR"
 
-echo "📦 Packing selected packages..."
 for dir in "${PACK_DIRS[@]}"; do
-  if [ -d "$dir" ]; then
-    echo "Packing $dir..."
-    (cd "$dir" && pnpm pack)
-  else
-    echo "⚠️ Warning: Directory $dir not found"
-  fi
+  (
+    if [ -d "$dir" ]; then
+      echo "Packing $dir..."
+      cd "$ROOT_DIR/$dir"
+      pnpm pack --silent
+      mv *.tgz "$PACKS_DIR/"
+    else
+      echo "⚠️ Warning: Directory $dir not found"
+    fi
+  ) &
 done
+wait
 
 echo "🧹 Cleaning up website directory..."
 cd "$ROOT_DIR/website"
@@ -124,10 +130,9 @@ rm -rf node_modules package-lock.json
 find_tgz() {
   local pattern=$1
   # Use ls -v for natural version sorting if available, or sort -V
-  local tgz=$(ls $pattern 2>/dev/null | sort -V | tail -n 1)
+  local tgz=$(ls "$PACKS_DIR"/$pattern 2>/dev/null | sort -V | tail -n 1)
   if [ -n "$tgz" ]; then
-    # Return absolute path
-    echo "$(cd "$(dirname "$tgz")" && pwd)/$(basename "$tgz")"
+    echo "$tgz"
   fi
 }
 
@@ -144,27 +149,27 @@ INSTALL_LIST=()
 case $choice in
   1)
     # UI packages must be installed before core (core depends on them)
-    add_to_install_list "$ROOT_DIR/packages/ui/context-menu/dayflow-ui-context-menu-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/ui/range-picker/dayflow-ui-range-picker-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/core/dayflow-core-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/react/dayflow-react-*.tgz"
+    add_to_install_list "dayflow-ui-context-menu-*.tgz"
+    add_to_install_list "dayflow-ui-range-picker-*.tgz"
+    add_to_install_list "dayflow-core-*.tgz"
+    add_to_install_list "dayflow-react-*.tgz"
     ;;
   2)
     # UI packages must be installed before core (core depends on them)
-    add_to_install_list "$ROOT_DIR/packages/ui/context-menu/dayflow-ui-context-menu-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/ui/range-picker/dayflow-ui-range-picker-*.tgz"
+    add_to_install_list "dayflow-ui-context-menu-*.tgz"
+    add_to_install_list "dayflow-ui-range-picker-*.tgz"
     # Core and Frameworks
-    add_to_install_list "$ROOT_DIR/packages/core/dayflow-core-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/react/dayflow-react-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/angular/dayflow-angular-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/svelte/dayflow-svelte-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/vue/dayflow-vue-*.tgz"
+    add_to_install_list "dayflow-core-*.tgz"
+    add_to_install_list "dayflow-react-*.tgz"
+    add_to_install_list "dayflow-angular-*.tgz"
+    add_to_install_list "dayflow-svelte-*.tgz"
+    add_to_install_list "dayflow-vue-*.tgz"
 
     # Plugins
-    add_to_install_list "$ROOT_DIR/packages/plugins/drag/dayflow-plugin-drag-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/plugins/keyboard-shortcuts/dayflow-plugin-keyboard-shortcuts-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/plugins/localization/dayflow-plugin-localization-*.tgz"
-    add_to_install_list "$ROOT_DIR/packages/plugins/sidebar/dayflow-plugin-sidebar-*.tgz"
+    add_to_install_list "dayflow-plugin-drag-*.tgz"
+    add_to_install_list "dayflow-plugin-keyboard-shortcuts-*.tgz"
+    add_to_install_list "dayflow-plugin-localization-*.tgz"
+    add_to_install_list "dayflow-plugin-sidebar-*.tgz"
     ;;
 esac
 

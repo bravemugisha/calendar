@@ -1,6 +1,6 @@
 @import 'tailwindcss/preflight' layer(base);
 @import 'tailwindcss/theme' layer(theme);
-@import 'tailwindcss/utilities';
+@import 'tailwindcss/utilities' source(none);
 @import './library-imports.css';
 
 @variant dark (.dark &);
