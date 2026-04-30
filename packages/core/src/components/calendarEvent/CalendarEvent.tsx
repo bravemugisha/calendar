@@ -1,3 +1,4 @@
+import { memo } from 'preact/compat';
 import {
   useRef,
   useState,
@@ -603,4 +604,4 @@ const CalendarEvent = ({
   );
 };
 
-export default CalendarEvent;
+export default memo(CalendarEvent);

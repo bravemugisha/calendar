@@ -399,22 +399,17 @@ const MonthView = ({
       isResizing?: boolean,
       source?: 'drag' | 'resize'
     ) => {
-      const newEvents = updateFunc(events);
+      const prevEvents = events;
+      const newEvents = updateFunc(prevEvents);
 
-      // Find events that need to be deleted (in old list but not in new list)
-      const newEventIds = new Set(newEvents.map(e => e.id));
-      const eventsToDelete = events.filter(e => !newEventIds.has(e.id));
+      const prevMap = new Map(prevEvents.map(e => [e.id, e]));
+      const newSet = new Set(newEvents.map(e => e.id));
 
-      // Find events that need to be added (in new list but not in old list)
-      const oldEventIds = new Set(events.map(e => e.id));
-      const eventsToAdd = newEvents.filter(e => !oldEventIds.has(e.id));
-
-      // Find events that need to be updated (exist in both lists but content may differ)
+      const eventsToDelete = prevEvents.filter(e => !newSet.has(e.id));
+      const eventsToAdd = newEvents.filter(e => !prevMap.has(e.id));
       const eventsToUpdate = newEvents.filter(e => {
-        if (!oldEventIds.has(e.id)) return false;
-        const oldEvent = events.find(old => old.id === e.id);
-        // Check if there are real changes
-        return oldEvent && hasEventChanged(oldEvent, e);
+        const old = prevMap.get(e.id);
+        return old !== undefined && old !== e && hasEventChanged(old, e);
       });
 
       // Apply batched changes.

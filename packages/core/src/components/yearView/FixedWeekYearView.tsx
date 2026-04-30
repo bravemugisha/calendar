@@ -26,7 +26,6 @@ import {
   getTodayInTimeZone,
   hasEventChanged,
   scrollbarTakesSpace,
-  temporalToVisualDate,
 } from '@/utils';
 
 import {
@@ -35,6 +34,7 @@ import {
   createFixedWeekDragPreviewEvent,
   createPreviewMonthSegment,
   FixedWeekMonthData,
+  getEventDayRange,
   getFixedWeekLabels,
   getFixedWeekTotalColumns,
 } from './utils';
@@ -119,6 +119,19 @@ export const FixedWeekYearView = ({
 
   const [newlyCreatedEventId, setNewlyCreatedEventId] = useState<string | null>(
     null
+  );
+
+  const handleDetailPanelOpen = useCallback(
+    () => setNewlyCreatedEventId(null),
+    []
+  );
+  const handleEventUpdate = useCallback(
+    (updated: Event) => app.updateEvent(updated.id, updated),
+    [app]
+  );
+  const handleEventDelete = useCallback(
+    (id: string) => app.deleteEvent(id),
+    [app]
   );
 
   const [contextMenu, setContextMenu] = useState<{
@@ -230,10 +243,16 @@ export const FixedWeekYearView = ({
     onEventsUpdate: (updateFunc, isResizing, source) => {
       const newEvents = updateFunc(rawEvents);
 
-      // Find events that need to be updated
+      // Build a Map for O(1) lookups — the previous O(N²) .find() in .filter()
+      // caused ~100M string comparisons/tick with 10000 events.
+      const prevMap = new Map(rawEvents.map(e => [e.id, e]));
       const eventsToUpdate = newEvents.filter(newEvent => {
-        const oldEvent = rawEvents.find(e => e.id === newEvent.id);
-        return oldEvent && hasEventChanged(oldEvent, newEvent);
+        const old = prevMap.get(newEvent.id);
+        return (
+          old !== undefined &&
+          old !== newEvent &&
+          hasEventChanged(old, newEvent)
+        );
       });
 
       if (eventsToUpdate.length > 0) {
@@ -302,19 +321,22 @@ export const FixedWeekYearView = ({
   // Helper to check if a date is today
   const isDateToday = (date: Date) => date.getTime() === today.getTime();
 
-  // Filter events for the current year
+  // Filter events for the current year (uses per-event cache via getEventDayRange)
   const yearEvents = useMemo(() => {
-    const yearStart = new Date(currentYear, 0, 1);
-    const yearEnd = new Date(currentYear, 11, 31, 23, 59, 59);
+    const yearStartMs = new Date(currentYear, 0, 1).getTime();
+    const yearEndMs = new Date(currentYear, 11, 31, 23, 59, 59).getTime();
 
-    return rawEvents.filter(event => {
-      if (!event.start) return false;
-      // If showTimedEvents is false, only show all-day events
-      if (!showTimedEvents && !event.allDay) return false;
-      const s = temporalToVisualDate(event.start, appTimeZone);
-      const e = event.end ? temporalToVisualDate(event.end, appTimeZone) : s;
-      return s <= yearEnd && e >= yearStart;
-    });
+    const result: Event[] = [];
+    for (let i = 0; i < rawEvents.length; i++) {
+      const event = rawEvents[i];
+      if (!event.start) continue;
+      if (!showTimedEvents && !event.allDay) continue;
+      const range = getEventDayRange(event, appTimeZone);
+      if (range.startMs <= yearEndMs && range.endMsEod >= yearStartMs) {
+        result.push(event);
+      }
+    }
+    return result;
   }, [rawEvents, currentYear, showTimedEvents, appTimeZone]);
 
   // Generate data for all 12 months with event segments
@@ -623,9 +645,7 @@ export const FixedWeekYearView = ({
                             onEventSelect={setSelectedEventId}
                             onDetailPanelToggle={setDetailPanelEventId}
                             newlyCreatedEventId={newlyCreatedEventId}
-                            onDetailPanelOpen={() =>
-                              setNewlyCreatedEventId(null)
-                            }
+                            onDetailPanelOpen={handleDetailPanelOpen}
                             calendarRef={calendarRef}
                             app={app}
                             detailPanelEventId={detailPanelEventId}
@@ -634,10 +654,8 @@ export const FixedWeekYearView = ({
                             useEventDetailPanel={useEventDetailPanel}
                             firstHour={0}
                             hourHeight={0}
-                            onEventUpdate={updated =>
-                              app.updateEvent(updated.id, updated)
-                            }
-                            onEventDelete={id => app.deleteEvent(id)}
+                            onEventUpdate={handleEventUpdate}
+                            onEventDelete={handleEventDelete}
                             appTimeZone={appTimeZone}
                           />
                         </div>

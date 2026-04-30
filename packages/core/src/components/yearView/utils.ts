@@ -6,6 +6,68 @@ import {
 } from '@/utils';
 import { createAllDayDisplayComparator } from '@/utils/allDaySort';
 
+export type EventDayRange = {
+  startMs: number; // 00:00 of the start day
+  endMs: number; // 00:00 of the end day
+  endMsEod: number; // 23:59:59.999 of the end day
+  startYear: number;
+  startMonth: number;
+  startDate: number;
+  endYear: number;
+  endMonth: number;
+  endDate: number;
+};
+
+const eventDayRangeCache = new WeakMap<Event, Map<string, EventDayRange>>();
+
+export const getEventDayRange = (
+  event: Event,
+  appTimeZone?: string
+): EventDayRange => {
+  const tzKey = appTimeZone ?? '';
+  let perEvent = eventDayRangeCache.get(event);
+  if (perEvent) {
+    const cached = perEvent.get(tzKey);
+    if (cached) return cached;
+  }
+  const start = temporalToVisualDate(event.start, appTimeZone);
+  const end = event.end ? temporalToVisualDate(event.end, appTimeZone) : start;
+  const startYear = start.getFullYear();
+  const startMonth = start.getMonth();
+  const startDate = start.getDate();
+  const endYear = end.getFullYear();
+  const endMonth = end.getMonth();
+  const endDate = end.getDate();
+  const startMs = new Date(startYear, startMonth, startDate).getTime();
+  const endMs = new Date(endYear, endMonth, endDate).getTime();
+  const endMsEod = new Date(
+    endYear,
+    endMonth,
+    endDate,
+    23,
+    59,
+    59,
+    999
+  ).getTime();
+  const result: EventDayRange = {
+    startMs,
+    endMs,
+    endMsEod,
+    startYear,
+    startMonth,
+    startDate,
+    endYear,
+    endMonth,
+    endDate,
+  };
+  if (!perEvent) {
+    perEvent = new Map();
+    eventDayRangeCache.set(event, perEvent);
+  }
+  perEvent.set(tzKey, result);
+  return result;
+};
+
 export interface YearMultiDaySegment {
   id: string;
   event: Event;
@@ -63,32 +125,23 @@ export function analyzeMultiDayEventsForRow(
     999
   ).getTime();
 
-  // 1. Filter and normalize events that overlap with this row
-  const eventsWithDates = events
-    .map(event => {
-      const start = temporalToVisualDate(event.start, appTimeZone);
-      const end = event.end
-        ? temporalToVisualDate(event.end, appTimeZone)
-        : start;
-
-      const startMs = new Date(
-        start.getFullYear(),
-        start.getMonth(),
-        start.getDate()
-      ).getTime();
-      const endMs = new Date(
-        end.getFullYear(),
-        end.getMonth(),
-        end.getDate()
-      ).getTime();
-
-      return {
+  // 1. Filter and normalize events that overlap with this row (cached per event)
+  const eventsWithDates: Array<{
+    event: Event;
+    startMs: number;
+    endMs: number;
+  }> = [];
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    const range = getEventDayRange(event, appTimeZone);
+    if (range.startMs <= rowEndMs && range.endMs >= rowStartMs) {
+      eventsWithDates.push({
         event,
-        startMs,
-        endMs,
-      };
-    })
-    .filter(item => item.startMs <= rowEndMs && item.endMs >= rowStartMs);
+        startMs: range.startMs,
+        endMs: range.endMs,
+      });
+    }
+  }
 
   if (eventsWithDates.length === 0) return [];
 
@@ -201,24 +254,8 @@ export const eventOverlapsMonth = (
     59,
     999
   ).getTime();
-  const start = temporalToVisualDate(event.start, appTimeZone);
-  const end = event.end ? temporalToVisualDate(event.end, appTimeZone) : start;
-  const startMs = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate()
-  ).getTime();
-  const endMs = new Date(
-    end.getFullYear(),
-    end.getMonth(),
-    end.getDate(),
-    23,
-    59,
-    59,
-    999
-  ).getTime();
-
-  return startMs <= monthEndMs && endMs >= monthStartMs;
+  const range = getEventDayRange(event, appTimeZone);
+  return range.startMs <= monthEndMs && range.endMsEod >= monthStartMs;
 };
 
 export const getFixedWeekTotalColumns = (
@@ -335,33 +372,22 @@ export const createPreviewMonthSegment = (
     999
   ).getTime();
 
-  const start = temporalToVisualDate(event.start, appTimeZone);
-  const end = event.end ? temporalToVisualDate(event.end, appTimeZone) : start;
-  const startDay = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate()
-  );
-  const endDay = new Date(end.getFullYear(), end.getMonth(), end.getDate());
-  const startMs = startDay.getTime();
-  const endMs = endDay.getTime();
+  const range = getEventDayRange(event, appTimeZone);
 
-  if (startMs > monthEndMs || endMs < monthStartMs) {
+  if (range.startMs > monthEndMs || range.endMs < monthStartMs) {
     return null;
   }
 
-  const clampedStartMs = Math.max(startMs, monthStartMs);
-  const clampedEndMs = Math.min(endMs, monthEndMs);
+  const clampedStartMs = Math.max(range.startMs, monthStartMs);
+  const clampedEndMs = Math.min(range.endMs, monthEndMs);
 
   return {
     id: `${event.id}::preview-month-${monthIndex}`,
     event,
     startCellIndex: paddingStart + (new Date(clampedStartMs).getDate() - 1),
     endCellIndex: paddingStart + (new Date(clampedEndMs).getDate() - 1),
-    isFirstSegment:
-      startDay.getMonth() === monthIndex && startDay.getFullYear() === year,
-    isLastSegment:
-      endDay.getMonth() === monthIndex && endDay.getFullYear() === year,
+    isFirstSegment: range.startMonth === monthIndex && range.startYear === year,
+    isLastSegment: range.endMonth === monthIndex && range.endYear === year,
     visualRowIndex: 0,
     monthIndex,
   };
@@ -390,34 +416,25 @@ export function analyzeEventsForMonth(
     999
   ).getTime();
 
-  const monthEventsWithDates = events
-    .filter(event => !!event.start)
-    .map(event => {
-      const start = temporalToVisualDate(event.start, appTimeZone);
-      const end = event.end
-        ? temporalToVisualDate(event.end, appTimeZone)
-        : start;
-
-      const eventStartDay = new Date(
-        start.getFullYear(),
-        start.getMonth(),
-        start.getDate()
-      );
-      const eventEndDay = new Date(
-        end.getFullYear(),
-        end.getMonth(),
-        end.getDate()
-      );
-
-      return {
+  const monthEventsWithDates: Array<{
+    event: Event;
+    startMs: number;
+    endMs: number;
+    range: EventDayRange;
+  }> = [];
+  for (let i = 0; i < events.length; i++) {
+    const event = events[i];
+    if (!event.start) continue;
+    const range = getEventDayRange(event, appTimeZone);
+    if (range.startMs <= monthEndMs && range.endMs >= monthStartMs) {
+      monthEventsWithDates.push({
         event,
-        startMs: eventStartDay.getTime(),
-        endMs: eventEndDay.getTime(),
-        eventStartDay,
-        eventEndDay,
-      };
-    })
-    .filter(item => item.startMs <= monthEndMs && item.endMs >= monthStartMs);
+        startMs: range.startMs,
+        endMs: range.endMs,
+        range,
+      });
+    }
+  }
 
   if (monthEventsWithDates.length === 0) {
     return { segments: [], maxVisualRow: -1 };
@@ -438,59 +455,55 @@ export function analyzeEventsForMonth(
   const segments: MonthEventSegment[] = [];
   const occupiedSlots: boolean[][] = [];
 
-  monthEventsWithDates.forEach(
-    ({ event, startMs, endMs, eventStartDay, eventEndDay }) => {
-      const clampedStartMs = Math.max(startMs, monthStartMs);
-      const clampedEndMs = Math.min(endMs, monthEndMs);
+  monthEventsWithDates.forEach(({ event, startMs, endMs, range }) => {
+    const clampedStartMs = Math.max(startMs, monthStartMs);
+    const clampedEndMs = Math.min(endMs, monthEndMs);
 
-      const startDay = new Date(clampedStartMs).getDate();
-      const endDay = new Date(clampedEndMs).getDate();
+    const startDay = new Date(clampedStartMs).getDate();
+    const endDay = new Date(clampedEndMs).getDate();
 
-      const startCellIndex = paddingStart + (startDay - 1);
-      const endCellIndex = paddingStart + (endDay - 1);
+    const startCellIndex = paddingStart + (startDay - 1);
+    const endCellIndex = paddingStart + (endDay - 1);
 
-      const isFirstSegment =
-        eventStartDay.getMonth() === monthIndex &&
-        eventStartDay.getFullYear() === year;
-      const isLastSegment =
-        eventEndDay.getMonth() === monthIndex &&
-        eventEndDay.getFullYear() === year;
+    const isFirstSegment =
+      range.startMonth === monthIndex && range.startYear === year;
+    const isLastSegment =
+      range.endMonth === monthIndex && range.endYear === year;
 
-      let visualRowIndex = 0;
-      while (true) {
-        if (!occupiedSlots[visualRowIndex]) {
-          occupiedSlots[visualRowIndex] = [];
-        }
-
-        let overlap = false;
-        for (let i = startCellIndex; i <= endCellIndex; i++) {
-          if (occupiedSlots[visualRowIndex][i]) {
-            overlap = true;
-            break;
-          }
-        }
-
-        if (!overlap) {
-          for (let i = startCellIndex; i <= endCellIndex; i++) {
-            occupiedSlots[visualRowIndex][i] = true;
-          }
-          break;
-        }
-        visualRowIndex++;
+    let visualRowIndex = 0;
+    while (true) {
+      if (!occupiedSlots[visualRowIndex]) {
+        occupiedSlots[visualRowIndex] = [];
       }
 
-      segments.push({
-        id: `${event.id}::month-${monthIndex}`,
-        event,
-        startCellIndex,
-        endCellIndex,
-        isFirstSegment,
-        isLastSegment,
-        visualRowIndex,
-        monthIndex,
-      });
+      let overlap = false;
+      for (let i = startCellIndex; i <= endCellIndex; i++) {
+        if (occupiedSlots[visualRowIndex][i]) {
+          overlap = true;
+          break;
+        }
+      }
+
+      if (!overlap) {
+        for (let i = startCellIndex; i <= endCellIndex; i++) {
+          occupiedSlots[visualRowIndex][i] = true;
+        }
+        break;
+      }
+      visualRowIndex++;
     }
-  );
+
+    segments.push({
+      id: `${event.id}::month-${monthIndex}`,
+      event,
+      startCellIndex,
+      endCellIndex,
+      isFirstSegment,
+      isLastSegment,
+      visualRowIndex,
+      monthIndex,
+    });
+  });
 
   const maxVisualRow =
     segments.length > 0 ? Math.max(...segments.map(s => s.visualRowIndex)) : -1;
@@ -513,6 +526,29 @@ export const buildFixedWeekMonthsData = ({
   startOfWeek: number;
   appTimeZone?: string;
 }): FixedWeekMonthData[] => {
+  // Pre-compute month boundaries once instead of 12 times inside loops
+  const monthStartMs: number[] = Array.from({ length: 12 });
+  const monthEndMs: number[] = Array.from({ length: 12 });
+  for (let m = 0; m < 12; m++) {
+    monthStartMs[m] = new Date(currentYear, m, 1).getTime();
+    monthEndMs[m] = new Date(currentYear, m + 1, 0, 23, 59, 59, 999).getTime();
+  }
+
+  // Single O(N) pass: bucket events into the months they overlap
+  const monthEventsByIndex: Event[][] = Array.from({ length: 12 }, () => []);
+  for (let i = 0; i < yearEvents.length; i++) {
+    const event = yearEvents[i];
+    if (!event.start) continue;
+    const range = getEventDayRange(event, appTimeZone);
+    // Find first month where event ends after month start, then iterate forward
+    // until event start exceeds month end. Most events span 1-2 months.
+    for (let m = 0; m < 12; m++) {
+      if (range.startMs > monthEndMs[m]) continue;
+      if (range.endMsEod < monthStartMs[m]) break;
+      monthEventsByIndex[m].push(event);
+    }
+  }
+
   const data: FixedWeekMonthData[] = [];
 
   for (let month = 0; month < 12; month++) {
@@ -542,8 +578,9 @@ export const buildFixedWeekMonthsData = ({
       rawMonthName.charAt(0).toUpperCase() +
       rawMonthName.slice(1).toLowerCase();
 
+    const monthEvents = monthEventsByIndex[month];
     const { segments: eventSegments, maxVisualRow } = analyzeEventsForMonth(
-      yearEvents,
+      monthEvents,
       month,
       currentYear,
       startOfWeek,
@@ -560,9 +597,7 @@ export const buildFixedWeekMonthsData = ({
       monthIndex: month,
       monthName,
       days,
-      monthEvents: yearEvents.filter(event =>
-        eventOverlapsMonth(event, currentYear, month, appTimeZone)
-      ),
+      monthEvents,
       eventSegments,
       minHeight,
     });

@@ -1,5 +1,11 @@
 import { RefObject, CSSProperties, TargetedEvent } from 'preact';
-import { useEffect, useState, useRef, useMemo } from 'preact/hooks';
+import {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from 'preact/hooks';
 
 import CalendarEventComponent from '@/components/calendarEvent';
 import { GridContextMenu } from '@/components/contextMenu';
@@ -162,6 +168,108 @@ export const TimeGrid = ({
     if (isEditable) return;
     setContextMenu(null);
   }, [isEditable]);
+
+  const allEventSegmentsByDay = useMemo(() => {
+    const result = new Map<
+      number,
+      Array<{
+        event: CalendarEvent;
+        segmentInfo?: {
+          startHour: number;
+          endHour: number;
+          isFirst: boolean;
+          isLast: boolean;
+          dayIndex?: number;
+        };
+      }>
+    >();
+
+    weekDaysLabels.forEach((_, dayIndex) => {
+      const segments: Array<{
+        event: CalendarEvent;
+        segmentInfo?: {
+          startHour: number;
+          endHour: number;
+          isFirst: boolean;
+          isLast: boolean;
+          dayIndex?: number;
+        };
+      }> = [];
+
+      const dayEvents = getEventsForDay(dayIndex, currentWeekEvents);
+      dayEvents.forEach(event => {
+        const multiDaySegs = analyzeMultiDayRegularEvent(
+          event,
+          currentWeekStart,
+          weekDaysLabels.length,
+          appTimeZone
+        );
+        if (multiDaySegs.length > 0) {
+          const seg = multiDaySegs.find(s => s.dayIndex === dayIndex);
+          if (seg) {
+            segments.push({ event, segmentInfo: { ...seg, dayIndex } });
+          }
+        } else {
+          segments.push({ event });
+        }
+      });
+
+      currentWeekEvents.forEach(event => {
+        if (event.allDay || event.day === dayIndex) return;
+        const multiDaySegs = analyzeMultiDayRegularEvent(
+          event,
+          currentWeekStart,
+          weekDaysLabels.length,
+          appTimeZone
+        );
+        const seg = multiDaySegs.find(s => s.dayIndex === dayIndex);
+        if (seg) {
+          segments.push({ event, segmentInfo: { ...seg, dayIndex } });
+        }
+      });
+
+      result.set(dayIndex, segments);
+    });
+
+    return result;
+  }, [currentWeekEvents, currentWeekStart, weekDaysLabels.length, appTimeZone]);
+
+  const onEventSelectImplRef = useRef<(eventId: string | null) => void>(() => {
+    // No-op
+  });
+  onEventSelectImplRef.current = (eventId: string | null) => {
+    const isViewable =
+      app.getReadOnlyConfig(eventId ?? undefined).viewable !== false;
+    const evt = currentWeekEvents.find(e => e.id === eventId);
+    if ((isMobile || isTouch) && evt && isViewable) {
+      setDraftEvent(evt);
+      setIsDrawerOpen(true);
+      return;
+    }
+    setSelectedEventId(eventId);
+    if (app.state.highlightedEventId) {
+      app.highlightEvent(null);
+      prevHighlightedEventId.current = null;
+    }
+  };
+  const stableOnEventSelect = useCallback(
+    (eventId: string | null) => onEventSelectImplRef.current(eventId),
+    []
+  );
+  const stableOnDetailPanelOpen = useCallback(
+    () => setNewlyCreatedEventId(null),
+    [setNewlyCreatedEventId]
+  );
+  const stableOnEventLongPress = useCallback(
+    (eventId: string) => {
+      if (isMobile || isTouch) setSelectedEventId(eventId);
+    },
+    [isMobile, isTouch, setSelectedEventId]
+  );
+  const stableOnDetailPanelToggle = useCallback(
+    (eventId: string | null) => setDetailPanelEventId(eventId),
+    [setDetailPanelEventId]
+  );
 
   /** Returns the fractional hour at the given clientY within the time grid. */
   const getGridHour = (clientY: number) => {
@@ -470,55 +578,8 @@ export const TimeGrid = ({
               {/* Event layer */}
               {weekDaysLabels.map((_, dayIndex) => {
                 const daysToShow = weekDaysLabels.length;
-                // Collect all event segments for this day
-                const dayEvents = getEventsForDay(dayIndex, currentWeekEvents);
-                const allEventSegments: Array<{
-                  event: CalendarEvent;
-                  segmentInfo?: {
-                    startHour: number;
-                    endHour: number;
-                    isFirst: boolean;
-                    isLast: boolean;
-                    dayIndex?: number;
-                  };
-                }> = [];
-
-                dayEvents.forEach(event => {
-                  const segments = analyzeMultiDayRegularEvent(
-                    event,
-                    currentWeekStart,
-                    weekDaysLabels.length,
-                    appTimeZone
-                  );
-                  if (segments.length > 0) {
-                    const segment = segments.find(s => s.dayIndex === dayIndex);
-                    if (segment) {
-                      allEventSegments.push({
-                        event,
-                        segmentInfo: { ...segment, dayIndex },
-                      });
-                    }
-                  } else {
-                    allEventSegments.push({ event });
-                  }
-                });
-
-                currentWeekEvents.forEach(event => {
-                  if (event.allDay || event.day === dayIndex) return;
-                  const segments = analyzeMultiDayRegularEvent(
-                    event,
-                    currentWeekStart,
-                    weekDaysLabels.length,
-                    appTimeZone
-                  );
-                  const segment = segments.find(s => s.dayIndex === dayIndex);
-                  if (segment) {
-                    allEventSegments.push({
-                      event,
-                      segmentInfo: { ...segment, dayIndex },
-                    });
-                  }
-                });
+                const allEventSegments =
+                  allEventSegmentsByDay.get(dayIndex) ?? [];
 
                 return (
                   <div
@@ -559,36 +620,12 @@ export const TimeGrid = ({
                           onEventUpdate={handleEventUpdate}
                           onEventDelete={handleEventDelete}
                           newlyCreatedEventId={newlyCreatedEventId}
-                          onDetailPanelOpen={() => setNewlyCreatedEventId(null)}
+                          onDetailPanelOpen={stableOnDetailPanelOpen}
                           selectedEventId={selectedEventId}
                           detailPanelEventId={detailPanelEventId}
-                          onEventSelect={(eventId: string | null) => {
-                            const isViewable =
-                              app.getReadOnlyConfig(eventId ?? undefined)
-                                .viewable !== false;
-                            const evt = currentWeekEvents.find(
-                              currentEvent => currentEvent.id === eventId
-                            );
-
-                            if ((isMobile || isTouch) && evt && isViewable) {
-                              setDraftEvent(evt);
-                              setIsDrawerOpen(true);
-                              return;
-                            }
-
-                            setSelectedEventId(eventId);
-                            if (app.state.highlightedEventId) {
-                              app.highlightEvent(null);
-                              prevHighlightedEventId.current = null;
-                            }
-                          }}
-                          onEventLongPress={(eventId: string) => {
-                            if (isMobile || isTouch)
-                              setSelectedEventId(eventId);
-                          }}
-                          onDetailPanelToggle={(eventId: string | null) =>
-                            setDetailPanelEventId(eventId)
-                          }
+                          onEventSelect={stableOnEventSelect}
+                          onEventLongPress={stableOnEventLongPress}
+                          onDetailPanelToggle={stableOnDetailPanelToggle}
                           customDetailPanelContent={customDetailPanelContent}
                           customEventDetailDialog={customEventDetailDialog}
                           useEventDetailPanel={useEventDetailPanel}

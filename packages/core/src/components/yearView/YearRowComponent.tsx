@@ -11,9 +11,9 @@ import {
   ICalendarApp,
   ViewType,
 } from '@/types';
-import { getTodayInTimeZone, temporalToVisualDate } from '@/utils';
+import { getTodayInTimeZone } from '@/utils';
 
-import { analyzeMultiDayEventsForRow } from './utils';
+import { analyzeMultiDayEventsForRow, getEventDayRange } from './utils';
 import { YearDayCell } from './YearDayCell';
 
 interface YearRowComponentProps {
@@ -73,24 +73,8 @@ const eventOverlapsRow = (
     999
   ).getTime();
 
-  const start = temporalToVisualDate(event.start, appTimeZone);
-  const end = event.end ? temporalToVisualDate(event.end, appTimeZone) : start;
-  const startMs = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate()
-  ).getTime();
-  const endMs = new Date(
-    end.getFullYear(),
-    end.getMonth(),
-    end.getDate(),
-    23,
-    59,
-    59,
-    999
-  ).getTime();
-
-  return startMs <= rowEndMs && endMs >= rowStartMs;
+  const range = getEventDayRange(event, appTimeZone);
+  return range.startMs <= rowEndMs && range.endMsEod >= rowStartMs;
 };
 
 const createPreviewRowSegment = (
@@ -120,28 +104,17 @@ const createPreviewRowSegment = (
     999
   ).getTime();
 
-  const start = temporalToVisualDate(event.start, appTimeZone);
-  const end = event.end ? temporalToVisualDate(event.end, appTimeZone) : start;
-  const startMs = new Date(
-    start.getFullYear(),
-    start.getMonth(),
-    start.getDate()
-  ).getTime();
-  const endMs = new Date(
-    end.getFullYear(),
-    end.getMonth(),
-    end.getDate()
-  ).getTime();
+  const range = getEventDayRange(event, appTimeZone);
 
-  if (startMs > rowEndMs || endMs < rowStartMs) {
+  if (range.startMs > rowEndMs || range.endMs < rowStartMs) {
     return null;
   }
 
   let startCellIndex = Math.round(
-    (Math.max(startMs, rowStartMs) - rowStartMs) / (1000 * 60 * 60 * 24)
+    (Math.max(range.startMs, rowStartMs) - rowStartMs) / (1000 * 60 * 60 * 24)
   );
   let endCellIndex = Math.round(
-    (Math.min(endMs, rowEndMs) - rowStartMs) / (1000 * 60 * 60 * 24)
+    (Math.min(range.endMs, rowEndMs) - rowStartMs) / (1000 * 60 * 60 * 24)
   );
 
   startCellIndex = Math.max(0, Math.min(startCellIndex, columnsPerRow - 1));
@@ -152,8 +125,8 @@ const createPreviewRowSegment = (
     event,
     startCellIndex,
     endCellIndex,
-    isFirstSegment: startMs >= rowStartMs,
-    isLastSegment: endMs <= rowEndMs,
+    isFirstSegment: range.startMs >= rowStartMs,
+    isLastSegment: range.endMs <= rowEndMs,
     visualRowIndex: 0,
   };
 };
@@ -206,6 +179,15 @@ export const YearRowComponent = memo(
       (d: Date) => {
         app.selectDate(d);
       },
+      [app]
+    );
+
+    const handleEventUpdate = useCallback(
+      (updated: Event) => app.updateEvent(updated.id, updated),
+      [app]
+    );
+    const handleEventDelete = useCallback(
+      (id: string) => app.deleteEvent(id),
       [app]
     );
 
@@ -426,10 +408,8 @@ export const YearRowComponent = memo(
                   // Required props for CalendarEvent
                   firstHour={0}
                   hourHeight={0}
-                  onEventUpdate={updated =>
-                    app.updateEvent(updated.id, updated)
-                  }
-                  onEventDelete={id => app.deleteEvent(id)}
+                  onEventUpdate={handleEventUpdate}
+                  onEventDelete={handleEventDelete}
                   appTimeZone={appTimeZone}
                 />
               </div>
