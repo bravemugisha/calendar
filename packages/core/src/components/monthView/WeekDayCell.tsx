@@ -71,6 +71,12 @@ interface WeekDayCellProps {
     direction: string
   ) => void;
   onSelectDate?: (date: Date) => void;
+  onGridDateClick?: (date: Date, dayEvents: Event[]) => void;
+  onGridDateDoubleClick?: (
+    e: MouseEvent | TouchEvent,
+    date: Date,
+    dayEvents: Event[]
+  ) => void;
   organizedMultiDaySegments: MultiDayEventSegment[][];
   overlayVisibleLayerCount: number;
   screenSize: 'mobile' | 'tablet' | 'desktop';
@@ -117,6 +123,8 @@ const WeekDayCell = ({
   onMoveStart,
   onResizeStart,
   onSelectDate,
+  onGridDateClick,
+  onGridDateDoubleClick,
   organizedMultiDaySegments,
   overlayVisibleLayerCount,
   screenSize,
@@ -289,6 +297,17 @@ const WeekDayCell = ({
     }
   }
 
+  const dayEvents = [
+    ...timedEventsOnly,
+    ...organizedMultiDaySegments
+      .flat()
+      .filter(
+        segment =>
+          segment.startDayIndex <= dayIndex && segment.endDayIndex >= dayIndex
+      )
+      .map(segment => segment.event),
+  ];
+
   return (
     <div
       key={`day-${day.date.getTime()}`}
@@ -299,8 +318,21 @@ const WeekDayCell = ({
         dayIndex === 6 && !hasScrollbarSpace ? 'false' : 'true'
       }
       data-date={createDateString(day.date)}
-      onClick={() => belongsToCurrentMonth && onSelectDate?.(day.date)}
-      onDblClick={event => onCreateStart?.(event, day.date)}
+      onClick={() => {
+        if (!belongsToCurrentMonth) return;
+        if (onGridDateClick) {
+          onGridDateClick(day.date, dayEvents);
+        } else {
+          onSelectDate?.(day.date);
+        }
+      }}
+      onDblClick={event => {
+        if (onGridDateDoubleClick) {
+          onGridDateDoubleClick(event, day.date, dayEvents);
+        } else {
+          onCreateStart?.(event, day.date);
+        }
+      }}
       onTouchStart={event => {
         if (screenSize !== 'mobile' && !enableTouch) return;
         const touch = event.touches[0];
