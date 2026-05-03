@@ -8,6 +8,7 @@ export {
   createDayView,
   createWeekView,
   createMonthView,
+  createAgendaView,
   createYearView,
   ViewType,
 } from '@dayflow/core';

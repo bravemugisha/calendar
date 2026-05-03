@@ -60,6 +60,11 @@ export type WeekViewProps = BaseViewProps<WeekViewConfig>;
 export type MonthViewProps = BaseViewProps<MonthViewConfig>;
 
 /**
+ * Agenda view specific Props
+ */
+export type AgendaViewProps = BaseViewProps<AgendaViewConfig>;
+
+/**
  * Year view specific Props
  */
 export type YearViewProps = BaseViewProps<YearViewConfig>;
@@ -154,6 +159,30 @@ export interface MonthViewConfig extends ViewFactoryConfig {
    */
   gridDateDoubleClick?:
     | 'week-view'
+    | 'day-view'
+    | 'none'
+    | ((date: Date, events: Event[]) => void);
+}
+
+/**
+ * Agenda view factory configuration
+ */
+export interface AgendaViewConfig extends ViewFactoryConfig {
+  /** Number of days rendered in one agenda page. */
+  daysToShow?: number;
+  /** Whether empty dates should still render a section in the list. */
+  showEmptyDays?: boolean;
+  /**
+   * Action when a date section is clicked.
+   */
+  gridDateClick?: 'day-view' | 'none' | ((date: Date, events: Event[]) => void);
+  /**
+   * Action when a date section is double-clicked.
+   * - 'day-view' (default): navigate to the Day View
+   * - 'none': no action
+   * - function: custom handler
+   */
+  gridDateDoubleClick?:
     | 'day-view'
     | 'none'
     | ((date: Date, events: Event[]) => void);

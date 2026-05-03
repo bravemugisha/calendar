@@ -1,6 +1,6 @@
 # 日历视图
 
-Day Flow 支持四种不同的视图类型，每种类型都针对不同的用例和用户需求进行了优化。您可以以编程方式切换视图，或者提供 UI 供用户切换视图。
+Day Flow 支持五种不同的视图类型，每种类型都针对不同的用例和用户需求进行了优化。您可以以编程方式切换视图，或者提供 UI 供用户切换视图。
 
 ## 可用视图
 
@@ -123,6 +123,45 @@ function MyCalendar() {
 }
 ```
 
+### Agenda 列表视图
+
+Agenda 视图会按天分组，以时间顺序列表的方式展示事件。它特别适合移动端布局、查看较长时间范围，以及快速浏览接下来要发生的事项。
+
+#### 配置
+
+| 属性                  | 类型                               | 默认值       | 描述                              |
+| :-------------------- | :--------------------------------- | :----------- | :-------------------------------- |
+| `daysToShow`          | `number`                           | `14`         | Agenda 列表中要渲染的连续天数。   |
+| `showEmptyDays`       | `boolean`                          | `true`       | 是否保留没有事件的日期分组。      |
+| `timeFormat`          | `'12h' \| '24h'`                   | `'24h'`      | 定时事件行使用的时间显示格式。    |
+| `gridDateClick`       | `'day-view' \| 'none' \| function` | `undefined`  | 点击某一天 section 时触发的操作。 |
+| `gridDateDoubleClick` | `'day-view' \| 'none' \| function` | `'day-view'` | 双击某一天 section 时触发的操作。 |
+
+```tsx {10-15}
+import {
+  useCalendarApp,
+  DayFlowCalendar,
+  createAgendaView,
+  ViewType,
+} from '@dayflow/react'; // or '@dayflow/vue', '@dayflow/svelte', '@dayflow/angular'
+
+function MyCalendar() {
+  const calendar = useCalendarApp({
+    views: [
+      createAgendaView({
+        daysToShow: 14,
+        timeFormat: '12h',
+        gridDateDoubleClick: 'day-view',
+      }),
+    ],
+    defaultView: ViewType.AGENDA,
+    initialDate: new Date(),
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
 ### 年视图
 
 年视图提供全面的年度概览。DayFlow 的年视图支持三种模式：`year-canvas`（连续网格）、`fixed-week`（固定 52 周列）和 `grid`（非常适合热力图的 4x3 月份网格）。
@@ -197,6 +236,7 @@ function MyCalendar() {
 import {
   useCalendarApp,
   DayFlowCalendar,
+  createAgendaView,
   createDayView,
   createWeekView,
   createMonthView,
@@ -207,6 +247,7 @@ import {
 function MultiViewCalendar() {
   const calendar = useCalendarApp({
     views: [
+      createAgendaView({ daysToShow: 10 }),
       createDayView(),
       createWeekView(),
       createMonthView(),
@@ -250,7 +291,7 @@ console.log(currentView.type); // 'week'
 // 跳转到今天
 calendar.goToToday();
 
-// 跳转到上一个周期（取决于当前视图，可能是日/周/月/年）
+// 跳转到上一个周期（取决于当前视图，可能是日/周/月/agenda/年）
 calendar.goToPrevious();
 
 // 跳转到下一个周期
@@ -267,6 +308,7 @@ enum ViewType {
   DAY = 'day',
   WEEK = 'week',
   MONTH = 'month',
+  AGENDA = 'agenda',
   YEAR = 'year',
 }
 ```

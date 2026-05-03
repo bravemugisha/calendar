@@ -24,13 +24,17 @@
     z-index: 10;
     flex: 1 1 0%;
     overflow: hidden;
-    border-left: 1px solid var(--df-color-border);
+    border-left: 0;
     background-color: var(--df-color-background);
     transition:
       margin-left 200ms ease-in-out,
       border-color 200ms ease-in-out,
       box-shadow 200ms ease-in-out,
       background-color 200ms ease-in-out;
+  }
+
+  .df-calendar-shell[data-sidebar-enabled='true'] {
+    border-left: 1px solid var(--df-color-border);
   }
 
   .df-calendar-shell[data-sidebar-collapsed='true'] {
@@ -179,6 +183,206 @@
     user-select: none;
   }
 
+  .df-agenda-view {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    background-color: var(--df-color-background);
+  }
+
+  .df-agenda-scroll {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 1.5rem;
+  }
+
+  .df-agenda-day-section {
+    display: grid;
+    grid-template-columns: minmax(9rem, 16rem) minmax(0, 1fr);
+    gap: 1.5rem;
+    padding: 1.5rem 1.75rem;
+    border-bottom: 1px solid var(--df-color-border);
+    cursor: default;
+  }
+
+  .df-agenda-day-section[data-today='true'] {
+    background-color: color-mix(
+      in srgb,
+      var(--df-color-primary) 4%,
+      var(--df-color-background)
+    );
+  }
+
+  .df-agenda-day-rail {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .df-agenda-day-number {
+    min-width: 4.5rem;
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    line-height: 0.95;
+    font-weight: 300;
+    color: var(--df-color-foreground);
+  }
+
+  .df-agenda-day-number[data-today='true'] {
+    color: var(--df-color-primary);
+  }
+
+  .df-agenda-day-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-top: 0.25rem;
+    text-align: left;
+  }
+
+  .df-agenda-day-month {
+    font-size: 0.95rem;
+    color: var(--df-color-foreground);
+  }
+
+  .df-agenda-day-name {
+    font-size: 0.95rem;
+    color: var(--df-color-muted-foreground);
+  }
+
+  .df-agenda-day-meta:hover {
+    opacity: 0.85;
+  }
+
+  .df-agenda-day-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .df-agenda-item {
+    display: grid;
+    grid-template-columns: minmax(8.5rem, 14rem) minmax(0, 1fr);
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .df-agenda-item-all-day {
+    align-items: center;
+  }
+
+  .df-agenda-time {
+    font-size: 0.95rem;
+    color: var(--df-color-foreground);
+    white-space: nowrap;
+  }
+
+  .df-agenda-event {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.875rem;
+    width: fit-content;
+    max-width: 100%;
+    padding: 0.125rem 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 0.75rem;
+  }
+
+  .df-agenda-event[data-selected='true'] {
+    box-shadow: none;
+  }
+
+  .df-agenda-event:focus,
+  .df-agenda-event:focus-visible,
+  .df-agenda-event:active {
+    outline: none;
+    box-shadow: none;
+  }
+
+  .df-agenda-dot {
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 9999px;
+    flex-shrink: 0;
+  }
+
+  .df-agenda-title {
+    min-width: 0;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--df-color-foreground);
+  }
+
+  .df-agenda-badge {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 1rem;
+    padding: 0.3rem 0.875rem;
+    border: none;
+    border-radius: 0.35rem;
+    font-size: 0.95rem;
+    line-height: 1.2;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .df-agenda-badge[data-continued-left='true'] {
+    padding-left: 1rem;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    clip-path: polygon(0 50%, 0.7rem 0, 100% 0, 100% 100%, 0.7rem 100%);
+  }
+
+  .df-agenda-badge[data-continued-right='true'] {
+    padding-right: 1rem;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    clip-path: polygon(
+      0 0,
+      calc(100% - 0.7rem) 0,
+      100% 50%,
+      calc(100% - 0.7rem) 100%,
+      0 100%
+    );
+  }
+
+  .df-agenda-badge[data-continued-left='true'][data-continued-right='true'] {
+    clip-path: polygon(
+      0 50%,
+      0.7rem 0,
+      calc(100% - 0.7rem) 0,
+      100% 50%,
+      calc(100% - 0.7rem) 100%,
+      0.7rem 100%
+    );
+  }
+
+  .df-agenda-all-day-events {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+  }
+
+  .df-agenda-all-day-event {
+    min-width: 0;
+  }
+
+  .df-agenda-empty,
+  .df-agenda-empty-row {
+    color: var(--df-color-muted-foreground);
+    font-size: 0.95rem;
+  }
+
+  .df-agenda-empty {
+    padding: 2rem 1.75rem;
+  }
+
   .df-month-view-fade-scroller {
     overflow: hidden;
   }
@@ -236,6 +440,144 @@
     display: flex;
     height: 4.5rem;
     border-top: 1px solid var(--df-color-border);
+  }
+
+  @media (max-width: 768px) {
+    .df-agenda-day-section {
+      display: block;
+      padding: 0;
+    }
+
+    .df-agenda-day-section[data-today='true'] {
+      background-color: color-mix(
+        in srgb,
+        var(--df-color-primary) 8%,
+        var(--df-color-background)
+      );
+    }
+
+    .df-agenda-day-rail {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.875rem;
+      padding: 0.875rem 0.875rem 0.625rem;
+    }
+
+    .df-agenda-day-number {
+      min-width: 3.5rem;
+      font-size: 2.9rem;
+      line-height: 0.9;
+    }
+
+    .df-agenda-day-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+      padding-top: 0.125rem;
+      min-width: 0;
+    }
+
+    .df-agenda-day-month {
+      font-size: 0.82rem;
+      line-height: 1.15;
+      color: var(--df-color-foreground);
+    }
+
+    .df-agenda-day-name {
+      font-size: 0.82rem;
+      line-height: 1.15;
+      color: var(--df-color-muted-foreground);
+    }
+
+    .df-agenda-day-content {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      padding: 0 0.5rem 0.75rem;
+    }
+
+    .df-agenda-day-content > * + * {
+      border-top: 1px solid var(--df-color-border);
+    }
+
+    .df-agenda-item {
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 0.75rem;
+      align-items: flex-start;
+      padding: 0.75rem 0.375rem;
+    }
+
+    .df-agenda-item-all-day {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+      align-items: flex-start;
+      padding: 0.75rem 0.375rem;
+    }
+
+    .df-agenda-time {
+      grid-column: 2;
+      grid-row: 1;
+      padding-top: 0.1rem;
+      font-size: 0.76rem;
+      line-height: 1.25;
+      color: var(--df-color-muted-foreground);
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .df-agenda-item-all-day .df-agenda-time {
+      grid-column: 1;
+      grid-row: 1;
+      padding-top: 0;
+      text-align: left;
+    }
+
+    .df-agenda-all-day-events {
+      grid-column: 1;
+      grid-row: 2;
+      min-width: 0;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+
+    .df-agenda-all-day-event {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .df-agenda-event {
+      grid-column: 1;
+      grid-row: 1;
+      gap: 0.75rem;
+      width: 100%;
+      min-width: 0;
+      align-items: flex-start;
+      justify-content: flex-start;
+      padding: 0;
+    }
+
+    .df-agenda-title {
+      min-width: 0;
+      font-size: 0.95rem;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+
+    .df-agenda-dot {
+      margin-top: 0.22rem;
+    }
+
+    .df-agenda-badge {
+      max-width: 100%;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.15;
+    }
+
+    .df-agenda-empty-row {
+      padding: 0.75rem 0.375rem 0;
+    }
   }
 
   .df-time-grid-cell {

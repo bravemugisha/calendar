@@ -344,6 +344,7 @@ export const CalendarRoot = ({
 
           <div
             className='df-calendar-shell'
+            data-sidebar-enabled={sidebar.enabled ? 'true' : 'false'}
             data-sidebar-collapsed={sidebar.isCollapsed}
             style={{
               marginLeft: sidebar.enabled

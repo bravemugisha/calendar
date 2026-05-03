@@ -4,7 +4,7 @@ title: Views
 
 # Calendar Views
 
-Day Flow supports four different view types, each optimized for different use cases and user needs. You can switch between views programmatically or provide a UI for users to switch views.
+Day Flow supports five different view types, each optimized for different use cases and user needs. You can switch between views programmatically or provide a UI for users to switch views.
 
 ## Available Views
 
@@ -127,6 +127,45 @@ function MyCalendar() {
 }
 ```
 
+### Agenda View
+
+The agenda view displays events as a chronological list grouped by day. It works especially well for mobile layouts, long-range planning, and feeds where users want to scan upcoming events quickly.
+
+#### Configuration
+
+| Property              | Type                               | Default      | Description                                              |
+| :-------------------- | :--------------------------------- | :----------- | :------------------------------------------------------- |
+| `daysToShow`          | `number`                           | `14`         | Number of consecutive days to render in the agenda list. |
+| `showEmptyDays`       | `boolean`                          | `true`       | Whether to keep days with no events visible in the list. |
+| `timeFormat`          | `'12h' \| '24h'`                   | `'24h'`      | Time format used for timed event rows.                   |
+| `gridDateClick`       | `'day-view' \| 'none' \| function` | `undefined`  | Action when a day section is clicked.                    |
+| `gridDateDoubleClick` | `'day-view' \| 'none' \| function` | `'day-view'` | Action when a day section is double-clicked.             |
+
+```tsx {10-15}
+import {
+  useCalendarApp,
+  DayFlowCalendar,
+  createAgendaView,
+  ViewType,
+} from '@dayflow/react'; // or '@dayflow/vue', '@dayflow/svelte', '@dayflow/angular'
+
+function MyCalendar() {
+  const calendar = useCalendarApp({
+    views: [
+      createAgendaView({
+        daysToShow: 14,
+        timeFormat: '12h',
+        gridDateDoubleClick: 'day-view',
+      }),
+    ],
+    defaultView: ViewType.AGENDA,
+    initialDate: new Date(),
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
 ### Year View
 
 The year view provides a comprehensive annual overview. DayFlow's Year View supports three modes: `year-canvas` (continuous grid), `fixed-week` (fixed 52-week columns), and `grid` (a 4x3 month grid perfect for heatmaps).
@@ -201,6 +240,7 @@ You can register multiple views and allow users to switch between them:
 import {
   useCalendarApp,
   DayFlowCalendar,
+  createAgendaView,
   createDayView,
   createWeekView,
   createMonthView,
@@ -211,6 +251,7 @@ import {
 function MultiViewCalendar() {
   const calendar = useCalendarApp({
     views: [
+      createAgendaView({ daysToShow: 10 }),
       createDayView(),
       createWeekView(),
       createMonthView(),
@@ -254,7 +295,7 @@ All views support the same navigation methods:
 // Go to today
 calendar.goToToday();
 
-// Go to previous period (day/week/month/year depending on current view)
+// Go to previous period (day/week/month/agenda/year depending on current view)
 calendar.goToPrevious();
 
 // Go to next period
@@ -271,6 +312,7 @@ enum ViewType {
   DAY = 'day',
   WEEK = 'week',
   MONTH = 'month',
+  AGENDA = 'agenda',
   YEAR = 'year',
 }
 ```

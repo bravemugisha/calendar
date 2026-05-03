@@ -56,7 +56,7 @@ export function TeamCalendar() {
 ### Views (required)
 
 - Each view is a `CalendarView` object `{ type, component, config }`.
-- DayFlow ships with factories (`createDayView`, `createWeekView`, etc.) that return ready-made definitions.
+- DayFlow ships with factories (`createDayView`, `createWeekView`, `createMonthView`, `createAgendaView`, `createYearView`) that return ready-made definitions.
 - `defaultView` must match one of the registered view types; otherwise the app throws during initialization.
 
 ### Events
@@ -91,7 +91,7 @@ export function TeamCalendar() {
 
 ### timeZone
 
-- `timeZone` defines the primary display and editing timezone for Day, Week, Month, and Year views.
+- `timeZone` defines the primary display and editing timezone for Day, Week, Month, Agenda, and Year views.
 - If omitted, DayFlow resolves it from the user's system timezone.
 - Changing `timeZone` reprojects the UI, but does not itself mutate event data.
 - Edit callbacks still return canonical event data after the change is applied. DayFlow does not persist the temporary UI projection timezone as the stored event shape.
@@ -247,7 +247,7 @@ To render a custom header, use the `calendarHeader` slot on `DayFlowCalendar`. S
 
 ### allDaySortComparator
 
-Controls the row order of all-day events in every view (day, week, month, year).
+Controls the row order of all-day events in every view (day, week, month, agenda, year).
 
 By default, DayFlow:
 

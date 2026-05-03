@@ -52,7 +52,7 @@ export function TeamCalendar() {
 ### 视图（必选）
 
 - 每个视图都是一个包含 `type`、`component`、`config` 的 `CalendarView`
-- 推荐使用内置工厂 `createDayView`/`createWeekView`/`createMonthView`/`createYearView`
+- 推荐使用内置工厂 `createDayView`/`createWeekView`/`createMonthView`/`createAgendaView`/`createYearView`
 - `defaultView` 必须存在于 `views` 列表，否则初始化会报错
 
 ### 事件
@@ -108,7 +108,7 @@ const calendar = useCalendarApp({
 
 ### timeZone
 
-- `timeZone` 用来定义 Day、Week、Month、Year 共用的主显示/编辑时区。
+- `timeZone` 用来定义 Day、Week、Month、Agenda、Year 共用的主显示/编辑时区。
 - 不传时，DayFlow 会默认使用当前用户设备的系统时区。
 - 切换 `timeZone` 只会重新投影视图，不会因为切换时区本身触发事件数据写回。
 - 编辑类回调返回的仍然是 canonical event；DayFlow 不会把当前 UI 投影时区下的临时显示值直接当成最终持久化数据。
@@ -264,7 +264,7 @@ const calendar = useCalendarApp({
 
 ### allDaySortComparator
 
-控制所有视图（日、周、月、年）中全天事件的行排列顺序。
+控制所有视图（日、周、月、Agenda、年）中全天事件的行排列顺序。
 
 默认情况下，DayFlow 会：
 

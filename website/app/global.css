@@ -201,3 +201,15 @@
   --df-calendar-height: 750px !important;
   height: var(--df-calendar-height, 750px) !important;
 }
+
+@media (max-width: 768px) {
+  .df-calendar-container .df-header-left,
+  .df-calendar-container .df-header-right {
+    display: none !important;
+  }
+
+  .df-calendar-container .df-header {
+    justify-content: center;
+    padding-right: 0;
+  }
+}

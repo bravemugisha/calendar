@@ -38,6 +38,11 @@ export const defaultViewConfigs = {
     weekHeight: 120,
     showEventDots: false,
   },
+  agenda: {
+    daysToShow: 14,
+    showEmptyDays: true,
+    timeFormat: '24h',
+  },
 };
 
 export const defaultCalendarConfig: CalendarConfig = {
@@ -93,7 +98,7 @@ export function createDragConfig(
 }
 
 export function createViewConfig(
-  viewType: 'day' | 'week' | 'month',
+  viewType: 'day' | 'week' | 'month' | 'agenda',
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   overrides?: Record<string, any>
 ) {
@@ -159,7 +164,7 @@ export class ConfigManager {
     return this.config.drag;
   }
 
-  getViewConfig(viewType: 'day' | 'week' | 'month') {
+  getViewConfig(viewType: 'day' | 'week' | 'month' | 'agenda') {
     return this.config.views[viewType];
   }
 

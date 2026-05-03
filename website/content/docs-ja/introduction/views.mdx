@@ -1,6 +1,6 @@
 # ビュー
 
-Day Flow は 4 つの異なるビュータイプをサポートしており、それぞれが異なるユースケースやユーザーのニーズに合わせて最適化されています。プログラムでビューを切り替えたり、ユーザーがビューを切り替えるための UI を提供したりすることができます。
+Day Flow は 5 つの異なるビュータイプをサポートしており、それぞれが異なるユースケースやユーザーのニーズに合わせて最適化されています。プログラムでビューを切り替えたり、ユーザーがビューを切り替えるための UI を提供したりすることができます。
 
 ## 利用可能なビュー
 
@@ -123,6 +123,45 @@ function MyCalendar() {
 }
 ```
 
+### Agenda ビュー
+
+Agenda ビューは、イベントを日ごとにグルーピングした時系列リストとして表示します。モバイルレイアウト、少し先までの予定確認、今後のイベントを素早く流し見したいケースに向いています。
+
+#### 設定
+
+| プロパティ            | 型                                 | デフォルト   | 説明                                               |
+| :-------------------- | :--------------------------------- | :----------- | :------------------------------------------------- |
+| `daysToShow`          | `number`                           | `14`         | Agenda リストに表示する連続日数。                  |
+| `showEmptyDays`       | `boolean`                          | `true`       | イベントがない日もリストに残すかどうか。           |
+| `timeFormat`          | `'12h' \| '24h'`                   | `'24h'`      | 時間指定イベント行に使う時刻表示形式。             |
+| `gridDateClick`       | `'day-view' \| 'none' \| function` | `undefined`  | 日セクションをクリックしたときのアクション。       |
+| `gridDateDoubleClick` | `'day-view' \| 'none' \| function` | `'day-view'` | 日セクションをダブルクリックしたときのアクション。 |
+
+```tsx {10-15}
+import {
+  useCalendarApp,
+  DayFlowCalendar,
+  createAgendaView,
+  ViewType,
+} from '@dayflow/react'; // or '@dayflow/vue', '@dayflow/svelte', '@dayflow/angular'
+
+function MyCalendar() {
+  const calendar = useCalendarApp({
+    views: [
+      createAgendaView({
+        daysToShow: 14,
+        timeFormat: '12h',
+        gridDateDoubleClick: 'day-view',
+      }),
+    ],
+    defaultView: ViewType.AGENDA,
+    initialDate: new Date(),
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
 ### 年ビュー
 
 年ビューは、包括的な年間概要を提供します。DayFlow の年ビューは、`year-canvas`（連続グリッド）、`fixed-week`（固定 52 週間の列）、および `grid`（ヒートマップに最適な 4x3 の月間グリッド）の 3 つのモードをサポートしています。
@@ -197,6 +236,7 @@ function MyCalendar() {
 import {
   useCalendarApp,
   DayFlowCalendar,
+  createAgendaView,
   createDayView,
   createWeekView,
   createMonthView,
@@ -207,6 +247,7 @@ import {
 function MultiViewCalendar() {
   const calendar = useCalendarApp({
     views: [
+      createAgendaView({ daysToShow: 10 }),
       createDayView(),
       createWeekView(),
       createMonthView(),
@@ -250,7 +291,7 @@ console.log(currentView.type); // 'week'
 // 今日へ移動
 calendar.goToToday();
 
-// 前の期間へ移動（現在のビューに応じて日/週/月/年）
+// 前の期間へ移動（現在のビューに応じて日/週/月/agenda/年）
 calendar.goToPrevious();
 
 // 次の期間へ移動
@@ -267,6 +308,7 @@ enum ViewType {
   DAY = 'day',
   WEEK = 'week',
   MONTH = 'month',
+  AGENDA = 'agenda',
   YEAR = 'year',
 }
 ```

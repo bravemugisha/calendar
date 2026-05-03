@@ -24,6 +24,7 @@ export enum ViewType {
   WEEK = 'week',
   MONTH = 'month',
   YEAR = 'year',
+  AGENDA = 'agenda',
   RESOURCE = 'resource',
 }
 
@@ -404,6 +405,7 @@ export interface CalendarConfig {
     day: Record<string, unknown>;
     week: Record<string, unknown>;
     month: Record<string, unknown>;
+    agenda: Record<string, unknown>;
   };
 }
 
