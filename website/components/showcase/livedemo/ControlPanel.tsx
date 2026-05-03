@@ -49,6 +49,7 @@ const VIEW_OPTIONS = [
   { label: 'Week', value: ViewType.WEEK },
   { label: 'Month', value: ViewType.MONTH },
   { label: 'Year', value: ViewType.YEAR },
+  { label: 'Agenda', value: ViewType.AGENDA },
 ];
 
 const TIME_ZONE_OPTIONS = Object.entries(TimeZone).toSorted((a, b) =>

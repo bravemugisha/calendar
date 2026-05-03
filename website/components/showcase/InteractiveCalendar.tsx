@@ -13,6 +13,8 @@ import {
 } from '@dayflow/plugin-localization';
 import { createSidebarPlugin } from '@dayflow/plugin-sidebar';
 import {
+  CalendarAppConfig,
+  createAgendaView,
   createDayView,
   createWeekView,
   createMonthView,
@@ -87,7 +89,13 @@ export function InteractiveCalendar() {
 
   const [selections, setSelections] = useState<CalendarSelections>({
     locale: 'en',
-    selectedViews: [ViewType.DAY, ViewType.WEEK, ViewType.MONTH, ViewType.YEAR],
+    selectedViews: [
+      ViewType.DAY,
+      ViewType.WEEK,
+      ViewType.MONTH,
+      ViewType.YEAR,
+      ViewType.AGENDA,
+    ],
     activeView: ViewType.MONTH,
     yearMode: 'fixed-week',
     switcherMode: 'buttons',
@@ -204,6 +212,15 @@ export function InteractiveCalendar() {
         })
       );
     }
+    if (selections.selectedViews.includes(ViewType.AGENDA)) {
+      v.push(
+        createAgendaView({
+          daysToShow: 14,
+          timeFormat: '12h',
+          gridDateDoubleClick: 'day-view',
+        })
+      );
+    }
 
     const currentView = selections.selectedViews.includes(selections.activeView)
       ? selections.activeView
@@ -264,7 +281,7 @@ export function InteractiveCalendar() {
     calendarsWithGroups,
     themeMode,
     updateSelections,
-  ]);
+  ]) as unknown as CalendarAppConfig;
 
   if (!mounted) {
     return (

@@ -13,6 +13,13 @@ import { getWeekRange } from '@/utils/dateRangeUtils';
 export class NavigationController {
   private visibleMonth: Date;
 
+  private static getAgendaPageDays(view?: CalendarView): number {
+    const pageDays = Number(view?.config?.daysToShow);
+    return Number.isFinite(pageDays) && pageDays > 0
+      ? Math.floor(pageDays)
+      : 14;
+  }
+
   constructor(
     private state: CalendarAppState,
     private getCallbacks: () => CalendarCallbacks,
@@ -97,6 +104,16 @@ export class NavigationController {
         this.emitVisibleRange(start, end, reason);
         break;
       }
+      case ViewType.AGENDA: {
+        const start = new Date(this.state.currentDate);
+        start.setHours(0, 0, 0, 0);
+        const end = new Date(start);
+        end.setDate(
+          end.getDate() + NavigationController.getAgendaPageDays(view)
+        );
+        this.emitVisibleRange(start, end, reason);
+        break;
+      }
       case ViewType.YEAR: {
         const start = new Date(this.state.currentDate.getFullYear(), 0, 1);
         start.setHours(0, 0, 0, 0);
@@ -156,6 +173,13 @@ export class NavigationController {
       case ViewType.MONTH:
         newDate.setMonth(newDate.getMonth() - 1);
         break;
+      case ViewType.AGENDA: {
+        const view = this.state.views.get(this.state.currentView);
+        newDate.setDate(
+          newDate.getDate() - NavigationController.getAgendaPageDays(view)
+        );
+        break;
+      }
       case ViewType.YEAR:
         newDate.setFullYear(newDate.getFullYear() - 1);
         break;
@@ -177,6 +201,13 @@ export class NavigationController {
       case ViewType.MONTH:
         newDate.setMonth(newDate.getMonth() + 1);
         break;
+      case ViewType.AGENDA: {
+        const view = this.state.views.get(this.state.currentView);
+        newDate.setDate(
+          newDate.getDate() + NavigationController.getAgendaPageDays(view)
+        );
+        break;
+      }
       case ViewType.YEAR:
         newDate.setFullYear(newDate.getFullYear() + 1);
         break;

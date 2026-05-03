@@ -7,6 +7,7 @@ declare module '@dayflow/svelte' {
     createDayView,
     createWeekView,
     createMonthView,
+    createAgendaView,
     createYearView,
     ViewType,
   } from '@dayflow/core';
@@ -35,6 +36,7 @@ declare module '@dayflow/svelte' {
     createDayView,
     createWeekView,
     createMonthView,
+    createAgendaView,
     createYearView,
     ViewType,
   };

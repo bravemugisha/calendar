@@ -287,18 +287,100 @@ CSS classes used for the Content Slot rendering system.
 
 ## Event State Attributes
 
-Every calendar event element exposes a set of `data-*` attributes that reflect its current state. You can target these directly in CSS without adding extra classes.
+DayFlow exposes more than just event state flags. Across events, grids, overlays, drawers, and internal layout helpers, the current project uses the following `data-*` attributes. You can target many of them in CSS directly, while a few are primarily structural hooks for overlay logic and click-outside handling.
 
-| Attribute            | Values                                | Description                                   |
-| -------------------- | ------------------------------------- | --------------------------------------------- |
-| `data-view`          | `"day"` `"week"` `"month"` `"year"`   | Which view is currently rendering the event   |
-| `data-all-day`       | `"true"` `"false"`                    | Whether the event is an all-day event         |
-| `data-selected`      | `"true"` `"false"`                    | Whether the event is currently selected       |
-| `data-dragging`      | `"true"` `"false"`                    | Whether the event is being dragged            |
-| `data-resizing`      | `"true"` `"false"`                    | Whether the event is being resized            |
-| `data-multi-day`     | `"true"` `"false"`                    | Whether the event spans multiple days         |
-| `data-editable`      | `"true"` `"false"`                    | Whether the event can be edited               |
-| `data-segment-shape` | `"full"` `"start"` `"middle"` `"end"` | Rounded-corner shape for multi-segment events |
+### Event Elements
+
+| Attribute              | Values                                         | Description                                                             |
+| ---------------------- | ---------------------------------------------- | ----------------------------------------------------------------------- |
+| `data-view`            | `"day"` `"week"` `"month"` `"year"` `"agenda"` | Which view is currently rendering the event or event fragment           |
+| `data-all-day`         | `"true"` `"false"`                             | Whether the event is an all-day event                                   |
+| `data-selected`        | `"true"` `"false"`                             | Whether the event is currently selected                                 |
+| `data-dragging`        | `"true"` `"false"`                             | Whether the event is currently being dragged                            |
+| `data-resizing`        | `"true"` `"false"`                             | Whether the event is currently being resized                            |
+| `data-popping`         | `"true"` `"false"`                             | Whether the event is visually popped / elevated during interaction      |
+| `data-editable`        | `"true"` `"false"`                             | Whether the event is editable from built-in UI                          |
+| `data-viewable`        | `"true"` `"false"`                             | Whether the event detail UI may be opened                               |
+| `data-draggable`       | `"true"` `"false"`                             | Whether dragging is enabled for that event                              |
+| `data-multi-day`       | `"true"` `"false"`                             | Whether the event spans multiple days                                   |
+| `data-month-stack`     | `"true"` `"false"`                             | Whether the event is rendered inside the Month view stacked layout      |
+| `data-touch-handles`   | `"true"` `"false"`                             | Whether touch resize handles should be visible / reserved               |
+| `data-axis`            | View-specific keywords                         | Orientation hint used by compact/timed event renderers                  |
+| `data-density`         | View-specific keywords                         | Density hint used by compact event content                              |
+| `data-position`        | View-specific keywords                         | Positional hint for segmented or compact event renderers                |
+| `data-segment-shape`   | `"full"` `"start"` `"middle"` `"end"`          | Rounded-corner shape for multi-segment events                           |
+| `data-segment-days`    | Numeric string                                 | Number of days represented by a rendered month-view event segment       |
+| `data-event-id`        | Event id string                                | Raw event identifier attached to interactive event / panel anchor nodes |
+| `data-continued-left`  | `"true"` `"false"`                             | Agenda all-day badge continues from a previous day                      |
+| `data-continued-right` | `"true"` `"false"`                             | Agenda all-day badge continues into a following day                     |
+
+### Date, Grid, and Layout State
+
+| Attribute                | Values                 | Description                                                                |
+| ------------------------ | ---------------------- | -------------------------------------------------------------------------- |
+| `data-today`             | `"true"` `"false"`     | Marks a date, section, or header cell representing today                   |
+| `data-other-month`       | `"true"` `"false"`     | Marks dates that belong to the previous / next month                       |
+| `data-current-month`     | `"true"` `"false"`     | Marks dates rendered inside the current month range                        |
+| `data-date`              | Date string            | Concrete date payload attached to grid / year cells                        |
+| `data-first-day`         | `"true"` `"false"`     | Marks the first visible day in a grouped year or month structure           |
+| `data-weekend`           | `"true"` `"false"`     | Marks weekend cells / labels                                               |
+| `data-has-events`        | `"true"` `"false"`     | Marks grid cells that contain one or more events                           |
+| `data-heat-level`        | Numeric string         | Heatmap intensity level used by grid-based Year view                       |
+| `data-visible`           | `"true"` `"false"`     | Generic visibility flag used by virtual / conditional layouts              |
+| `data-layout`            | Layout keyword         | Internal layout mode marker used by month / virtual scroll rendering       |
+| `data-layout-ready`      | `"true"` `"false"`     | Whether a virtualized layout has completed its first measurement pass      |
+| `data-trailing-border`   | `"true"` `"false"`     | Whether a month cell should render the trailing border                     |
+| `data-scrollbar-space`   | `"true"` `"false"`     | Whether a view reserves room for a scrollbar                               |
+| `data-secondary-tz`      | `"true"` `"false"`     | Whether a secondary timezone axis is active                                |
+| `data-show-all-day`      | `"true"` `"false"`     | Whether the all-day row is currently enabled                               |
+| `data-sliding-view`      | `"true"` `"false"`     | Whether a view is in a sliding / transition state                          |
+| `data-mobile`            | `"true"` `"false"`     | Mobile-mode rendering hint used by some compact view fragments             |
+| `data-switcher-mode`     | `"buttons"` `"select"` | Which built-in view switcher mode is active                                |
+| `data-inside-pill`       | `"true"` `"false"`     | Whether compact header content is currently rendered inside the today pill |
+| `data-sidebar-collapsed` | `"true"` `"false"`     | Whether the sidebar is collapsed                                           |
+| `data-sidebar-enabled`   | `"true"` `"false"`     | Whether the calendar shell is currently mounted with the sidebar plugin    |
+| `data-df-theme`          | Theme keyword          | Theme marker emitted by themed layout wrappers                             |
+
+### Controls, Inputs, and Search
+
+| Attribute                | Values                             | Description                                                         |
+| ------------------------ | ---------------------------------- | ------------------------------------------------------------------- |
+| `data-active`            | `"true"` `"false"`                 | Generic active-state marker for switches, tabs, and picker controls |
+| `data-open`              | `"true"` `"false"`                 | Whether a dropdown, drawer, or search surface is currently open     |
+| `data-bordered`          | `"true"` `"false"`                 | Whether the header should render its bottom border                  |
+| `data-loading`           | `"true"` `"false"`                 | Loading state for async buttons / actions                           |
+| `data-ready`             | `"true"` `"false"`                 | Whether a quick-create overlay has completed initial positioning    |
+| `data-placement`         | Placement keyword                  | Placement hint for popup / quick-create alignment                   |
+| `data-checked`           | `"true"` `"false"`                 | Checked state for custom switches                                   |
+| `data-disabled`          | `"true"` `"false"`                 | Disabled state for custom switches / inputs                         |
+| `data-kind`              | Component-specific keyword         | Section / field kind marker used by the mobile event drawer         |
+| `data-expanded`          | `"true"` `"false"`                 | Expanded / collapsed state for drawer sections                      |
+| `data-closing`           | `"true"` `"false"`                 | Marks the mobile drawer during its closing transition               |
+| `data-tone`              | `"default"` `"today"` `"upcoming"` | Semantic tone used by grouped search result date headers            |
+| `data-mini-calendar-dot` | Present attribute                  | Marker attached to mini-calendar event dots                         |
+
+### Sidebar Plugin State
+
+| Attribute              | Values             | Description                                                                 |
+| ---------------------- | ------------------ | --------------------------------------------------------------------------- |
+| `data-active`          | `"true"` `"false"` | Highlights the active calendar row in the sidebar list                      |
+| `data-collapsed`       | `"true"` `"false"` | Whether a sidebar source group or chevron-controlled panel is collapsed     |
+| `data-draggable`       | `"true"` `"false"` | Whether a sidebar calendar item can be dragged                              |
+| `data-dragging`        | `"true"` `"false"` | Whether a sidebar calendar item is currently being dragged                  |
+| `data-position`        | `"top"` `"bottom"` | Drop-indicator position used while dragging calendars within the sidebar    |
+| `data-selected`        | `"true"` `"false"` | Selected option state inside sidebar dropdowns / import dialogs             |
+| `data-submenu-content` | Present attribute  | Marks sidebar submenu portal content (for merge menus and related overlays) |
+
+### Overlays and Interaction Hooks
+
+| Attribute                       | Values            | Description                                       |
+| ------------------------------- | ----------------- | ------------------------------------------------- |
+| `data-event-detail-panel`       | Present attribute | Marks the floating event detail panel root        |
+| `data-event-detail-dialog`      | Present attribute | Marks the modal event detail dialog root          |
+| `data-range-picker-popup`       | Present attribute | Marks the range picker popup root                 |
+| `data-calendar-picker-dropdown` | Present attribute | Marks the calendar picker dropdown root           |
+| `data-grid-day-cell`            | Present attribute | Marks clickable day cells in grid-based Year view |
+| `data-grid-day-popup`           | Present attribute | Marks the Year view day popup root                |
 
 ### Example
 
@@ -321,6 +403,11 @@ Every calendar event element exposes a set of `data-*` attributes that reflect i
 /* All-day events only */
 .df-event[data-all-day='true'] {
   font-weight: 600;
+}
+
+/* Highlight today's agenda section or compact grid cell */
+[data-today='true'] {
+  background-color: color-mix(in srgb, var(--df-color-primary) 8%, transparent);
 }
 ```
 

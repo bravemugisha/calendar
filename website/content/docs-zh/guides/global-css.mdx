@@ -285,18 +285,100 @@ DayFlow 提供了一组带有 `df-` 前缀的 CSS 类，允许您自定义日历
 
 ## 事件状态属性
 
-每个日历事件元素都暴露了一组 `data-*` 属性，反映其当前状态。可以直接在 CSS 中通过属性选择器来定位，无需额外添加类名。
+DayFlow 暴露的不只是事件状态标记。当前项目里，事件、网格、浮层、抽屉以及部分内部布局辅助节点都会使用 `data-*` 属性。下面这份表覆盖了当前代码里实际存在的属性。其中大多数可以直接拿来写 CSS，少数则主要用于浮层控制或 click-outside 这类结构化逻辑。
 
-| 属性                 | 可选值                                | 描述                 |
-| -------------------- | ------------------------------------- | -------------------- |
-| `data-view`          | `"day"` `"week"` `"month"` `"year"`   | 当前渲染该事件的视图 |
-| `data-all-day`       | `"true"` `"false"`                    | 是否为全天事件       |
-| `data-selected`      | `"true"` `"false"`                    | 事件是否处于选中状态 |
-| `data-dragging`      | `"true"` `"false"`                    | 事件是否正在被拖拽   |
-| `data-resizing`      | `"true"` `"false"`                    | 事件是否正在被缩放   |
-| `data-multi-day`     | `"true"` `"false"`                    | 是否为跨天事件       |
-| `data-editable`      | `"true"` `"false"`                    | 事件是否可编辑       |
-| `data-segment-shape` | `"full"` `"start"` `"middle"` `"end"` | 多段事件的圆角形状   |
+### 事件元素
+
+| 属性                   | 可选值                                         | 描述                                            |
+| ---------------------- | ---------------------------------------------- | ----------------------------------------------- |
+| `data-view`            | `"day"` `"week"` `"month"` `"year"` `"agenda"` | 当前正在渲染该事件或事件片段的视图              |
+| `data-all-day`         | `"true"` `"false"`                             | 是否为全天事件                                  |
+| `data-selected`        | `"true"` `"false"`                             | 事件是否处于选中状态                            |
+| `data-dragging`        | `"true"` `"false"`                             | 事件是否正在被拖拽                              |
+| `data-resizing`        | `"true"` `"false"`                             | 事件是否正在被调整大小                          |
+| `data-popping`         | `"true"` `"false"`                             | 交互时事件是否处于弹起 / 提升的视觉状态         |
+| `data-editable`        | `"true"` `"false"`                             | 是否允许通过内置 UI 编辑                        |
+| `data-viewable`        | `"true"` `"false"`                             | 是否允许打开事件详情 UI                         |
+| `data-draggable`       | `"true"` `"false"`                             | 该事件是否启用拖拽                              |
+| `data-multi-day`       | `"true"` `"false"`                             | 是否为跨天事件                                  |
+| `data-month-stack`     | `"true"` `"false"`                             | 是否处于月视图的堆叠布局中                      |
+| `data-touch-handles`   | `"true"` `"false"`                             | 是否需要显示 / 预留触控调整手柄                 |
+| `data-axis`            | 视图相关关键字                                 | 紧凑 / timed 事件内容的方向提示                 |
+| `data-density`         | 视图相关关键字                                 | 紧凑事件内容的密度提示                          |
+| `data-position`        | 视图相关关键字                                 | 分段或紧凑事件渲染中的位置提示                  |
+| `data-segment-shape`   | `"full"` `"start"` `"middle"` `"end"`          | 多段事件的圆角形状                              |
+| `data-segment-days`    | 数字字符串                                     | 月视图片段所覆盖的天数                          |
+| `data-event-id`        | 事件 id 字符串                                 | 挂在交互事件节点 / 面板锚点节点上的原始事件标识 |
+| `data-continued-left`  | `"true"` `"false"`                             | Agenda 全天 badge 是否从前一天延续而来          |
+| `data-continued-right` | `"true"` `"false"`                             | Agenda 全天 badge 是否延续到后一天              |
+
+### 日期、网格与布局状态
+
+| 属性                     | 可选值                 | 描述                                              |
+| ------------------------ | ---------------------- | ------------------------------------------------- |
+| `data-today`             | `"true"` `"false"`     | 标记今天对应的日期、section 或头部单元格          |
+| `data-other-month`       | `"true"` `"false"`     | 标记属于上个月或下个月的日期                      |
+| `data-current-month`     | `"true"` `"false"`     | 标记当前月份范围内的日期                          |
+| `data-date`              | 日期字符串             | 挂在网格 / 年视图单元格上的具体日期值             |
+| `data-first-day`         | `"true"` `"false"`     | 标记分组年/月结构中的第一个可见日期               |
+| `data-weekend`           | `"true"` `"false"`     | 是否为周末单元格 / 标签                           |
+| `data-has-events`        | `"true"` `"false"`     | 单元格内是否包含至少一个事件                      |
+| `data-heat-level`        | 数字字符串             | 网格年视图热力等级                                |
+| `data-visible`           | `"true"` `"false"`     | 用于虚拟化或条件渲染的通用可见状态标记            |
+| `data-layout`            | 布局关键字             | 月视图 / 虚拟滚动渲染使用的内部布局模式           |
+| `data-layout-ready`      | `"true"` `"false"`     | 虚拟布局是否已完成首轮测量                        |
+| `data-trailing-border`   | `"true"` `"false"`     | 月视图单元格是否应绘制尾部边框                    |
+| `data-scrollbar-space`   | `"true"` `"false"`     | 当前视图是否为滚动条预留空间                      |
+| `data-secondary-tz`      | `"true"` `"false"`     | 是否启用了辅助时区轴                              |
+| `data-show-all-day`      | `"true"` `"false"`     | 是否显示全天行                                    |
+| `data-sliding-view`      | `"true"` `"false"`     | 视图是否处于滑动 / 过渡状态                       |
+| `data-mobile`            | `"true"` `"false"`     | 某些紧凑片段使用的移动端渲染提示                  |
+| `data-switcher-mode`     | `"buttons"` `"select"` | 内置视图切换器当前使用的模式                      |
+| `data-inside-pill`       | `"true"` `"false"`     | Compact header 内容是否被渲染进 today pill        |
+| `data-sidebar-collapsed` | `"true"` `"false"`     | 侧边栏是否折叠                                    |
+| `data-sidebar-enabled`   | `"true"` `"false"`     | 当前 calendar shell 是否带着 sidebar 插件一起挂载 |
+| `data-df-theme`          | 主题关键字             | 主题化布局包装节点发出的主题标记                  |
+
+### 控件、输入与搜索
+
+| 属性                     | 可选值                             | 描述                                           |
+| ------------------------ | ---------------------------------- | ---------------------------------------------- |
+| `data-active`            | `"true"` `"false"`                 | 通用 active 状态标记，用于开关、tab、picker 等 |
+| `data-open`              | `"true"` `"false"`                 | 下拉、抽屉或搜索区域是否处于打开状态           |
+| `data-bordered`          | `"true"` `"false"`                 | header 是否绘制底部边框                        |
+| `data-loading`           | `"true"` `"false"`                 | 异步按钮 / 操作的加载状态                      |
+| `data-ready`             | `"true"` `"false"`                 | quick-create 浮层是否完成初始定位              |
+| `data-placement`         | 位置关键字                         | popup / quick-create 的定位提示                |
+| `data-checked`           | `"true"` `"false"`                 | 自定义开关的选中状态                           |
+| `data-disabled`          | `"true"` `"false"`                 | 自定义开关 / 输入的禁用状态                    |
+| `data-kind`              | 组件相关关键字                     | mobile event drawer 中的区块 / 字段类型        |
+| `data-expanded`          | `"true"` `"false"`                 | 抽屉区块是否展开                               |
+| `data-closing`           | `"true"` `"false"`                 | mobile drawer 是否处于关闭过渡阶段             |
+| `data-tone`              | `"default"` `"today"` `"upcoming"` | 搜索结果日期分组标题使用的语义色调             |
+| `data-mini-calendar-dot` | 存在属性                           | mini calendar 事件圆点的标记                   |
+
+### Sidebar 插件状态
+
+| 属性                   | 可选值             | 描述                                           |
+| ---------------------- | ------------------ | ---------------------------------------------- |
+| `data-active`          | `"true"` `"false"` | 侧边栏中的日历行是否处于 active 状态           |
+| `data-collapsed`       | `"true"` `"false"` | 侧边栏 source group 或折叠面板是否处于收起状态 |
+| `data-draggable`       | `"true"` `"false"` | 侧边栏日历项是否允许拖拽                       |
+| `data-dragging`        | `"true"` `"false"` | 侧边栏日历项当前是否正在拖拽                   |
+| `data-position`        | `"top"` `"bottom"` | 侧边栏内拖拽排序时 drop indicator 所在的位置   |
+| `data-selected`        | `"true"` `"false"` | 侧边栏下拉菜单 / import 对话框中的选中状态     |
+| `data-submenu-content` | 存在属性           | 标记 sidebar 子菜单 portal 内容节点            |
+
+### 浮层与交互钩子
+
+| 属性                            | 可选值   | 描述                             |
+| ------------------------------- | -------- | -------------------------------- |
+| `data-event-detail-panel`       | 存在属性 | 浮动事件详情面板根节点           |
+| `data-event-detail-dialog`      | 存在属性 | 模态事件详情对话框根节点         |
+| `data-range-picker-popup`       | 存在属性 | range picker 弹层根节点          |
+| `data-calendar-picker-dropdown` | 存在属性 | calendar picker 下拉层根节点     |
+| `data-grid-day-cell`            | 存在属性 | 网格型年视图中的可点击日期单元格 |
+| `data-grid-day-popup`           | 存在属性 | 年视图日期 popup 根节点          |
 
 ### 示例
 
@@ -319,6 +401,11 @@ DayFlow 提供了一组带有 `df-` 前缀的 CSS 类，允许您自定义日历
 /* 仅针对全天事件 */
 .df-event[data-all-day='true'] {
   font-weight: 600;
+}
+
+/* 强调今天对应的 Agenda section 或紧凑网格单元格 */
+[data-today='true'] {
+  background-color: color-mix(in srgb, var(--df-color-primary) 8%, transparent);
 }
 ```
 
