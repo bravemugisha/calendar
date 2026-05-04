@@ -1,4 +1,4 @@
-import { RefObject } from 'preact';
+import { JSX, RefObject } from 'preact';
 import {
   useState,
   useEffect,
@@ -477,7 +477,10 @@ const DayView = ({
   }, [appTimeZone]);
 
   return (
-    <div className='df-day-view'>
+    <div
+      className='df-day-view'
+      style={{ '--df-hour-height': `${HOUR_HEIGHT}px` } as JSX.CSSProperties}
+    >
       <DayContent
         app={app}
         currentDate={currentDate}
