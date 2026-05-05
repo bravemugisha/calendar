@@ -387,6 +387,8 @@ const WeekView = ({
       isMobile,
       gridWidth,
       displayDays,
+      HOUR_HEIGHT,
+      FIRST_HOUR,
     }),
     [
       calendarRef,
@@ -402,6 +404,8 @@ const WeekView = ({
       isMobile,
       gridWidth,
       displayDays,
+      HOUR_HEIGHT,
+      FIRST_HOUR,
     ]
   );
 
