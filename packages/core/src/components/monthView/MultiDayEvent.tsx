@@ -242,7 +242,12 @@ export const MultiDayEvent = memo(
       const startTimeText = formatTime(startHour);
       const endTimeText = formatTime(endHour);
       const lineColors = getCalendarLineColors(segment.event);
-      const hideColorBar = isActive && isMultiCalendarEvent;
+      const hideColorBar =
+        (isActive && isMultiCalendarEvent) ||
+        (!isAllDayEvent &&
+          segment.segmentType !== 'start' &&
+          segment.segmentType !== 'start-week-end' &&
+          segment.segmentType !== 'single');
 
       if (isAllDayEvent) {
         const getDisplayText = () => {
@@ -293,6 +298,13 @@ export const MultiDayEvent = memo(
       const segmentDays = segment.endDayIndex - segment.startDayIndex + 1;
       const remainingPercent =
         segmentDays > 1 ? ((segmentDays - 1) / segmentDays) * 100 : 0;
+      const isMultiDayTimedStart =
+        !isAllDayEvent && segment.isFirstSegment && segmentDays > 1;
+
+      // For multi-day timed start, we want to limit the title to the first day's cell width minus the time display space.
+      // 100 / segmentDays is the width of exactly one day relative to the full segment width.
+      const firstDayPercent = 100 / segmentDays;
+
       const startTimeStyle =
         segmentDays > 1
           ? {
@@ -314,9 +326,25 @@ export const MultiDayEvent = memo(
               }
             />
           )}
-          <div className='df-event-month-main'>
+          <div
+            className='df-event-month-main'
+            style={
+              isMultiDayTimedStart && !isMobile
+                ? {
+                    maxWidth: `calc(${firstDayPercent}% - 45px)`,
+                    overflow: 'hidden',
+                    WebkitMaskImage:
+                      'linear-gradient(to right, black 70%, transparent 100%)',
+                    maskImage:
+                      'linear-gradient(to right, black 70%, transparent 100%)',
+                    WebkitMaskRepeat: 'no-repeat',
+                    maskRepeat: 'no-repeat',
+                  }
+                : undefined
+            }
+          >
             <span
-              className={`df-event-month-title ${isMobile ? 'df-mobile-mask-fade' : ''}`}
+              className={`df-event-month-title ${isMobile || isMultiDayTimedStart ? 'df-mobile-mask-fade' : ''}`}
               style={isMobile ? mobileFadeStyle : undefined}
             >
               {titleText}
