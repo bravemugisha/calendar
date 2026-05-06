@@ -35,6 +35,7 @@ export const useWeekViewSwipe = ({
   const isHorizontalSwipe = useRef(false);
   const liveSwipeOffsetRef = useRef(0);
   const activePointerIdRef = useRef<number | null>(null);
+  const hasCapturedPointerRef = useRef(false);
 
   useEffect(() => {
     if (!isSlidingView) return;
@@ -85,6 +86,7 @@ export const useWeekViewSwipe = ({
       };
       isHorizontalSwipe.current = false;
       liveSwipeOffsetRef.current = 0;
+      hasCapturedPointerRef.current = false;
       setIsTransitioning(false);
     };
 
@@ -104,6 +106,13 @@ export const useWeekViewSwipe = ({
         Math.abs(deltaX) > Math.abs(deltaY)
       ) {
         isHorizontalSwipe.current = true;
+        if (
+          activePointerIdRef.current !== null &&
+          !hasCapturedPointerRef.current
+        ) {
+          scroller.setPointerCapture?.(activePointerIdRef.current);
+          hasCapturedPointerRef.current = true;
+        }
       }
 
       if (!isHorizontalSwipe.current) return;
@@ -194,7 +203,6 @@ export const useWeekViewSwipe = ({
       if (e.pointerType === 'touch' || e.button !== 0) return;
 
       activePointerIdRef.current = e.pointerId;
-      scroller.setPointerCapture?.(e.pointerId);
       startSwipe(e.clientX, e.clientY);
     };
 
@@ -209,18 +217,24 @@ export const useWeekViewSwipe = ({
     const handleScrollerPointerEnd = (e: PointerEvent) => {
       if (activePointerIdRef.current !== e.pointerId) return;
 
-      scroller.releasePointerCapture?.(e.pointerId);
+      if (hasCapturedPointerRef.current) {
+        scroller.releasePointerCapture?.(e.pointerId);
+      }
+      hasCapturedPointerRef.current = false;
       activePointerIdRef.current = null;
       endSwipe();
     };
 
     scroller.addEventListener('touchstart', handleScrollerTouchStart, {
+      capture: true,
       passive: true,
     });
     scroller.addEventListener('touchmove', handleScrollerTouchMove, {
+      capture: true,
       passive: false,
     });
     scroller.addEventListener('touchend', handleScrollerTouchEnd, {
+      capture: true,
       passive: true,
     });
     scroller.addEventListener('pointerdown', handleScrollerPointerDown);
@@ -229,9 +243,13 @@ export const useWeekViewSwipe = ({
     scroller.addEventListener('pointercancel', handleScrollerPointerEnd);
 
     return () => {
-      scroller.removeEventListener('touchstart', handleScrollerTouchStart);
-      scroller.removeEventListener('touchmove', handleScrollerTouchMove);
-      scroller.removeEventListener('touchend', handleScrollerTouchEnd);
+      scroller.removeEventListener(
+        'touchstart',
+        handleScrollerTouchStart,
+        true
+      );
+      scroller.removeEventListener('touchmove', handleScrollerTouchMove, true);
+      scroller.removeEventListener('touchend', handleScrollerTouchEnd, true);
       scroller.removeEventListener('pointerdown', handleScrollerPointerDown);
       scroller.removeEventListener('pointermove', handleScrollerPointerMove);
       scroller.removeEventListener('pointerup', handleScrollerPointerEnd);
