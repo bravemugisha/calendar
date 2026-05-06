@@ -41,6 +41,10 @@ const createApp = () =>
   });
 
 describe('MobileEventDrawer', () => {
+  beforeAll(() => {
+    window.scrollTo = jest.fn();
+  });
+
   it('hydrates notes and toggles start date expander state', () => {
     const app = createApp();
     const draftEvent = {
@@ -71,5 +75,30 @@ describe('MobileEventDrawer', () => {
     );
 
     expect(expandedCalendar).not.toBeNull();
+  });
+
+  it('locks background scroll when open and restores it when closed', () => {
+    const app = createApp();
+    const draftEvent = app.getEvents()[0];
+
+    const { unmount } = render(
+      <MobileEventDrawer
+        isOpen
+        onClose={jest.fn()}
+        onSave={jest.fn()}
+        onEventDelete={jest.fn()}
+        draftEvent={draftEvent}
+        app={app}
+      />
+    );
+
+    expect(document.body.style.position).toBe('fixed');
+    expect(document.body.style.overflow).toBe('hidden');
+
+    unmount();
+
+    expect(document.body.style.position).toBe('');
+    expect(document.body.style.overflow).toBe('');
+    expect(window.scrollTo).toHaveBeenCalled();
   });
 });

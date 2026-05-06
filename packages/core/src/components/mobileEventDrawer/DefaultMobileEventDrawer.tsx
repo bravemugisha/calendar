@@ -120,22 +120,35 @@ export const MobileEventDrawer = ({
   // Prevent background scroll
   useEffect(() => {
     if (isOpen) {
-      // Robust lock for iOS
-      document.body.style.overflow = 'hidden';
-      document.documentElement.style.overflow = 'hidden';
+      const scrollY = window.scrollY;
+      // Robust lock for iOS & preserve scroll position
+      document.body.style.top = `-${scrollY}px`;
       document.body.style.position = 'fixed';
       document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
     } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+
+      if (scrollY) {
+        window.scrollTo(0, Number.parseInt(scrollY || '0', 10) * -1);
+      }
     }
     return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
       document.documentElement.style.overflow = '';
-      document.body.style.position = '';
-      document.body.style.width = '';
+      if (scrollY) {
+        window.scrollTo(0, Number.parseInt(scrollY || '0', 10) * -1);
+      }
     };
   }, [isOpen]);
 

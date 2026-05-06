@@ -6,14 +6,14 @@ export interface ResponsiveResult {
 
 /**
  * Tracks viewport width and returns whether the current breakpoint is mobile
- * (≤768 px).  Subscribes to window resize to stay current.
+ * (≤1024 px).  Subscribes to window resize to stay current.
  */
 export function useResponsive(): ResponsiveResult {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.matchMedia('(max-width: 768px)').matches);
+      setIsMobile(window.matchMedia('(max-width: 1024px)').matches);
     };
     checkMobile();
     window.addEventListener('resize', checkMobile);
