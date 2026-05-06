@@ -1,0 +1,130 @@
+---
+title: 资源网格
+description: DayFlow Pro 垂直资源网格视图，支持按资源分列、日期分组模式和基于拖拽的调度交互。
+status: pro
+---
+
+# 资源网格 (Resource Grid)
+
+`@dayflow-pro/resource-grid` 提供了一个垂直调度网格，其中时间从上向下流动，资源被渲染为列。它非常适合预订房间、设备、工作室、办公位或管理员工排班。
+
+试用[在线演示](https://pro.dayflow.studio)
+
+## 安装
+
+<PackageTabs pkg='@dayflow-pro/resource-grid' />
+
+有关 DayFlow Pro 的安装步骤，请参阅 [Pro 安装](/docs/introduction/pro-installation)。
+
+## 基本用法
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createResourceGridView } from '@dayflow-pro/resource-grid';
+
+function App() {
+  const calendar = useCalendarApp({
+    views: [
+      createResourceGridView({
+        mode: 'resourceView',
+        resources: [
+          { id: 'room-a', title: 'Room A' },
+          { id: 'room-b', title: 'Room B' },
+        ],
+        visibleDays: 3,
+        hourHeight: 72,
+        firstHour: 8,
+        lastHour: 20,
+      }),
+    ],
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
+## 视图模式
+
+| 模式              | 描述                                   |
+| :---------------- | :------------------------------------- |
+| `resourceView`    | 资源是主要列，日期在每个资源内部重复。 |
+| `resourcesByDate` | 日期是主要列，资源在每个日期内部重复。 |
+
+软件包默认配置为：
+
+```ts
+{
+  visibleDays: 7,
+  showWeekend: true,
+  onlyShowEventDays: false,
+  dayWidth: 120,
+  hourHeight: 72,
+  firstHour: 0,
+  lastHour: 24,
+  stickyHeaders: true,
+}
+```
+
+## 资源与事件模型
+
+资源模型设计得很简单：
+
+```ts
+type Resource = {
+  id: string;
+  title: string;
+  avatar?: string;
+  color?: string;
+  meta?: Record<string, unknown>;
+};
+```
+
+事件可以直接存储 `resourceId`，也可以通过回调解析：
+
+```tsx
+const event = {
+  id: 'booking-1',
+  title: 'Studio recording',
+  start: new Date(2026, 4, 8, 10, 0),
+  end: new Date(2026, 4, 8, 12, 0),
+  resourceId: 'room-a',
+};
+```
+
+解析顺序为：
+
+1. 如果提供了 `getResourceId(event)`，则使用它
+2. `event.resourceId`
+3. `event.calendarId`
+
+## 过滤与可见性
+
+网格可以过滤资源和日期：
+
+| 属性                                  | 类型                                | 备注                           |
+| :------------------------------------ | :---------------------------------- | :----------------------------- |
+| `visibleResourceIds`                  | `string[]`                          | 将网格限制在特定的资源子集内。 |
+| `isResourceVisible`                   | `(resource) => boolean`             | 自定义谓词，用于完全隐藏资源。 |
+| `syncResourceVisibilityWithCalendars` | `boolean`                           | 自动跟随日历可见性。           |
+| `getCalendarIdForResource`            | `(resource) => string \| undefined` | 覆盖资源到日历的映射。         |
+| `showWeekend`                         | `boolean`                           | 包含或排除周末。               |
+| `onlyShowEventDays`                   | `boolean`                           | 移除没有匹配事件的可见日期。   |
+
+启用日历同步时，回退映射为 `resource.meta?.calendarId ?? resource.id`。
+
+如果 `onlyShowEventDays` 移除了当前范围内的所有日期，视图将回退到普通日期范围，而不是渲染一个空网格。
+
+## 布局配置
+
+| 属性                 | 类型                              | 备注                               |
+| :------------------- | :-------------------------------- | :--------------------------------- |
+| `license`            | `PackageLicenseConfig`            | 当你不使用全局注册时的可选覆盖项。 |
+| `visibleDays`        | `number`                          | 从当前日期起生成的显示天数。       |
+| `hourHeight`         | `number`                          | 每小时行的高度（像素）。           |
+| `firstHour`          | `number`                          | 第一个可见小时。                   |
+| `lastHour`           | `number`                          | 最后一个可见小时。                 |
+| `dayWidth`           | `number`                          | 每列使用的基础宽度。               |
+| `stickyHeaders`      | `boolean`                         | 滚动时保持标题固定。               |
+| `initialScrollState` | `{ left?: number; top?: number }` | 设置初始滚动位置。                 |
+
+当视口宽度大于配置的内容宽度且当前模式允许时，实现也会自动拉伸列。

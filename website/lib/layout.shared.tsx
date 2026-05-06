@@ -2,6 +2,7 @@ import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared';
 import Image from 'next/image';
 
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { Badge } from '@/components/ui/badge';
 
 export const gitConfig = {
   user: 'dayflow-js',
@@ -10,6 +11,7 @@ export const gitConfig = {
 };
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const PRO_URL = 'https://pro.dayflow.studio';
 
 export const sidebarTabs = [
   {
@@ -19,6 +21,19 @@ export const sidebarTabs = [
       <Image
         src={`${BASE}/logo.png`}
         alt='DayFlow logo'
+        width={16}
+        height={16}
+        className='size-4'
+      />
+    ),
+  },
+  {
+    title: 'Calendar Pro',
+    url: PRO_URL,
+    icon: (
+      <Image
+        src={`${BASE}/pro-logo.png`}
+        alt='DayFlow Pro logo'
         width={16}
         height={16}
         className='size-4'
@@ -74,6 +89,29 @@ const NavTitle = (
   </span>
 );
 
+const ProLink = (
+  <a
+    href={PRO_URL}
+    target='_blank'
+    rel='noopener noreferrer'
+    className='inline-flex items-center gap-2 text-sm font-medium text-slate-600 transition-colors hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+  >
+    <Image
+      src={`${BASE}/pro-logo.png`}
+      alt='DayFlow Pro logo'
+      width={66}
+      height={66}
+      className='h-6 w-auto'
+    />
+    <Badge
+      variant='outline'
+      className='border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold tracking-[0.16em] text-amber-700 uppercase dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200'
+    >
+      Pro
+    </Badge>
+  </a>
+);
+
 const githubUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}`;
 
 export function baseOptions(): BaseLayoutProps {
@@ -83,9 +121,13 @@ export function baseOptions(): BaseLayoutProps {
     },
     links: [
       {
-        text: 'Blossom Picker',
+        text: '🌸 Blossom Color Picker',
         url: 'https://blossom.dayflow.studio',
         external: true,
+      },
+      {
+        type: 'custom',
+        children: ProLink,
       },
       {
         type: 'icon',

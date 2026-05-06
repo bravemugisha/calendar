@@ -15,6 +15,7 @@ import {
   createWeekView,
   createDayView,
   createYearView,
+  createAgendaView,
   UseCalendarAppReturn,
 } from '@dayflow/react';
 import { getWebsiteCalendars } from '@examples/utils/palette';
@@ -161,6 +162,7 @@ const DefaultCalendarExample: React.FC<{
         startOfWeek: 7,
         showEventDots: true,
       }),
+      createAgendaView({}),
     ],
     [secondaryTz]
   );

@@ -1,0 +1,130 @@
+---
+title: Resource Grid
+description: DayFlow Pro vertical resource grid view with per-resource columns, date grouping modes, and drag-based scheduling interactions.
+status: pro
+---
+
+# Resource Grid
+
+`@dayflow-pro/resource-grid` provides a vertical scheduling grid where time runs top to bottom and resources are rendered as columns. It works well for booking rooms, equipment, studios, desks, or staff shifts.
+
+Try the [live demo](https://pro.dayflow.studio)
+
+## Installation
+
+<PackageTabs pkg='@dayflow-pro/resource-grid' />
+
+Refer to the [Pro Installation](/docs/introduction/pro-installation) guide for installation steps.
+
+## Basic usage
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createResourceGridView } from '@dayflow-pro/resource-grid';
+
+function App() {
+  const calendar = useCalendarApp({
+    views: [
+      createResourceGridView({
+        mode: 'resourceView',
+        resources: [
+          { id: 'room-a', title: 'Room A' },
+          { id: 'room-b', title: 'Room B' },
+        ],
+        visibleDays: 3,
+        hourHeight: 72,
+        firstHour: 8,
+        lastHour: 20,
+      }),
+    ],
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
+## View modes
+
+| Mode              | Description                                                                  |
+| :---------------- | :--------------------------------------------------------------------------- |
+| `resourceView`    | Resources are the primary columns, with dates repeated inside each resource. |
+| `resourcesByDate` | Dates are the primary columns, with resources repeated inside each date.     |
+
+The package default config is:
+
+```ts
+{
+  visibleDays: 7,
+  showWeekend: true,
+  onlyShowEventDays: false,
+  dayWidth: 120,
+  hourHeight: 72,
+  firstHour: 0,
+  lastHour: 24,
+  stickyHeaders: true,
+}
+```
+
+## Resource and event model
+
+Resources are intentionally simple:
+
+```ts
+type Resource = {
+  id: string;
+  title: string;
+  avatar?: string;
+  color?: string;
+  meta?: Record<string, unknown>;
+};
+```
+
+Events can either store `resourceId` directly or resolve it through a callback:
+
+```tsx
+const event = {
+  id: 'booking-1',
+  title: 'Studio recording',
+  start: new Date(2026, 4, 8, 10, 0),
+  end: new Date(2026, 4, 8, 12, 0),
+  resourceId: 'room-a',
+};
+```
+
+Resolution order is:
+
+1. `getResourceId(event)` if provided
+2. `event.resourceId`
+3. `event.calendarId`
+
+## Filtering and visibility
+
+The grid can filter both resources and days:
+
+| Property                              | Type                                | Notes                                              |
+| :------------------------------------ | :---------------------------------- | :------------------------------------------------- |
+| `visibleResourceIds`                  | `string[]`                          | Restricts the grid to a specific resource subset.  |
+| `isResourceVisible`                   | `(resource) => boolean`             | Custom predicate to hide resources entirely.       |
+| `syncResourceVisibilityWithCalendars` | `boolean`                           | Follows calendar visibility automatically.         |
+| `getCalendarIdForResource`            | `(resource) => string \| undefined` | Overrides resource-to-calendar mapping.            |
+| `showWeekend`                         | `boolean`                           | Includes or excludes weekend days.                 |
+| `onlyShowEventDays`                   | `boolean`                           | Removes visible days that have no matching events. |
+
+When calendar syncing is enabled, the fallback mapping is `resource.meta?.calendarId ?? resource.id`.
+
+If `onlyShowEventDays` removes every day from the current range, the view falls back to the normal date range instead of rendering an empty grid.
+
+## Layout configuration
+
+| Property             | Type                              | Notes                                                      |
+| :------------------- | :-------------------------------- | :--------------------------------------------------------- |
+| `license`            | `PackageLicenseConfig`            | Optional override when you do not use global registration. |
+| `visibleDays`        | `number`                          | Number of days generated from the current date.            |
+| `hourHeight`         | `number`                          | Height of one hour row in pixels.                          |
+| `firstHour`          | `number`                          | First visible hour.                                        |
+| `lastHour`           | `number`                          | Last visible hour.                                         |
+| `dayWidth`           | `number`                          | Base width used for each column.                           |
+| `stickyHeaders`      | `boolean`                         | Keeps headers pinned while scrolling.                      |
+| `initialScrollState` | `{ left?: number; top?: number }` | Sets the initial scroll position.                          |
+
+The implementation also stretches columns automatically when the viewport is wider than the configured content and the current mode allows it.

@@ -1,0 +1,207 @@
+---
+title: Resource Timeline
+description: DayFlow Pro horizontal resource timeline view with grouped resources, milestone rendering, view switching, and scheduler-style interactions.
+status: pro
+---
+
+# Resource Timeline
+
+`@dayflow-pro/resource-timeline` adds a scheduler-style horizontal timeline to DayFlow. Time flows left to right, each resource gets its own row, and the view is designed for planning work across people, rooms, projects, or equipment.
+
+Try the [live demo](https://pro.dayflow.studio)
+
+Compared with the built-in calendar views, Resource Timeline is optimized for:
+
+- Long-running tasks and project plans
+- Resource allocation across multiple lanes
+- Milestones and progress tracking
+- Hierarchical or grouped resource lists
+
+## Installation
+
+<PackageTabs pkg='@dayflow-pro/resource-timeline' />
+
+Refer to the [Pro Installation](/docs/introduction/pro-installation) guide for installation steps.
+
+## Basic usage
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createResourceTimelineView } from '@dayflow-pro/resource-timeline';
+
+function App() {
+  const calendar = useCalendarApp({
+    views: [
+      createResourceTimelineView({
+        resources: [
+          {
+            id: 'eng-alice',
+            name: 'Alice Chen',
+            groupId: 'engineering',
+            groupName: 'Engineering',
+            subtitle: 'Frontend',
+          },
+          {
+            id: 'eng-bob',
+            name: 'Bob Torres',
+            groupId: 'engineering',
+            groupName: 'Engineering',
+            subtitle: 'Platform',
+          },
+        ],
+        defaultView: 'week',
+        height: 640,
+        getResourceId: event =>
+          (event as { resourceId?: string }).resourceId ?? event.calendarId,
+      }),
+    ],
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
+## Timeline modes
+
+| Mode      | Description                             |
+| :-------- | :-------------------------------------- |
+| `day`     | One day with hour-based columns.        |
+| `week`    | One week with day-based columns.        |
+| `month`   | One month with day-based columns.       |
+| `quarter` | Three months with week/month groupings. |
+| `year`    | A full year for roadmap-style planning. |
+
+Use `defaultView` to choose the initial mode. You can also control how switching is rendered through `viewSwitcherMode`, which supports `buttons`, `select`, and `filter`.
+
+## Resource model
+
+Resources are plain objects. The source code supports more than just `id` and `name`:
+
+```ts
+type Resource = {
+  id: string;
+  name: string;
+  parentId?: string;
+  collapsed?: boolean;
+  groupId?: string;
+  groupName?: string;
+  order?: number;
+  subtitle?: string;
+  avatar?: string;
+  color?: string;
+  style?: {
+    colors: { color: string; textColor?: string };
+    darkColors?: { color: string; textColor?: string };
+    opacity?: number;
+    borderRadius?: number;
+  };
+  meta?: Record<string, unknown>;
+};
+```
+
+Useful fields:
+
+- `groupId` and `groupName` let you organize resources into grouped sections.
+- `parentId` and `collapsed` support hierarchical resource trees.
+- `subtitle`, `avatar`, `color`, and `style` let you enrich the sidebar presentation.
+- `meta` is often used to store an external identifier such as `calendarId`.
+
+## Event-to-resource binding
+
+The view resolves each event's row in this order:
+
+1. `getResourceId(event)` if provided
+2. `event.resourceId`
+3. `event.meta?.resourceId`
+4. `event.calendarId`
+
+That means you can either store `resourceId` directly on your event objects or map existing DayFlow events into resources with a callback.
+
+```tsx
+const event = {
+  id: 'task-1',
+  title: 'Build export flow',
+  start: new Date(2026, 4, 10, 9, 0),
+  end: new Date(2026, 4, 12, 18, 0),
+  resourceId: 'eng-alice',
+  progress: 65,
+};
+```
+
+## Milestones and event styling
+
+Events whose `start` and `end` are equal are rendered as milestones automatically.
+
+```tsx
+const milestone = {
+  id: 'release-gate',
+  title: 'Release approval',
+  start: new Date(2026, 4, 14, 10, 0),
+  end: new Date(2026, 4, 14, 10, 0),
+  resourceId: 'eng-bob',
+};
+```
+
+| Property                | Type                             | Notes                                                                         |
+| :---------------------- | :------------------------------- | :---------------------------------------------------------------------------- |
+| `milestoneLabelDisplay` | `'hover' \| 'always'`            | Controls whether milestone labels appear only on hover or stay visible.       |
+| `milestoneLaneBehavior` | `'smart' \| 'overlay'`           | Controls whether milestones share normal lanes when possible or overlay them. |
+| `getEventType`          | `(event) => ResourceEventType`   | Maps events to timeline-specific event types.                                 |
+| `getEventTooltip`       | `(event) => string \| undefined` | Provides tooltip text for an event.                                           |
+| `styleRegistry`         | `Record<string, EventStyle>`     | Registers custom style presets.                                               |
+| `getEventStyleId`       | `(event) => string \| undefined` | Selects a style preset for an event.                                          |
+
+## ResourceTimelineViewConfig
+
+### Core
+
+| Property           | Type                                      | Notes                                                      |
+| :----------------- | :---------------------------------------- | :--------------------------------------------------------- |
+| `resources`        | `Resource[]`                              | Required resource list for the timeline.                   |
+| `license`          | `PackageLicenseConfig`                    | Optional override when you do not use global registration. |
+| `defaultView`      | `day \| week \| month \| quarter \| year` | Initial timeline scale.                                    |
+| `views`            | `SchedulerTimelineView[]`                 | Override the available switchable timeline modes.          |
+| `viewType`         | `ViewType \| string`                      | Custom view type when integrating with advanced hosts.     |
+| `viewSwitcherMode` | `'buttons' \| 'select' \| 'filter'`       | Controls the mode switcher UI.                             |
+| `height`           | `number \| string`                        | Height of the rendered view.                               |
+
+### Layout
+
+| Property                | Type     | Notes                                              |
+| :---------------------- | :------- | :------------------------------------------------- |
+| `resourcePanelWidth`    | `number` | Preferred sidebar width.                           |
+| `resourcePanelMinWidth` | `number` | Minimum sidebar width.                             |
+| `resourcePanelMaxWidth` | `number` | Maximum sidebar width.                             |
+| `rowHeight`             | `number` | Height of each resource row.                       |
+| `headerHeight`          | `number` | Timeline header height.                            |
+| `hourWidth`             | `number` | Width used by the day mode hour scale.             |
+| `weekDayWidth`          | `number` | Width per day in week mode.                        |
+| `dayWidth`              | `number` | Width per day in month mode.                       |
+| `monthDayWidth`         | `number` | Width per day when rendering dense monthly ranges. |
+| `quarterMonthWidth`     | `number` | Width per month in quarter mode.                   |
+| `yearCellWidth`         | `number` | Width per unit in year mode.                       |
+| `yearRangePast`         | `number` | Extra year range before the current year.          |
+| `yearRangeFuture`       | `number` | Extra year range after the current year.           |
+| `overscanRows`          | `number` | Extra rows rendered outside the viewport.          |
+| `bufferCells`           | `number` | Extra time cells rendered for smoother scrolling.  |
+
+### Resource visibility and syncing
+
+| Property                              | Type                                | Notes                                                      |
+| :------------------------------------ | :---------------------------------- | :--------------------------------------------------------- |
+| `resourceSorter`                      | `(left, right) => number`           | Custom row ordering.                                       |
+| `syncResourceVisibilityWithCalendars` | `boolean`                           | Hides resource rows when their mapped calendar is hidden.  |
+| `getCalendarIdForResource`            | `(resource) => string \| undefined` | Overrides how a resource maps to calendar visibility.      |
+| `onResourcesUpdate`                   | `(resources) => void`               | Fired when resources are reordered or collapsed in the UI. |
+
+When calendar syncing is enabled, the fallback resource-to-calendar mapping is `resource.meta?.calendarId ?? resource.id`.
+
+## Focus, sidebar, and integrations
+
+The timeline exposes a few integration points that are easy to miss:
+
+- `focusRequest` lets host apps programmatically move the timeline to a specific event and date.
+- `sidebar` passes through scheduler sidebar configuration such as context-menu actions.
+- `customDetailPanelContent` and `customEventDetailDialog` can be passed through the view props when you need custom scheduler detail UIs.
+- `timeFormat` supports `24h` and `12h`.
+- `resizeTimeFormat` customizes the label shown while resizing events.

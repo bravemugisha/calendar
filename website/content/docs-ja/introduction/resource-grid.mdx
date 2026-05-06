@@ -1,0 +1,130 @@
+---
+title: リソースグリッド
+description: リソースごとの列、日付グループ化モード、およびドラッグベースのスケジューリングインタラクションを備えた DayFlow Pro 垂直リソースグリッドビュー。
+status: pro
+---
+
+# リソースグリッド (Resource Grid)
+
+`@dayflow-pro/resource-grid` は、時間が上から下に流れ、リソースが列としてレンダリングされる垂直スケジューリンググリッドを提供します。これは、会議室、設備、スタジオ、デスクの予約、またはスタッフのシフト管理に適しています。
+
+[ライブデモ](https://pro.dayflow.studio)を試す
+
+## インストール
+
+<PackageTabs pkg='@dayflow-pro/resource-grid' />
+
+DayFlow Pro のインストール手順については、[Pro のインストール](/docs/introduction/pro-installation)を参照してください。
+
+## 基本的な使い方
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createResourceGridView } from '@dayflow-pro/resource-grid';
+
+function App() {
+  const calendar = useCalendarApp({
+    views: [
+      createResourceGridView({
+        mode: 'resourceView',
+        resources: [
+          { id: 'room-a', title: 'Room A' },
+          { id: 'room-b', title: 'Room B' },
+        ],
+        visibleDays: 3,
+        hourHeight: 72,
+        firstHour: 8,
+        lastHour: 20,
+      }),
+    ],
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
+## ビューモード
+
+| モード            | 説明                                                           |
+| :---------------- | :------------------------------------------------------------- |
+| `resourceView`    | リソースが主要な列となり、各リソース内で日付が繰り返されます。 |
+| `resourcesByDate` | 日付が主要な列となり、各日付内でリソースが繰り返されます。     |
+
+パッケージのデフォルト設定は以下の通りです。
+
+```ts
+{
+  visibleDays: 7,
+  showWeekend: true,
+  onlyShowEventDays: false,
+  dayWidth: 120,
+  hourHeight: 72,
+  firstHour: 0,
+  lastHour: 24,
+  stickyHeaders: true,
+}
+```
+
+## リソースとイベントモデル
+
+リソースは意図的にシンプルに設計されています。
+
+```ts
+type Resource = {
+  id: string;
+  title: string;
+  avatar?: string;
+  color?: string;
+  meta?: Record<string, unknown>;
+};
+```
+
+イベントは `resourceId` を直接保持するか、コールバックを通じて解決できます。
+
+```tsx
+const event = {
+  id: 'booking-1',
+  title: 'Studio recording',
+  start: new Date(2026, 4, 8, 10, 0),
+  end: new Date(2026, 4, 8, 12, 0),
+  resourceId: 'room-a',
+};
+```
+
+解決順序は以下の通りです。
+
+1. 提供されている場合は `getResourceId(event)`
+2. `event.resourceId`
+3. `event.calendarId`
+
+## フィルタリングと表示設定
+
+グリッドはリソースと日付の両方をフィルタリングできます。
+
+| プロパティ                            | 型                                  | 備考                                                 |
+| :------------------------------------ | :---------------------------------- | :--------------------------------------------------- |
+| `visibleResourceIds`                  | `string[]`                          | グリッドを特定のリソースサブセットに制限します。     |
+| `isResourceVisible`                   | `(resource) => boolean`             | リソースを完全に非表示にするためのカスタム述語。     |
+| `syncResourceVisibilityWithCalendars` | `boolean`                           | カレンダーの表示状態に自動的に従います。             |
+| `getCalendarIdForResource`            | `(resource) => string \| undefined` | リソースからカレンダーへのマッピングを上書きします。 |
+| `showWeekend`                         | `boolean`                           | 週末を含めるか除外するかを指定します。               |
+| `onlyShowEventDays`                   | `boolean`                           | 一致するイベントがない表示日を削除します。           |
+
+カレンダーの同期が有効な場合、フォールバックのマッピングは `resource.meta?.calendarId ?? resource.id` です。
+
+`onlyShowEventDays` によって現在の範囲からすべての日付が削除された場合、ビューは空のグリッドを表示する代わりに通常の日付範囲にフォールバックします。
+
+## レイアウト設定
+
+| プロパティ           | 型                                | 備考                                                 |
+| :------------------- | :-------------------------------- | :--------------------------------------------------- |
+| `license`            | `PackageLicenseConfig`            | グローバル登録を使用しない場合のオプションの上書き。 |
+| `visibleDays`        | `number`                          | 現在の日付から生成される日数。                       |
+| `hourHeight`         | `number`                          | 1 時間の行の高さ（ピクセル単位）。                   |
+| `firstHour`          | `number`                          | 最初に表示される時間。                               |
+| `lastHour`           | `number`                          | 最後に表示される時間。                               |
+| `dayWidth`           | `number`                          | 各列に使用される基本の幅。                           |
+| `stickyHeaders`      | `boolean`                         | スクロー中、ヘッダーを固定します。                   |
+| `initialScrollState` | `{ left?: number; top?: number }` | 初期のスクロール位置を設定します。                   |
+
+また、ビューポートが設定されたコンテンツよりも広く、現在のモードが許可している場合、実装により列が自動的に引き伸ばされます。

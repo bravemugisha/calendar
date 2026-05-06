@@ -1,0 +1,148 @@
+---
+title: 印刷プラグイン
+description: プレビュー、用紙サイズ設定、カレンダーフィルタリング、および複数の印刷用レイアウトを備えた DayFlow Pro の印刷およびエクスポートワークフロー。
+status: pro
+---
+
+# 印刷プラグイン (Print Plugin)
+
+`@dayflow-pro/plugin-print` は、DayFlow に組み込みの印刷ダイアログとプレビューフローを追加します。日、週、月、および 2 つの年間レイアウトをサポートし、ユーザーは用紙サイズや向きを選択できます。コンテキストに応じて、現在表示されているイベントセットまたは一致するすべてのイベントを印刷できます。
+
+[ライブデモ](https://pro.dayflow.studio)を試す
+
+## インストール
+
+<PackageTabs pkg='@dayflow-pro/plugin-print' />
+
+DayFlow Pro のインストール手順については、[Pro のインストール](/docs/introduction/pro-installation)を参照してください。
+
+## 基本的な使い方
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createPrintPlugin } from '@dayflow-pro/plugin-print';
+
+function App() {
+  const printPlugin = createPrintPlugin({
+    defaultOptions: {
+      miniCalendar: true,
+      calendarKeys: true,
+      textSize: 'medium',
+    },
+  });
+
+  const calendar = useCalendarApp({
+    plugins: [printPlugin],
+  });
+
+  return (
+    <>
+      <button onClick={() => printPlugin.api.open()}>印刷</button>
+      <DayFlowCalendar calendar={calendar} />
+    </>
+  );
+}
+```
+
+このプラグインは、カレンダーアプリに 2 つのヘルパーを直接インストールします。
+
+```tsx
+await calendar.openPrintDialog();
+await calendar.print();
+```
+
+## プラグインが提供するもの
+
+- `document.body` にレンダリングされる印刷プレビューダイアログ
+- `window.print()` を介したブラウザ標準の印刷
+- 日、週、月、および年間レイアウトのビュー選択
+- `calendarIds` によるカレンダーレベルのフィルタリング
+- 用紙サイズと向きの制御
+- プラグインがインストールされている間の Cmd/Ctrl + P ショートカットのサポート
+
+## サポートされている印刷ビュー
+
+| ビュー            | 備考                                                         |
+| :---------------- | :----------------------------------------------------------- |
+| `day`             | 選択した 1 日または複数日を印刷します。                      |
+| `week`            | 週間スタイルのレイアウトを印刷します。                       |
+| `month`           | 月間グリッドを印刷します。                                   |
+| `year-fixed-week` | 固定された週ごとの行を使用した年間概要。デフォルトは横向き。 |
+| `year-canvas`     | 縦向き出力に最適化された高密度な年間概要。                   |
+
+ダイアログが開くと、現在の DayFlow ビューから初期ビューが派生します。
+
+- 現在が月表示 -> `month`
+- 現在が週表示 -> `week`
+- 現在が日表示 -> `day`
+- 現在が年表示 -> `year-fixed-week`
+
+## プラグインの設定
+
+| プロパティ       | 型                              | デフォルト | 備考                                                     |
+| :--------------- | :------------------------------ | :--------- | :------------------------------------------------------- |
+| `enabled`        | `boolean`                       | `true`     | `false` に設定すると、インストールを完全に無効にします。 |
+| `defaultOptions` | `Partial<CalendarPrintOptions>` | —          | カスタム印刷オプションでダイアログをプリロードします。   |
+| `license`        | `PackageLicenseConfig`          | —          | グローバル登録を使用しない場合のオプションの上書き。     |
+
+## CalendarPrintOptions
+
+| プロパティ      | 型                               | デフォルト | 備考                                                 |
+| :-------------- | :------------------------------- | :--------- | :--------------------------------------------------- |
+| `allDayEvents`  | `boolean`                        | `true`     | 終日イベントを含めます。                             |
+| `timedEvents`   | `boolean`                        | `true`     | 時間指定イベントを含めます。                         |
+| `miniCalendar`  | `boolean`                        | `true`     | 印刷ヘッダーにミニカレンダーを表示します。           |
+| `calendarKeys`  | `boolean`                        | `true`     | カレンダーの凡例を表示します。                       |
+| `blackAndWhite` | `boolean`                        | `false`    | カレンダーの色を使用せずにレンダリングします。       |
+| `textSize`      | `'small' \| 'medium' \| 'large'` | `medium`   | プレビューと印刷のタイポグラフィの密度を制御します。 |
+
+## CalendarPrintConfig
+
+印刷ダイアログを部分的な設定で事前シードまたは上書きできます。
+
+```ts
+type CalendarPrintConfig = {
+  view: 'month' | 'week' | 'day' | 'year-fixed-week' | 'year-canvas';
+  paper: 'A4' | 'Letter';
+  orientation?: 'portrait' | 'landscape';
+  startDate: Date;
+  endDate?: Date;
+  calendarIds: string[];
+  options: CalendarPrintOptions;
+};
+```
+
+ソースコードからの重要な動作:
+
+- `year-fixed-week` は強制的に `landscape`（横向き）になります。
+- `year-canvas` は強制的に `portrait`（縦向き）になります。
+- ダイアログは、ブラウザのネイティブ印刷 UI を開く前に `@page` ルールを注入します。
+- プレビューでは、印刷前にズームとパンがサポートされます。
+
+## 印刷スコープ
+
+ダイアログは常に同じイベントソースからプルするとは限りません。
+
+- 選択した印刷ビューが現在のカレンダービューと一致し、`startDate` がアプリの現在の日付と一致する場合、プレビューレンダリングは表示されているイベントセットに `app.getEvents()` を使用します。
+- それ以外の場合は `app.getAllEvents()` を使用し、現在画面にレンダリングされている範囲外の日付も印刷対象に含めることができます。
+
+これは内部的に `sourceScope: 'visible' | 'all'` として公開されています。
+
+## API
+
+`createPrintPlugin()` は、`api` オブジェクトを持つ通常の DayFlow プラグインを返します。
+
+```ts
+type PrintPluginApi = {
+  open: () => void;
+  close: () => void;
+  print: (config?: Partial<CalendarPrintConfig>) => void;
+};
+```
+
+備考:
+
+- `api.open()`: 印刷ダイアログを開きます。
+- `api.close()`: ダイアログがマウントされている場合に閉じます。
+- `api.print(config)`: 現在、これもダイアログを開きます。まだプレビューをバイパスしません。
+- プラグインは、インストールされると `Cmd/Ctrl + P` をグローバルにリッスンします。

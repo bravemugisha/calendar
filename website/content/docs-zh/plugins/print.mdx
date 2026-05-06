@@ -1,0 +1,148 @@
+---
+title: 打印插件
+description: DayFlow Pro 打印和导出工作流，支持预览、纸张尺寸、日历过滤和多种打印布局。
+status: pro
+---
+
+# 打印插件 (Print Plugin)
+
+`@dayflow-pro/plugin-print` 为 DayFlow 增加了内置的打印对话框和预览流程。它支持日、周、月以及两种年度布局，允许用户选择纸张尺寸和方向，并能根据上下文打印当前可见的事件集或所有匹配的事件。
+
+试用[在线演示](https://pro.dayflow.studio)
+
+## 安装
+
+<PackageTabs pkg='@dayflow-pro/plugin-print' />
+
+有关 DayFlow Pro 的安装步骤，请参阅 [Pro 安装](/docs/introduction/pro-installation)。
+
+## 基本用法
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createPrintPlugin } from '@dayflow-pro/plugin-print';
+
+function App() {
+  const printPlugin = createPrintPlugin({
+    defaultOptions: {
+      miniCalendar: true,
+      calendarKeys: true,
+      textSize: 'medium',
+    },
+  });
+
+  const calendar = useCalendarApp({
+    plugins: [printPlugin],
+  });
+
+  return (
+    <>
+      <button onClick={() => printPlugin.api.open()}>打印</button>
+      <DayFlowCalendar calendar={calendar} />
+    </>
+  );
+}
+```
+
+该插件还会在日历实例上直接安装两个辅助方法：
+
+```tsx
+await calendar.openPrintDialog();
+await calendar.print();
+```
+
+## 插件提供的功能
+
+- 渲染到 `document.body` 的打印预览对话框
+- 通过 `window.print()` 调用原生浏览器打印
+- 提供日、周、月和年度布局的视图选择
+- 通过 `calendarIds` 进行日历级别的过滤
+- 纸张尺寸和方向控制
+- 安装插件后支持 Cmd/Ctrl + P 快捷键
+
+## 支持的打印视图
+
+| 视图              | 备注                                       |
+| :---------------- | :----------------------------------------- |
+| `day`             | 打印一个或多个选定的日期。                 |
+| `week`            | 打印周样式的布局。                         |
+| `month`           | 打印月网格。                               |
+| `year-fixed-week` | 使用固定的每周行进行年度概览。默认为横向。 |
+| `year-canvas`     | 针对纵向输出优化的密集年度概览。           |
+
+对话框打开时，会根据当前的 DayFlow 视图派生其初始视图：
+
+- 当前为月视图 -> `month`
+- 当前为周视图 -> `week`
+- 当前为日视图 -> `day`
+- 当前为年视图 -> `year-fixed-week`
+
+## 插件配置
+
+| 属性             | 类型                            | 默认值 | 备注                               |
+| :--------------- | :------------------------------ | :----- | :--------------------------------- |
+| `enabled`        | `boolean`                       | `true` | 设置为 `false` 时完全禁用安装。    |
+| `defaultOptions` | `Partial<CalendarPrintOptions>` | —      | 预加载自定义打印选项。             |
+| `license`        | `PackageLicenseConfig`          | —      | 当你不使用全局注册时的可选覆盖项。 |
+
+## CalendarPrintOptions
+
+| 属性            | 类型                             | 默认值   | 备注                       |
+| :-------------- | :------------------------------- | :------- | :------------------------- |
+| `allDayEvents`  | `boolean`                        | `true`   | 包含全天事件。             |
+| `timedEvents`   | `boolean`                        | `true`   | 包含带时间事件。           |
+| `miniCalendar`  | `boolean`                        | `true`   | 在打印页眉中显示迷你日历。 |
+| `calendarKeys`  | `boolean`                        | `true`   | 显示日历图例。             |
+| `blackAndWhite` | `boolean`                        | `false`  | 渲染时不带日历颜色。       |
+| `textSize`      | `'small' \| 'medium' \| 'large'` | `medium` | 控制预览和打印的排版密度。 |
+
+## CalendarPrintConfig
+
+你可以使用部分配置预设或覆盖打印对话框：
+
+```ts
+type CalendarPrintConfig = {
+  view: 'month' | 'week' | 'day' | 'year-fixed-week' | 'year-canvas';
+  paper: 'A4' | 'Letter';
+  orientation?: 'portrait' | 'landscape';
+  startDate: Date;
+  endDate?: Date;
+  calendarIds: string[];
+  options: CalendarPrintOptions;
+};
+```
+
+源码中的重要行为：
+
+- `year-fixed-week` 强制使用 `landscape`（横向）。
+- `year-canvas` 强制使用 `portrait`（纵向）。
+- 对话框在打开浏览器原生打印 UI 之前会注入 `@page` 规则。
+- 预览支持在打印前进行缩放和移动。
+
+## 打印范围
+
+对话框并不总是从同一个事件源拉取数据：
+
+- 如果选择的打印视图与当前日历视图匹配，且 `startDate` 与应用当前日期匹配，预览渲染将使用 `app.getEvents()` 获取可见事件集。
+- 否则，它将使用 `app.getAllEvents()`，以便打印可以覆盖当前渲染屏幕之外的日期。
+
+这在内部公开为 `sourceScope: 'visible' | 'all'`。
+
+## API
+
+`createPrintPlugin()` 返回一个带有 `api` 对象的普通 DayFlow 插件：
+
+```ts
+type PrintPluginApi = {
+  open: () => void;
+  close: () => void;
+  print: (config?: Partial<CalendarPrintConfig>) => void;
+};
+```
+
+备注：
+
+- `api.open()` 打开打印对话框。
+- `api.close()` 关闭已挂载的对话框。
+- `api.print(config)` 目前也会打开对话框；暂不支持绕过预览直接打印。
+- 插件安装后会全局监听 `Cmd/Ctrl + P`。

@@ -1,0 +1,207 @@
+---
+title: リソースタイムライン
+description: グループ化されたリソース、マイルストーンのレンダリング、表示の切り替え、およびスケジューラ形式のインタラクションを備えた DayFlow Pro 水平リソースタイムラインビュー。
+status: pro
+---
+
+# リソースタイムライン (Resource Timeline)
+
+`@dayflow-pro/resource-timeline` は、DayFlow にスケジューラ形式の水平タイムラインを追加します。時間は左から右に流れ、各リソースは独自の行を持ちます。このビューは、人、会議室、プロジェクト、または機器にわたる作業の計画に最適化されています。
+
+[ライブデモ](https://pro.dayflow.studio)を試す
+
+組み込みのカレンダービューと比較して、リソースタイムラインは以下の用途に最適化されています。
+
+- 長期にわたるタスクとプロジェクト計画
+- 複数のレーンにわたるリソース割り当て
+- マイルストーンと進捗管理
+- 階層化またはグループ化されたリソースリスト
+
+## インストール
+
+<PackageTabs pkg='@dayflow-pro/resource-timeline' />
+
+DayFlow Pro のインストール手順については、[Pro のインストール](/docs/introduction/pro-installation)を参照してください。
+
+## 基本的な使い方
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createResourceTimelineView } from '@dayflow-pro/resource-timeline';
+
+function App() {
+  const calendar = useCalendarApp({
+    views: [
+      createResourceTimelineView({
+        resources: [
+          {
+            id: 'eng-alice',
+            name: 'Alice Chen',
+            groupId: 'engineering',
+            groupName: 'Engineering',
+            subtitle: 'Frontend',
+          },
+          {
+            id: 'eng-bob',
+            name: 'Bob Torres',
+            groupId: 'engineering',
+            groupName: 'Engineering',
+            subtitle: 'Platform',
+          },
+        ],
+        defaultView: 'week',
+        height: 640,
+        getResourceId: event =>
+          (event as { resourceId?: string }).resourceId ?? event.calendarId,
+      }),
+    ],
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
+## タイムラインモード
+
+| モード    | 説明                                       |
+| :-------- | :----------------------------------------- |
+| `day`     | 時間ベースの列を持つ 1 日。                |
+| `week`    | 日ベースの列を持つ 1 週間。                |
+| `month`   | 日ベースの列を持つ 1 か月。                |
+| `quarter` | 週/月でグループ化された 3 か月。           |
+| `year`    | ロードマップ形式の計画のためのフルイヤー。 |
+
+`defaultView` を使用して初期モードを選択します。また、`viewSwitcherMode` を通じて切り替えのレンダリング方法を制御でき、`buttons`、`select`、`filter` をサポートしています。
+
+## リソースモデル
+
+リソースはプレーンなオブジェクトです。ソースコードでは `id` と `name` 以外にも多くのフィールドをサポートしています。
+
+```ts
+type Resource = {
+  id: string;
+  name: string;
+  parentId?: string;
+  collapsed?: boolean;
+  groupId?: string;
+  groupName?: string;
+  order?: number;
+  subtitle?: string;
+  avatar?: string;
+  color?: string;
+  style?: {
+    colors: { color: string; textColor?: string };
+    darkColors?: { color: string; textColor?: string };
+    opacity?: number;
+    borderRadius?: number;
+  };
+  meta?: Record<string, unknown>;
+};
+```
+
+便利なフィールド:
+
+- `groupId` と `groupName`: リソースをグループ化されたセクションに整理できます。
+- `parentId` と `collapsed`: 階層的なリソースツリーをサポートします。
+- `subtitle`、`avatar`、`color`、`style`: サイドバーの表示を豊かにします。
+- `meta`: `calendarId` などの外部識別子を保存するために頻繁に使用されます。
+
+## イベントとリソースの紐付け
+
+このビューは、各イベントの行を次の順序で解決します。
+
+1. 提供されている場合は `getResourceId(event)`
+2. `event.resourceId`
+3. `event.meta?.resourceId`
+4. `event.calendarId`
+
+つまり、イベントオブジェクトに直接 `resourceId` を保存するか、コールバックを使用して既存の DayFlow イベントをリソースにマップすることができます。
+
+```tsx
+const event = {
+  id: 'task-1',
+  title: 'Build export flow',
+  start: new Date(2026, 4, 10, 9, 0),
+  end: new Date(2026, 4, 12, 18, 0),
+  resourceId: 'eng-alice',
+  progress: 65,
+};
+```
+
+## マイルストーンとイベントのスタイリング
+
+`start` と `end` が等しいイベントは、自動的にマイルストーンとしてレンダリングされます。
+
+```tsx
+const milestone = {
+  id: 'release-gate',
+  title: 'Release approval',
+  start: new Date(2026, 4, 14, 10, 0),
+  end: new Date(2026, 4, 14, 10, 0),
+  resourceId: 'eng-bob',
+};
+```
+
+| プロパティ              | 型                               | 備考                                                                                   |
+| :---------------------- | :------------------------------- | :------------------------------------------------------------------------------------- |
+| `milestoneLabelDisplay` | `'hover' \| 'always'`            | マイルストーンのラベルをホバー時にのみ表示するか、常に表示するかを制御します。         |
+| `milestoneLaneBehavior` | `'smart' \| 'overlay'`           | マイルストーンが可能であれば通常のレーンを共有するか、オーバーレイするかを制御します。 |
+| `getEventType`          | `(event) => ResourceEventType`   | イベントをタイムライン固有のイベントタイプにマップします。                             |
+| `getEventTooltip`       | `(event) => string \| undefined` | イベントのツールチップテキストを提供します。                                           |
+| `styleRegistry`         | `Record<string, EventStyle>`     | カスタムスタイルのプリセットを登録します。                                             |
+| `getEventStyleId`       | `(event) => string \| undefined` | イベントのスタイルプリセットを選択します。                                             |
+
+## ResourceTimelineViewConfig
+
+### コア (Core)
+
+| プロパティ         | 型                                        | 備考                                                       |
+| :----------------- | :---------------------------------------- | :--------------------------------------------------------- |
+| `resources`        | `Resource[]`                              | タイムラインに必要なリソースリスト。                       |
+| `license`          | `PackageLicenseConfig`                    | グローバル登録を使用しない場合のオプションの上書き。       |
+| `defaultView`      | `day \| week \| month \| quarter \| year` | 初期のタイムラインスケール。                               |
+| `views`            | `SchedulerTimelineView[]`                 | 利用可能な切り替え可能なタイムラインモードを上書きします。 |
+| `viewType`         | `ViewType \| string`                      | 高度なホストと統合する場合のカスタムビュータイプ。         |
+| `viewSwitcherMode` | `'buttons' \| 'select' \| 'filter'`       | モード切り替え UI を制御します。                           |
+| `height`           | `number \| string`                        | レンダリングされるビューの高さ。                           |
+
+### レイアウト (Layout)
+
+| プロパティ              | 型       | 備考                                                           |
+| :---------------------- | :------- | :------------------------------------------------------------- |
+| `resourcePanelWidth`    | `number` | 推奨されるサイドバーの幅。                                     |
+| `resourcePanelMinWidth` | `number` | 最小サイドバー幅。                                             |
+| `resourcePanelMaxWidth` | `number` | 最大サイドバー幅。                                             |
+| `rowHeight`             | `number` | 各リソース行の高さ。                                           |
+| `headerHeight`          | `number` | タイムラインヘッダーの高さ。                                   |
+| `hourWidth`             | `number` | day モードの時間スケールで使用される幅。                       |
+| `weekDayWidth`          | `number` | week モードの 1 日あたりの幅。                                 |
+| `dayWidth`              | `number` | month モードの 1 日あたりの幅。                                |
+| `monthDayWidth`         | `number` | 高密度な月間範囲をレンダリングする際の 1 日あたりの幅。        |
+| `quarterMonthWidth`     | `number` | quarter モードの 1 か月あたりの幅。                            |
+| `yearCellWidth`         | `number` | year モードのユニットあたりの幅。                              |
+| `yearRangePast`         | `number` | 現在の年の前の追加の年範囲。                                   |
+| `yearRangeFuture`       | `number` | 現在の年の後の追加の年範囲。                                   |
+| `overscanRows`          | `number` | ビューポート外にレンダリングされる追加の行数。                 |
+| `bufferCells`           | `number` | スムーズなスクロールのためにレンダリングされる追加の時間セル。 |
+
+### リソースの表示と同期
+
+| プロパティ                            | 型                                  | 備考                                                                    |
+| :------------------------------------ | :---------------------------------- | :---------------------------------------------------------------------- |
+| `resourceSorter`                      | `(left, right) => number`           | カスタムの行の並び替え。                                                |
+| `syncResourceVisibilityWithCalendars` | `boolean`                           | マップされたカレンダーが非表示のときにリソース行を非表示にします。      |
+| `getCalendarIdForResource`            | `(resource) => string \| undefined` | リソースがカレンダーの表示にどのようにマップされるかを上書きします。    |
+| `onResourcesUpdate`                   | `(resources) => void`               | UI でリソースが並べ替えられたり、折りたたまれたりしたときに発生します。 |
+
+カレンダーの同期が有効な場合、フォールバックのリソースからカレンダーへのマッピングは `resource.meta?.calendarId ?? resource.id` です。
+
+## フォーカス、サイドバー、および統合
+
+タイムラインには、見落としやすい統合ポイントがいくつかあります。
+
+- `focusRequest`: ホストアプリがプログラムでタイムラインを特定のイベントや日付に移動できるようにします。
+- `sidebar`: コンテキストメニューアクションなどのスケジューラサイドバー設定を渡します。
+- `customDetailPanelContent` と `customEventDetailDialog`: カスタムのスケジューラ詳細 UI が必要な場合にビューの props を通じて渡すことができます。
+- `timeFormat`: `24h` と `12h` をサポートします。
+- `resizeTimeFormat`: イベントのサイズ変更中に表示されるラベルをカスタマイズします。

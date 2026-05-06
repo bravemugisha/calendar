@@ -1,0 +1,207 @@
+---
+title: 资源时间线
+description: DayFlow Pro 水平资源时间线视图，支持资源分组、里程碑渲染、视图切换和调度器风格的交互。
+status: pro
+---
+
+# 资源时间线 (Resource Timeline)
+
+`@dayflow-pro/resource-timeline` 为 DayFlow 增加了一个调度器风格的水平时间线。时间从左向右流动，每个资源拥有自己的行。该视图专门为人员、房间、项目或设备的跨资源工作规划而优化。
+
+试用[在线演示](https://pro.dayflow.studio)
+
+与内置的日历视图相比，资源时间线针对以下场景进行了优化：
+
+- 长期运行的任务和项目计划
+- 跨多个车道（Lane）的资源分配
+- 里程碑和进度跟踪
+- 分层或分组的资源列表
+
+## 安装
+
+<PackageTabs pkg='@dayflow-pro/resource-timeline' />
+
+有关 DayFlow Pro 的安装步骤，请参阅 [Pro 安装](/docs/introduction/pro-installation)。
+
+## 基本用法
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createResourceTimelineView } from '@dayflow-pro/resource-timeline';
+
+function App() {
+  const calendar = useCalendarApp({
+    views: [
+      createResourceTimelineView({
+        resources: [
+          {
+            id: 'eng-alice',
+            name: 'Alice Chen',
+            groupId: 'engineering',
+            groupName: 'Engineering',
+            subtitle: 'Frontend',
+          },
+          {
+            id: 'eng-bob',
+            name: 'Bob Torres',
+            groupId: 'engineering',
+            groupName: 'Engineering',
+            subtitle: 'Platform',
+          },
+        ],
+        defaultView: 'week',
+        height: 640,
+        getResourceId: event =>
+          (event as { resourceId?: string }).resourceId ?? event.calendarId,
+      }),
+    ],
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```
+
+## 时间线模式
+
+| 模式      | 描述                            |
+| :-------- | :------------------------------ |
+| `day`     | 以小时为列的一天。              |
+| `week`    | 以天为列的一周。                |
+| `month`   | 以天为列的一个月。              |
+| `quarter` | 包含周/月分组的三个月（季度）。 |
+| `year`    | 用于路线图风格规划的全年视图。  |
+
+使用 `defaultView` 选择初始模式。你还可以通过 `viewSwitcherMode` 控制切换器的渲染方式，支持 `buttons`、`select` 和 `filter`。
+
+## 资源模型
+
+资源是普通的 JavaScript 对象。源代码支持的字段不仅仅是 `id` 和 `name`：
+
+```ts
+type Resource = {
+  id: string;
+  name: string;
+  parentId?: string;
+  collapsed?: boolean;
+  groupId?: string;
+  groupName?: string;
+  order?: number;
+  subtitle?: string;
+  avatar?: string;
+  color?: string;
+  style?: {
+    colors: { color: string; textColor?: string };
+    darkColors?: { color: string; textColor?: string };
+    opacity?: number;
+    borderRadius?: number;
+  };
+  meta?: Record<string, unknown>;
+};
+```
+
+有用字段：
+
+- `groupId` 和 `groupName`：让你将资源整理到分组部分。
+- `parentId` 和 `collapsed`：支持分层资源树。
+- `subtitle`、`avatar`、`color` 和 `style`：丰富侧边栏的展示效果。
+- `meta`：通常用于存储外部标识符，如 `calendarId`。
+
+## 事件与资源绑定
+
+该视图按以下顺序解析每个事件所在的行：
+
+1. 如果提供了 `getResourceId(event)`，则使用它
+2. `event.resourceId`
+3. `event.meta?.resourceId`
+4. `event.calendarId`
+
+这意味着你既可以直接在事件对象上存储 `resourceId`，也可以通过回调将现有的 DayFlow 事件映射到资源。
+
+```tsx
+const event = {
+  id: 'task-1',
+  title: 'Build export flow',
+  start: new Date(2026, 4, 10, 9, 0),
+  end: new Date(2026, 4, 12, 18, 0),
+  resourceId: 'eng-alice',
+  progress: 65,
+};
+```
+
+## 里程碑和事件样式
+
+`start` 和 `end` 相等的事件会被自动渲染为里程碑。
+
+```tsx
+const milestone = {
+  id: 'release-gate',
+  title: 'Release approval',
+  start: new Date(2026, 4, 14, 10, 0),
+  end: new Date(2026, 4, 14, 10, 0),
+  resourceId: 'eng-bob',
+};
+```
+
+| 属性                    | 类型                             | 备注                                         |
+| :---------------------- | :------------------------------- | :------------------------------------------- |
+| `milestoneLabelDisplay` | `'hover' \| 'always'`            | 控制里程碑标签是仅在悬停时出现还是始终可见。 |
+| `milestoneLaneBehavior` | `'smart' \| 'overlay'`           | 控制里程碑是尽可能共享普通车道还是覆盖它们。 |
+| `getEventType`          | `(event) => ResourceEventType`   | 将事件映射到时间线特定的事件类型。           |
+| `getEventTooltip`       | `(event) => string \| undefined` | 提供事件的工具提示文本。                     |
+| `styleRegistry`         | `Record<string, EventStyle>`     | 注册自定义样式预設。                         |
+| `getEventStyleId`       | `(event) => string \| undefined` | 为事件选择样式预設。                         |
+
+## ResourceTimelineViewConfig
+
+### 核心 (Core)
+
+| 属性               | 类型                                      | 备注                               |
+| :----------------- | :---------------------------------------- | :--------------------------------- |
+| `resources`        | `Resource[]`                              | 时间线所需的资源列表。             |
+| `license`          | `PackageLicenseConfig`                    | 当你不使用全局注册时的可选覆盖项。 |
+| `defaultView`      | `day \| week \| month \| quarter \| year` | 初始时间线刻度。                   |
+| `views`            | `SchedulerTimelineView[]`                 | 覆盖可用的可切换时间线模式。       |
+| `viewType`         | `ViewType \| string`                      | 与高级宿主集成时的自定义视图类型。 |
+| `viewSwitcherMode` | `'buttons' \| 'select' \| 'filter'`       | 控制模式切换器 UI。                |
+| `height`           | `number \| string`                        | 渲染视图的高度。                   |
+
+### 布局 (Layout)
+
+| 属性                    | 类型     | 备注                                   |
+| :---------------------- | :------- | :------------------------------------- |
+| `resourcePanelWidth`    | `number` | 首选侧边栏宽度。                       |
+| `resourcePanelMinWidth` | `number` | 最小侧边栏宽度。                       |
+| `resourcePanelMaxWidth` | `number` | 最大侧边栏宽度。                       |
+| `rowHeight`             | `number` | 每个资源行的高度。                     |
+| `headerHeight`          | `number` | 时间线标题高度。                       |
+| `hourWidth`             | `number` | 天模式小时刻度使用的宽度。             |
+| `weekDayWidth`          | `number` | 周模式下每天的宽度。                   |
+| `dayWidth`              | `number` | 月模式下每天的宽度。                   |
+| `monthDayWidth`         | `number` | 渲染密集月度范围时每天的宽度。         |
+| `quarterMonthWidth`     | `number` | 季度模式下每月的宽度。                 |
+| `yearCellWidth`         | `number` | 年模式下每个单元格的宽度。             |
+| `yearRangePast`         | `number` | 当前年份之前的额外年份范围。           |
+| `yearRangeFuture`       | `number` | 当前年份之后的额外年份范围。           |
+| `overscanRows`          | `number` | 在视口外渲染的额外行数。               |
+| `bufferCells`           | `number` | 为使滚动更顺畅而渲染的额外时间单元格。 |
+
+### 资源可见性与同步
+
+| 属性                                  | 类型                                | 备注                               |
+| :------------------------------------ | :---------------------------------- | :--------------------------------- |
+| `resourceSorter`                      | `(left, right) => number`           | 自定义行排序。                     |
+| `syncResourceVisibilityWithCalendars` | `boolean`                           | 当映射的日历隐藏时，隐藏资源行。   |
+| `getCalendarIdForResource`            | `(resource) => string \| undefined` | 覆盖资源映射到日历可见性的方式。   |
+| `onResourcesUpdate`                   | `(resources) => void`               | 当资源在 UI 中被重排或折叠时触发。 |
+
+启用日历同步时，回退的资源到日历映射为 `resource.meta?.calendarId ?? resource.id`。
+
+## 焦点、侧边栏与集成
+
+时间线公开了一些容易被忽视的集成点：
+
+- `focusRequest`：让宿主应用能够以编程方式将时间线移动到特定的事件和日期。
+- `sidebar`：透传调度器侧边栏配置，如右键菜单操作。
+- `customDetailPanelContent` 和 `customEventDetailDialog`：当你需要自定义调度器详情 UI 时，可以通过视图属性透传。
+- `timeFormat`：支持 `24h` 和 `12h`。
+- `resizeTimeFormat`：自定义调整事件大小时显示的标签。

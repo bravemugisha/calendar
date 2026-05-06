@@ -6,11 +6,13 @@ import { Sidebar } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 import { LanguageSwitcher } from './LanguageSwitcher';
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || '';
+const PRO_URL = 'https://pro.dayflow.studio';
 
 function DiscordIcon({ className }: { className?: string }) {
   return (
@@ -79,6 +81,29 @@ export function DocsHeader({ githubUrl }: DocsHeaderProps) {
             {/* Desktop right: language + discord + github */}
             <div className='flex flex-row items-center gap-1.5 max-lg:hidden'>
               <a
+                href={PRO_URL}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={cn(
+                  buttonVariants({ color: 'ghost' }),
+                  'gap-2 px-2 text-sm font-medium text-slate-600 dark:text-slate-400'
+                )}
+              >
+                <Image
+                  src={`${BASE}/pro-logo.png`}
+                  alt='DayFlow Pro logo'
+                  width={66}
+                  height={16}
+                  className='h-6 w-auto'
+                />
+                <Badge
+                  variant='outline'
+                  className='border-amber-200 bg-amber-50 px-1.5 py-0 text-[10px] font-bold tracking-[0.16em] text-amber-700 uppercase dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200'
+                >
+                  Pro
+                </Badge>
+              </a>
+              <a
                 href='https://blossom.dayflow.studio'
                 target='_blank'
                 rel='noopener noreferrer'
@@ -87,7 +112,7 @@ export function DocsHeader({ githubUrl }: DocsHeaderProps) {
                   'text-sm font-medium text-slate-600 dark:text-slate-400'
                 )}
               >
-                🌸 Blossom Picker
+                🌸 Blossom Color Picker
               </a>
               <LanguageSwitcher />
               <a
@@ -124,6 +149,29 @@ export function DocsHeader({ githubUrl }: DocsHeaderProps) {
                 )}
               >
                 🌸
+              </a>
+              <a
+                href={PRO_URL}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={cn(
+                  buttonVariants({ color: 'ghost', size: 'sm' }),
+                  'gap-1 px-2 text-slate-600 dark:text-slate-400'
+                )}
+              >
+                <Image
+                  src={`${BASE}/pro-logo.png`}
+                  alt='DayFlow Pro logo'
+                  width={50}
+                  height={12}
+                  className='h-3 w-auto'
+                />
+                <Badge
+                  variant='outline'
+                  className='border-amber-200 bg-amber-50 px-1 py-0 text-[9px] font-bold tracking-[0.14em] text-amber-700 uppercase dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200'
+                >
+                  Pro
+                </Badge>
               </a>
               <LanguageSwitcher />
               <a

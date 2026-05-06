@@ -9,6 +9,7 @@ import { z } from 'zod';
 
 const customPageSchema = frontmatterSchema.extend({
   title: z.string().optional(),
+  status: z.string().optional(),
 });
 
 const docsOptions = {
@@ -19,7 +20,9 @@ const docsOptions = {
     },
   },
   meta: {
-    schema: metaSchema,
+    schema: metaSchema.extend({
+      status: z.string().optional(),
+    }),
   },
 };
 

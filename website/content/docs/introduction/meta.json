@@ -1,5 +1,13 @@
 {
   "title": "Introduction",
   "defaultOpen": true,
-  "pages": ["index", "events", "views", "dayflow-calendar", "use-calendar-app"]
+  "pages": [
+    "index",
+    "events",
+    "views",
+    "dayflow-calendar",
+    "use-calendar-app",
+    "resource-grid",
+    "resource-timeline"
+  ]
 }

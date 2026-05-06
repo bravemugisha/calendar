@@ -1,0 +1,66 @@
+---
+title: Pro Installation
+description: Install DayFlow Pro packages, configure private registry access, and activate your DayFlow Pro license key.
+status: pro
+---
+
+# Pro Installation
+
+DayFlow Pro uses two separate credentials:
+
+- A private npm registry token for installing `@dayflow-pro/*` packages
+- A signed DayFlow Pro license key used to activate Pro features
+
+## 1. Configure private registry access
+
+Add your DayFlow Pro npm token to `.npmrc` before installing private packages:
+
+```ini
+@dayflow-pro:registry=https://gitlab.com/api/v4/projects/81880038/packages/npm/
+//gitlab.com/api/v4/projects/81880038/packages/npm/:_authToken=${DAYFLOW_PRO_NPM_TOKEN}
+```
+
+After that, install the packages you purchased as usual:
+
+```bash
+pnpm add @dayflow-pro/license @dayflow-pro/resource-grid
+```
+
+## 2. Register your license key once
+
+Register your DayFlow Pro license key during app startup:
+
+```tsx
+import { registerDayflowProLicense } from '@dayflow-pro/license';
+
+registerDayflowProLicense({
+  token: process.env.NEXT_PUBLIC_DAYFLOW_PRO_LICENSE_TOKEN!,
+});
+```
+
+Once this is registered, your Pro views and plugins can read the token automatically.
+
+## 3. Use Pro packages normally
+
+After installation and registration, you can use Pro packages without repeating the license config in every call:
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createResourceGridView } from '@dayflow-pro/resource-grid';
+
+function App() {
+  const calendar = useCalendarApp({
+    views: [
+      createResourceGridView({
+        mode: 'resourceView',
+        resources: [
+          { id: 'room-a', title: 'Room A' },
+          { id: 'room-b', title: 'Room B' },
+        ],
+      }),
+    ],
+  });
+
+  return <DayFlowCalendar calendar={calendar} />;
+}
+```

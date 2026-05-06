@@ -1,0 +1,148 @@
+---
+title: Print Plugin
+description: DayFlow Pro print and export workflow with preview, paper sizing, calendar filtering, and multiple printable layouts.
+status: pro
+---
+
+# Print Plugin
+
+`@dayflow-pro/plugin-print` adds a built-in print dialog and preview flow for DayFlow. It supports day, week, month, and two year layouts, lets users choose paper size and orientation, and can print either the currently visible event set or all matching events depending on context.
+
+Try the [live demo](https://pro.dayflow.studio)
+
+## Installation
+
+<PackageTabs pkg='@dayflow-pro/plugin-print' />
+
+Refer to the [Pro Installation](/docs/introduction/pro-installation) guide for installation steps.
+
+## Basic usage
+
+```tsx
+import { DayFlowCalendar, useCalendarApp } from '@dayflow/react';
+import { createPrintPlugin } from '@dayflow-pro/plugin-print';
+
+function App() {
+  const printPlugin = createPrintPlugin({
+    defaultOptions: {
+      miniCalendar: true,
+      calendarKeys: true,
+      textSize: 'medium',
+    },
+  });
+
+  const calendar = useCalendarApp({
+    plugins: [printPlugin],
+  });
+
+  return (
+    <>
+      <button onClick={() => printPlugin.api.open()}>Print</button>
+      <DayFlowCalendar calendar={calendar} />
+    </>
+  );
+}
+```
+
+The plugin also installs two helpers directly onto the calendar app:
+
+```tsx
+await calendar.openPrintDialog();
+await calendar.print();
+```
+
+## What the plugin provides
+
+- A print preview dialog rendered into `document.body`
+- Native browser printing through `window.print()`
+- View selection for day, week, month, and yearly layouts
+- Calendar-level filtering through `calendarIds`
+- Paper size and orientation controls
+- Cmd/Ctrl + P shortcut support while the plugin is installed
+
+## Supported print views
+
+| View              | Notes                                                         |
+| :---------------- | :------------------------------------------------------------ |
+| `day`             | Prints one or more selected days.                             |
+| `week`            | Prints a week-style layout.                                   |
+| `month`           | Prints a month grid.                                          |
+| `year-fixed-week` | Year overview using fixed weekly rows. Defaults to landscape. |
+| `year-canvas`     | Dense year overview optimized for portrait output.            |
+
+When the dialog opens, it derives its initial view from the current DayFlow view:
+
+- current month view -> `month`
+- current week view -> `week`
+- current day view -> `day`
+- current year view -> `year-fixed-week`
+
+## Plugin configuration
+
+| Property         | Type                            | Default | Notes                                                      |
+| :--------------- | :------------------------------ | :------ | :--------------------------------------------------------- |
+| `enabled`        | `boolean`                       | `true`  | Disables installation entirely when set to `false`.        |
+| `defaultOptions` | `Partial<CalendarPrintOptions>` | —       | Preloads the dialog with custom print options.             |
+| `license`        | `PackageLicenseConfig`          | —       | Optional override when you do not use global registration. |
+
+## CalendarPrintOptions
+
+| Property        | Type                             | Default  | Notes                                          |
+| :-------------- | :------------------------------- | :------- | :--------------------------------------------- |
+| `allDayEvents`  | `boolean`                        | `true`   | Include all-day events.                        |
+| `timedEvents`   | `boolean`                        | `true`   | Include timed events.                          |
+| `miniCalendar`  | `boolean`                        | `true`   | Show the mini calendar in the print header.    |
+| `calendarKeys`  | `boolean`                        | `true`   | Show the calendar legend.                      |
+| `blackAndWhite` | `boolean`                        | `false`  | Render without calendar colors.                |
+| `textSize`      | `'small' \| 'medium' \| 'large'` | `medium` | Controls preview and print typography density. |
+
+## CalendarPrintConfig
+
+You can pre-seed or override the print dialog with a partial config:
+
+```ts
+type CalendarPrintConfig = {
+  view: 'month' | 'week' | 'day' | 'year-fixed-week' | 'year-canvas';
+  paper: 'A4' | 'Letter';
+  orientation?: 'portrait' | 'landscape';
+  startDate: Date;
+  endDate?: Date;
+  calendarIds: string[];
+  options: CalendarPrintOptions;
+};
+```
+
+Important behavior from the source:
+
+- `year-fixed-week` forces `landscape`.
+- `year-canvas` forces `portrait`.
+- The dialog injects an `@page` rule before opening the browser's native print UI.
+- The preview supports zooming and panning before print.
+
+## Printing scope
+
+The dialog does not always pull from the same event source:
+
+- If the selected print view matches the current calendar view and `startDate` matches the app's current date, preview rendering uses `app.getEvents()` for the visible event set.
+- Otherwise it uses `app.getAllEvents()` so printing can cover dates outside the currently rendered screen.
+
+This is exposed internally as `sourceScope: 'visible' | 'all'`.
+
+## API
+
+`createPrintPlugin()` returns a normal DayFlow plugin with an `api` object:
+
+```ts
+type PrintPluginApi = {
+  open: () => void;
+  close: () => void;
+  print: (config?: Partial<CalendarPrintConfig>) => void;
+};
+```
+
+Notes:
+
+- `api.open()` opens the print dialog.
+- `api.close()` closes the dialog if it is mounted.
+- `api.print(config)` currently opens the dialog as well; it does not bypass preview yet.
+- The plugin listens for `Cmd/Ctrl + P` globally once installed.
