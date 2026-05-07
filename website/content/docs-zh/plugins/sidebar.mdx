@@ -51,6 +51,43 @@ function MyCalendar() {
 | `renderCalendarContextMenu`  | `(calendar, onClose) => TNode`                         | `undefined`                        | 日历项的自定义右键菜单渲染器        |
 | `renderCreateCalendarDialog` | `(props) => TNode`                                     | `undefined`                        | 自定义创建日历对话框渲染器          |
 
+## 编程式 API
+
+日历渲染完成后，通过 `app.getPlugin` 获取 `SidebarService`：
+
+```tsx
+import { type SidebarService } from '@dayflow/plugin-sidebar';
+
+const sidebar = app.getPlugin<SidebarService>('sidebar');
+
+sidebar?.collapse(); // 折叠侧边栏
+sidebar?.expand(); // 展开侧边栏
+sidebar?.setCollapsed(true); // 显式设置状态
+console.log(sidebar?.isCollapsed()); // 读取当前状态
+```
+
+### SidebarService
+
+| 方法                               | 返回值    | 说明               |
+| :--------------------------------- | :-------- | :----------------- |
+| `collapse()`                       | `void`    | 折叠侧边栏         |
+| `expand()`                         | `void`    | 展开侧边栏         |
+| `setCollapsed(collapsed: boolean)` | `void`    | 显式设置折叠状态   |
+| `isCollapsed()`                    | `boolean` | 返回当前的折叠状态 |
+
+> **注意：** 这些方法在首次渲染之前调用会静默 no-op。实际的用户交互和生命周期回调均发生在渲染之后，因此在实践中几乎不需要担心这个问题。
+
+### 绑定到键盘快捷键
+
+```tsx
+window.addEventListener('keydown', e => {
+  if (e.metaKey && e.key === '[') {
+    const sidebar = app.getPlugin<SidebarService>('sidebar');
+    sidebar?.setCollapsed(!sidebar.isCollapsed());
+  }
+});
+```
+
 ## 功能
 
 侧边栏插件提供包含颜色点、可见性开关和折叠按钮的侧栏布局。它会自动与日历状态同步，无需额外代码。同时内置了日历管理与右键菜单功能。

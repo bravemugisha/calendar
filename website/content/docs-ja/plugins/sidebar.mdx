@@ -51,6 +51,43 @@ function MyCalendar() {
 | `renderCalendarContextMenu`  | `(calendar, onClose) => TNode`                         | `undefined`                        | カレンダー項目のカスタムコンテキストメニューレンダラー |
 | `renderCreateCalendarDialog` | `(props) => TNode`                                     | `undefined`                        | カスタムカレンダー作成ダイアログレンダラー             |
 
+## プログラマティック API
+
+カレンダーのレンダリング後、`app.getPlugin` で `SidebarService` を取得できます：
+
+```tsx
+import { type SidebarService } from '@dayflow/plugin-sidebar';
+
+const sidebar = app.getPlugin<SidebarService>('sidebar');
+
+sidebar?.collapse(); // サイドバーを折りたたむ
+sidebar?.expand(); // サイドバーを展開する
+sidebar?.setCollapsed(true); // 状態を明示的に設定する
+console.log(sidebar?.isCollapsed()); // 現在の状態を取得する
+```
+
+### SidebarService
+
+| メソッド                           | 返り値    | 説明                             |
+| :--------------------------------- | :-------- | :------------------------------- |
+| `collapse()`                       | `void`    | サイドバーを折りたたむ           |
+| `expand()`                         | `void`    | サイドバーを展開する             |
+| `setCollapsed(collapsed: boolean)` | `void`    | 折りたたみ状態を明示的に設定する |
+| `isCollapsed()`                    | `boolean` | 現在の折りたたみ状態を返す       |
+
+> **注意:** これらのメソッドは最初のレンダリング前に呼び出すと no-op になります。実際のユーザー操作やライフサイクルコールバックはレンダリング後に発生するため、実用上ほとんど問題にはなりません。
+
+### キーボードショートカットへのバインド
+
+```tsx
+window.addEventListener('keydown', e => {
+  if (e.metaKey && e.key === '[') {
+    const sidebar = app.getPlugin<SidebarService>('sidebar');
+    sidebar?.setCollapsed(!sidebar.isCollapsed());
+  }
+});
+```
+
 ## 機能
 
 サイドバープラグインは、可視状態のトグル、カレンダーの配色表示、折りたたみボタンを備えた既製のレイアウトを提供します。また、カレンダーの作成とコンテキストメニューもサポートしており、ユーザーがカレンダーの追加、色の編集、削除を自由に行うことができます。

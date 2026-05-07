@@ -51,6 +51,43 @@ function MyCalendar() {
 | `renderCalendarContextMenu`  | `(calendar, onClose) => TNode`                         | `undefined`                        | Custom context menu renderer for calendar items |
 | `renderCreateCalendarDialog` | `(props) => TNode`                                     | `undefined`                        | Custom create-calendar dialog renderer          |
 
+## Programmatic API
+
+After the calendar has rendered, access `SidebarService` via `app.getPlugin`:
+
+```tsx
+import { type SidebarService } from '@dayflow/plugin-sidebar';
+
+const sidebar = app.getPlugin<SidebarService>('sidebar');
+
+sidebar?.collapse(); // Collapse the sidebar
+sidebar?.expand(); // Expand the sidebar
+sidebar?.setCollapsed(true); // Set state explicitly
+console.log(sidebar?.isCollapsed()); // Read current state
+```
+
+### SidebarService
+
+| Method                             | Returns   | Description                         |
+| :--------------------------------- | :-------- | :---------------------------------- |
+| `collapse()`                       | `void`    | Collapses the sidebar               |
+| `expand()`                         | `void`    | Expands the sidebar                 |
+| `setCollapsed(collapsed: boolean)` | `void`    | Sets collapsed state explicitly     |
+| `isCollapsed()`                    | `boolean` | Returns the current collapsed state |
+
+> **Note:** These methods are no-ops before the first render. All real interactions happen after the calendar mounts, so this is rarely a concern in practice.
+
+### Binding to a keyboard shortcut
+
+```tsx
+window.addEventListener('keydown', e => {
+  if (e.metaKey && e.key === '[') {
+    const sidebar = app.getPlugin<SidebarService>('sidebar');
+    sidebar?.setCollapsed(!sidebar.isCollapsed());
+  }
+});
+```
+
 ## Features
 
 The sidebar provides a ready-made layout with visibility toggles, calendar color swatches, and collapse controls. It also supports calendar creation and context menus, allowing users to add, edit colors, and delete calendars.

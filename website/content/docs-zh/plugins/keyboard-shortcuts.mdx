@@ -91,8 +91,39 @@ createKeyboardShortcutsPlugin({
 
 ## 插件 API
 
-您可以通过编程方式触发 UI 关闭：
+通过以下方式获取插件句柄，以便在运行时控制快捷键行为：
 
 ```tsx
-calendar.app.dismissUI();
+import { type KeyboardShortcutsService } from '@dayflow/plugin-keyboard-shortcuts';
+
+const kb = app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts');
+```
+
+### KeyboardShortcutsService
+
+| 方法          | 返回值    | 说明                                |
+| :------------ | :-------- | :---------------------------------- |
+| `enable()`    | `void`    | 重新启用快捷键处理                  |
+| `disable()`   | `void`    | 暂停所有快捷键，直到调用 `enable()` |
+| `isEnabled()` | `boolean` | 返回快捷键当前是否处于激活状态      |
+
+一个典型的使用场景是：当自定义弹窗或富文本编辑器打开时，临时屏蔽日历快捷键：
+
+```tsx
+function MyModal() {
+  const kb = app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts');
+
+  useEffect(() => {
+    kb?.disable();
+    return () => kb?.enable(); // 卸载时恢复
+  }, []);
+
+  // ...
+}
+```
+
+也可以通过编程方式关闭当前打开的 UI：
+
+```tsx
+app.dismissUI();
 ```

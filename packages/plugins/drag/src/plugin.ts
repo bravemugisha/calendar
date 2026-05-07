@@ -123,9 +123,9 @@ export function isDragService(obj: unknown): obj is DragService {
   return (
     typeof obj === 'object' &&
     obj !== null &&
-    'useDragForView' in obj &&
     'getConfig' in obj &&
-    'updateConfig' in obj
+    'updateConfig' in obj &&
+    'isViewSupported' in obj
   );
 }
 

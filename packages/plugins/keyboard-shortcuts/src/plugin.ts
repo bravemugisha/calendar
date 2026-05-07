@@ -245,13 +245,43 @@ async function handlePaste(app: ICalendarApp) {
   }
 }
 
+/**
+ * Programmatic API returned by `app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts')`.
+ *
+ * @example
+ * const kb = app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts');
+ * kb?.disable(); // suppress shortcuts while a custom modal is open
+ * kb?.enable();  // restore when the modal closes
+ */
+export interface KeyboardShortcutsService {
+  /** Resume handling keyboard shortcuts. */
+  enable: () => void;
+  /** Suppress all keyboard shortcuts until re-enabled. */
+  disable: () => void;
+  /** Returns whether shortcuts are currently active. */
+  isEnabled: () => boolean;
+}
+
 export function createKeyboardShortcutsPlugin(
   config: KeyboardShortcutsConfig = {}
 ): CalendarPlugin {
   const { enabled = true, keyMap = {}, callbacks = {} } = config;
 
+  const state = { enabled };
+
+  const keyboardService: KeyboardShortcutsService = {
+    enable: () => {
+      state.enabled = true;
+    },
+    disable: () => {
+      state.enabled = false;
+    },
+    isEnabled: () => state.enabled,
+  };
+
   return {
     name: 'keyboard-shortcuts',
+    api: keyboardService,
     install(app: ICalendarApp) {
       if (!enabled) return;
 
@@ -261,6 +291,8 @@ export function createKeyboardShortcutsPlugin(
       keyboardApp.__dayflowKeyboardState ??= { lastNavigatedEventId: null };
 
       const handleKeyDown = async (e: KeyboardEvent) => {
+        if (!state.enabled) return;
+
         const activeElement = document.activeElement;
         const isTyping =
           activeElement &&

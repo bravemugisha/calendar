@@ -82,12 +82,49 @@ export interface SidebarPluginConfig {
   componentsOrder?: ('calendarList' | 'miniCalendar')[];
 }
 
+/** Control handle written by the Preact bridge on every render cycle. */
+interface SidebarControlRef {
+  setCollapsed: ((collapsed: boolean) => void) | null;
+  currentCollapsed: boolean;
+}
+
+/**
+ * Programmatic API returned by `app.getPlugin<SidebarService>('sidebar')`.
+ *
+ * @example
+ * const sidebar = app.getPlugin<SidebarService>('sidebar');
+ * sidebar?.collapse();
+ */
+export interface SidebarService {
+  /** Collapse the sidebar. No-ops if the sidebar has not yet rendered. */
+  collapse: () => void;
+  /** Expand the sidebar. No-ops if the sidebar has not yet rendered. */
+  expand: () => void;
+  /** Set collapsed state explicitly. */
+  setCollapsed: (collapsed: boolean) => void;
+  /** Returns the current collapsed state. */
+  isCollapsed: () => boolean;
+}
+
 export function createSidebarPlugin(
   config: SidebarPluginConfig = {}
 ): CalendarPlugin {
+  const controlRef: SidebarControlRef = {
+    setCollapsed: null,
+    currentCollapsed: config.initialCollapsed ?? false,
+  };
+
+  const sidebarService: SidebarService = {
+    collapse: () => controlRef.setCollapsed?.(true),
+    expand: () => controlRef.setCollapsed?.(false),
+    setCollapsed: (collapsed: boolean) => controlRef.setCollapsed?.(collapsed),
+    isCollapsed: () => controlRef.currentCollapsed,
+  };
+
   return {
     name: 'sidebar',
     config,
+    api: sidebarService,
     install(_app: ICalendarApp) {
       const sidebarWidth = normalizeCssWidth(
         config.width,
@@ -101,6 +138,11 @@ export function createSidebarPlugin(
           const [isCollapsed, setIsCollapsed] = useState(
             config.initialCollapsed ?? false
           );
+
+          // Keep the programmatic API in sync with the current render state.
+          controlRef.setCollapsed = setIsCollapsed;
+          controlRef.currentCollapsed = isCollapsed;
+
           const [sidebarVersion, setSidebarVersion] = useState(0);
           const [editingCalendarId, setEditingCalendarId] = useState<
             string | null

@@ -91,8 +91,39 @@ The following callbacks are supported in the `callbacks` object:
 
 ## Plugin API
 
-You can programmatically trigger UI dismissal:
+Access the plugin handle to control shortcut handling at runtime:
 
 ```tsx
-calendar.app.dismissUI();
+import { type KeyboardShortcutsService } from '@dayflow/plugin-keyboard-shortcuts';
+
+const kb = app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts');
+```
+
+### KeyboardShortcutsService
+
+| Method        | Returns   | Description                                         |
+| :------------ | :-------- | :-------------------------------------------------- |
+| `enable()`    | `void`    | Re-enables shortcut handling                        |
+| `disable()`   | `void`    | Suppresses all shortcuts until `enable()` is called |
+| `isEnabled()` | `boolean` | Returns whether shortcuts are currently active      |
+
+A common use case is suppressing calendar shortcuts while a custom modal or rich text editor is open:
+
+```tsx
+function MyModal() {
+  const kb = app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts');
+
+  useEffect(() => {
+    kb?.disable();
+    return () => kb?.enable(); // restore on unmount
+  }, []);
+
+  // ...
+}
+```
+
+You can also programmatically dismiss any open UI:
+
+```tsx
+app.dismissUI();
 ```

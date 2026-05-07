@@ -91,8 +91,39 @@ createKeyboardShortcutsPlugin({
 
 ## プラグイン API
 
-UI をプログラムから閉じることができます：
+プラグインハンドルを取得して、実行時にショートカットの動作を制御できます：
 
 ```tsx
-calendar.app.dismissUI();
+import { type KeyboardShortcutsService } from '@dayflow/plugin-keyboard-shortcuts';
+
+const kb = app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts');
+```
+
+### KeyboardShortcutsService
+
+| メソッド      | 返り値    | 説明                                                |
+| :------------ | :-------- | :-------------------------------------------------- |
+| `enable()`    | `void`    | ショートカット処理を再有効化する                    |
+| `disable()`   | `void`    | `enable()` が呼ばれるまで全ショートカットを抑制する |
+| `isEnabled()` | `boolean` | ショートカットが現在有効かどうかを返す              |
+
+よくある使用例として、カスタムモーダルやリッチテキストエディタが開いている間、カレンダーのショートカットを一時的に抑制する場合があります：
+
+```tsx
+function MyModal() {
+  const kb = app.getPlugin<KeyboardShortcutsService>('keyboard-shortcuts');
+
+  useEffect(() => {
+    kb?.disable();
+    return () => kb?.enable(); // アンマウント時に復元
+  }, []);
+
+  // ...
+}
+```
+
+プログラムから開いている UI を閉じることもできます：
+
+```tsx
+app.dismissUI();
 ```
